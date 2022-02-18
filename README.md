@@ -12,6 +12,8 @@ Loader menu | Game intro
 
 ALPHA_E.COM MD5: 7e165fc5fd1aec1482bc915ab4053d36
 
+![My loader](./images/loader.png "My loader")
+
 # Files:
 
 | File              | Info                                                                                                   |
