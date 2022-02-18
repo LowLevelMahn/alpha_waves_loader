@@ -19,16 +19,16 @@ Loader menu | Game intro
 | ALPHA_D.COM	 |  41c74f363e70864fb15579ba171731bf | german version  | 
 | ALPHA_E.COM	 |  7e165fc5fd1aec1482bc915ab4053d36 | english version |
 | ALPHA_F.COM	 |  682d26aec9512a4002d9aef271df0b23 | french version  |
-| CONFIG.TAT	 |  8b3de28f7feebc33e70b36c64061ab1f | config file     |
-| GRAPHS.CC1	 |  91d542578b974910ad30db6297bc8c0a | graphics data   |
+| CONFIG.TAT	  |  8b3de28f7feebc33e70b36c64061ab1f | config file     |
+| GRAPHS.CC1	  |  91d542578b974910ad30db6297bc8c0a | graphics data   |
 | HIGHSCOR.QB	 |  6fd61f2a03225192b7ac5a1dce5c96ea | highscores      |
 | MUSIC_A.CC1	 |  ab4eb457f274d7b28b6985662a1dc3b6 | music           |
 | MUSIC_B.CC1	 |  cd968b9d80712830e1c2fa1cba170900 | music           |
 | MUSIC_T.CC1	 |  8827fbc74d9053ff6363387a99be2f16 | music           |
 | PROGS.CC1	   |  d529022d120dcd7bafedde05acd467c7 | gfx/game code   |
 | TATOU.BAT	   |  4a748577227640cbfd26874fe08c6d7c | simple starter  |
-| TESTFKEY.COM |	964a23b53713cfc666fbc081a72bf77b | ?               |
-| TEXTES.CC1	 |  54393dca30917561ac33e4093096cc75 | multilang texts |
+| TESTFKEY.COM |	964a23b53713cfc666fbc081a72bf77b  | ?               |
+| TEXTES.CC1	  |  54393dca30917561ac33e4093096cc75 | multilang texts |
 
 ![My loader](./images/loader.png "My loader")
 
