@@ -20,7 +20,7 @@ ALPHA_E.COM MD5: 7e165fc5fd1aec1482bc915ab4053d36
 | ae.asm            | reversed and reassemble-able source code of ALPHA_E.COM                                                |
 | build.bat         | builds ae.asm with UASM64/WLink and checks if resulting ae_org.com is binary identical to ALPHA_E.COM  |
 | tools_howto.txt   | how to get the needed build tools (UASM, WLink) - very easy to install                                 |
-| ae_org.com        | ae.asm build as is needs to be binary identical to ALPHA_E.com                                         |
+| ae_org.com        | ae.asm build as-is needs to be binary identical to ALPHA_E.com                                         |
 | ae.com            | ae.asm build with DIRECT_START, direct start of the game, no menu, unused code NOPed out               |
 
  **tools_dir** variable in build.bat needs to be set to suits your environment
