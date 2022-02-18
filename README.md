@@ -2,8 +2,10 @@
 
 This is the reverse engineered the english-language text menu game loader ALPHA_E.COM of the DOS game Alpha Waves aka Continuum
 
-![Loader menu](./images/menu.png "Menu") ![Game intro](./images/intro.png "Intro")
-
+Loader menu | Game intro
+--- | ---
+![](./images/menu.png "Menu") | ![](./images/intro.png "Intro")
+ 
 - Youtube: https://www.youtube.com/watch?v=jN9KKnfwoNY
 - AlphaWaves on moby: https://www.mobygames.com/game/dos/continuum
 - Archive.org Floppy-Image download: https://archive.org/details/002297-AlphaWaves (my work bases on this floppy image, unpack disk image with 7zip)
