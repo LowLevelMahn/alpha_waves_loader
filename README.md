@@ -27,7 +27,7 @@ Loader menu | Game intro
 | MUSIC_T.CC1	 |  8827fbc74d9053ff6363387a99be2f16 | music           |
 | PROGS.CC1	   |  d529022d120dcd7bafedde05acd467c7 | gfx/game code   |
 | TATOU.BAT	   |  4a748577227640cbfd26874fe08c6d7c | simple starter  |
-| TESTFKEY.COM |	964a23b53713cfc666fbc081a72bf77b  | ?               |
+| TESTFKEY.COM |	 964a23b53713cfc666fbc081a72bf77b | ?               |
 | TEXTES.CC1	  |  54393dca30917561ac33e4093096cc75 | multilang texts |
 
 ![My loader](./images/loader.png "My loader")
