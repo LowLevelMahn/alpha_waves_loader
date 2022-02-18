@@ -14,7 +14,7 @@ Loader menu | Game intro
 - Archive.org Floppy-Image download: https://archive.org/details/002297-AlphaWaves (my work bases on this floppy image, unpack disk image with 7zip)
     - ALPHA_E.COM MD5: 7e165fc5fd1aec1482bc915ab4053d36
 
-| File         | MD5                               | Info            |                                                                                                 |
+| File         | MD5                               | Info            |                                                  
 | :----------- | :-------------------------------- | :-------------- |
 | ALPHA_D.COM	 |  41c74f363e70864fb15579ba171731bf | german version  | 
 | ALPHA_E.COM	 |  7e165fc5fd1aec1482bc915ab4053d36 | english version |
