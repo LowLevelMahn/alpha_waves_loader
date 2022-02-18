@@ -2,6 +2,9 @@
 
 This is the reverse engineered, english-language text menu game loader ALPHA_E.COM of the DOS game Alpha Waves aka Continuum
 
+Due to super tiny floppy and memory sizes of that time most games used "loaders" that mostly combine graphics/sound/etc. code into in-memory build executables
+ALPHA_E.COM is the english version of such a "loder" for AlphaWaves
+
 Loader menu | Game intro
 --- | ---
 ![](./images/menu.png "Menu") | ![](./images/intro.png "Intro")
