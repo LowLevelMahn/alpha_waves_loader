@@ -1,0 +1,17 @@
+1. Download the tools - all open source and free, all tools can just be unzip (no installation needed)
+
+uasm: http://www.terraspace.co.uk/uasm.html
+-> http://www.terraspace.co.uk/uasm252_x64.zip
+just unzip - no installation needed!!
+
+openwatcom v2: https://github.com/open-watcom/open-watcom-v2/releases 
+-> https://github.com/open-watcom/open-watcom-v2/releases/download/Current-build/open-watcom-2_0-c-win-x64.exe
+just unzip the exe - no installation needed!!
+
+2. unpack and copy the folders into the tools folder
+
+rename the folder to match this hierarchy, no moving of single files - just the complete
+folder - in the end these executables need to be reachable
+
+tools\uasm_x64\uasm64.exe
+tools\open-watcom-2_0-c-win-x64\binnt64\wlink.exe
