@@ -9,8 +9,7 @@ Loader menu | Game intro
 - Youtube: https://www.youtube.com/watch?v=jN9KKnfwoNY
 - AlphaWaves on Moby Games: https://www.mobygames.com/game/dos/continuum
 - Archive.org Floppy-Image download: https://archive.org/details/002297-AlphaWaves (my work bases on this floppy image, unpack disk image with 7zip)
-
-ALPHA_E.COM MD5: 7e165fc5fd1aec1482bc915ab4053d36
+    - ALPHA_E.COM MD5: 7e165fc5fd1aec1482bc915ab4053d36
 
 ![My loader](./images/loader.png "My loader")
 
