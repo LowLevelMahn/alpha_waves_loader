@@ -1,6 +1,6 @@
 # alpha_waves_loader
 
-This is the reverse engineered the english-language text menu game loader ALPHA_E.COM of the DOS game Alpha Waves aka Continuum
+This is the reverse engineered, english-language text menu game loader ALPHA_E.COM of the DOS game Alpha Waves aka Continuum
 
 Loader menu | Game intro
 --- | ---
