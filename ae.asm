@@ -277,6 +277,7 @@ subprogram_exit_code db	0		; DATA XREF: GAME_START_sub_7+B3w
 dos_version db 0      ; DATA XREF: start_0+1Aw
           ; interrupt_0x24r
           
+IFNDEF CLEANUP          
 IFDEF DIRECT_START
   db 5 dup(EMPTY)
 ELSE
@@ -299,7 +300,8 @@ grafic_type_supported_table db 5 dup(0)	; DATA XREF: GFX_SELECT_MENU_sub_9+18o
 					;
 					;
 					; ---------------------------
-ENDIF          
+ENDIF   
+ENDIF       
        
 IFNDEF CLEANUP       
 IFDEF DIRECT_START
@@ -832,7 +834,7 @@ GAME_START_sub_3 proc near		; CODE XREF: GAME_START_sub_3+101j
     mov ax, ds
     mov es, ax
     assume es:seg000
-    mov di, 301h
+		mov	di, 301h	; its not in seg000!!!
     xor ax, ax
     rep stosw
     pop di
@@ -2147,13 +2149,15 @@ interrupt_0x97	endp
 ; ---------------------------------------------------------------------------
 ; START OF FUNCTION CHUNK FOR start_0
 
+IFNDEF CLEANUP
 IFDEF DIRECT_START
-    db 6 dup(NOOP) ; nops
+    db 6 dup(EMPTY) ; nops
 ELSE    
 select_gfx:       ; CODE XREF: start_0+82j
           ; DATA XREF: seg000:01D9o
     call  GFX_SELECT_MENU_sub_9
 		jmp	main_menu_screen
+ENDIF
 ENDIF
     
 ; ---------------------------------------------------------------------------
@@ -2445,7 +2449,7 @@ loc_624:				; CODE XREF: START_GAME_IS_GFX_SUPPORTED_sub_12+50j
     mov cx, 8
     rep movsb
     xor dx, dx    ; seems_unused2_@
-		mov	cs:IN_MAIN_MENU_selected_gfx_index, 0FFFFh ; mark as invalid
+		mov	cs:IN_MAIN_MENU_selected_gfx_index, 0FFFFh
 		lea	ax, text_problem ; text_offset_@
     mov cx, 5   ; seems_unused1_@
 		call	SOME_PRINTING_show_msg_box_sub_13
@@ -2833,6 +2837,7 @@ START_GAME_DOES_FILE_EXIST_sub_19 endp
 
 patch8_end:   
 
+IFNDEF CLEANUP
   ;----
   ; keep all the offsets around intact
   patch8_size = patch8_end - patch8_begin
@@ -2842,6 +2847,7 @@ patch8_end:
   ENDIF
   db patch8_rest_nops dup(EMPTY) ; nops
   ;----  
+ENDIF
 
 ELSE
 
@@ -2978,6 +2984,7 @@ ENDIF
 
 ; =============== S U B R O U T I N E =======================================
 
+IFNDEF CLEANUP
 IFDEF DIRECT_START
   db 20h dup(EMPTY)
 ELSE
@@ -3025,6 +3032,7 @@ loc_650:        ; CODE XREF: WAIT_F_KEY_sub_20+4j
     retn
 WAIT_F_KEY_sub_20 endp
 
+ENDIF
 ENDIF
 
 ; ---------------------------------------------------------------------------
@@ -3197,6 +3205,7 @@ interrupt_0x24	endp ; sp-analysis failed
 
 ; =============== S U B R O U T I N E =======================================
 
+IFNDEF CLEANUP
 IFDEF DIRECT_START
   db 8 dup(EMPTY)
 ELSE
@@ -3210,9 +3219,11 @@ wait_key_check_esc proc	near		; CODE XREF: SOME_PRINTING_show_msg_box_sub_13+Ep
 wait_key_check_esc endp
 
 ENDIF
+ENDIF
 
 ; =============== S U B R O U T I N E =======================================
 
+IFNDEF CLEANUP
 IFDEF DIRECT_START
   ; remove joystick detection dead code
   db 1F5h dup(EMPTY) ; nops
@@ -3574,6 +3585,7 @@ loc_685:				; CODE XREF: DETECT_JOYSTICK_sub_32+51j
 DETECT_JOYSTICK_sub_32 endp
 
 ENDIF
+ENDIF
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -3636,8 +3648,9 @@ IF 1
 ENDIF  
 
 config_tat_buffer:
+IFNDEF CLEANUP
   db 2Ch dup(EMPTY) ; nops
-  
+ENDIF  
 ELSE
 
 config_tat_buffer dw 302h  ; DATA XREF: read_config_and_resize_memory+12o

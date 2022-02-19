@@ -55,10 +55,9 @@ my reduced loader
  - reverse/reassemble to binary equal com program
  - analysed the config.tat and HIGHSCOR.QB fully
  - documented the video-card detection, menu and config.tat reading code
- - created a reduced version that gets rid of the video card detection and menu (NOPed out) which directly starts the game
+ - created a reduced/cleanup version that gets rid of the video card detection and menu (parts NOPed out, unused data/code removed) which directly starts the game
  
  # TODOs
- - there are still non-symbolic offsets or something in the game-start code - the loader crashes if i remove the NOPed parts completely
  - game-starting analyse is in the very beginning: so far: an exe gets created from parts of progs1.cc in ram and executed 
  - rewrite the loader in C and write a tool that directly creates a full game exe that can be directly started (i know i can just memdump, but thats not my goal)
  - maybe reverse AlphaWaves itself - its a Turbo C 2.x exe
