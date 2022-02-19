@@ -12,7 +12,7 @@ set INCLUDE=%watcom%\h
 set PATH=%WATCOM_BIN%;%PATH%
 set wlink_exe=%watcom_bin%\wlink.exe
 
-::goto do_uasm
+goto do_uasm
 
 set tasm32_exe=%tools_dir%\TASM\BIN\TASM32.EXE
 echo TASM32 build

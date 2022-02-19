@@ -8,8 +8,7 @@ ELSE
 ENDIF
 
 IFDEF CLEANUP
-  ; TODO removing unused code ends in crash - maybe non-symbolic offsets in the game start code
-  %OUT CLEANUP unused code
+  %OUT CLEANUP unused data/code
 ELSE
   %OUT CLEANUP not set  
 ENDIF
@@ -17,6 +16,7 @@ ENDIF
 %OUT ====================================
 
 NOOP = 90h
+EMPTY = 0AAh
 
 ; ---------------------------------------------------------------------------
 
@@ -76,8 +76,10 @@ start   endp
 
 
 ; ---------------------------------------------------------------------------
+IFNDEF CLEANUP
+
 IFDEF DIRECT_START    
-    db 3eh dup(NOOP)
+    db 3eh dup(EMPTY)
 ELSE    
 CGA_string	db 'CGA'                ; DATA XREF: seg000:gfx_string_offset_tableo
 		db 5 dup(1)		; 0
@@ -93,6 +95,8 @@ gfx_string_offset_table	dw offset CGA_string, offset EGA_string, offset	TANDY_st
 		dw offset HERCULES_string, offset VGA_string; 3	; "CGA"
 gfx_type_array	db 2, 3, 40h, 80h, 5	; 0 ; DATA XREF: START_GAME_IS_GFX_SUPPORTED_sub_12+Er
 gfx_type_array2	db 2, 3, 2, 1, 5	; 0 ; DATA XREF: START_GAME_IS_GFX_SUPPORTED_sub_12+2Cr
+ENDIF
+
 ENDIF
 
 word_38		dw 0			; DATA XREF: GAME_START_sub_7+79w
@@ -140,13 +144,16 @@ stru_53		ptr16 <0>		; DATA XREF: read_some_file_sub_4+137w
 byte_55		db 0			; DATA XREF: EXE_HEADER_sub_2+1r
 					; EXE_HEADER_sub_2+5Cr	...
 
+IFNDEF CLEANUP
+
 IFDEF DIRECT_START
-  db NOOP
+  db EMPTY
 ELSE  
 byte_56		db 0			; DATA XREF: JOYSTICK_STUFF2_sub_30+7w
 					; CALIBRATE_JOYSTICK_STUFF_sub_31+Cr ...
 ENDIF
-          
+ENDIF
+         
 byte_57		db 0			; DATA XREF: GAME_START_sub_3+42o
 					; GAME_START_sub_3+7Cr	...
 byte_569	db 0			; DATA XREF: GAME_START_sub_3:loc_577r
@@ -180,13 +187,15 @@ saved_int1_ptr	ptr16 <0>		; DATA XREF: EXE_HEADER_sub_2+3Br
 saved_5_interrupt_pointers ptr16 5 dup(<0>) ; DATA XREF: start_0+B9o
           ; INIT_PART_init_stuff_sub_26+4Ao
     
+IFNDEF CLEANUP
 IFDEF DIRECT_START
-   db 6 dup(NOOP)
+   db 6 dup(EMPTY)
 ELSE
 main_menu_jump_table dw offset start_game ; DATA XREF: start_0+82r
     dw offset select_gfx
     dw offset shutdown_cleanup
 ENDIF    
+ENDIF
     
 config_tat_gfx_table_offset dw 0	; DATA XREF: GFX_SELECT_MENU_sub_9+27r
           ; read_config_and_resize_memory+4Aw ...
@@ -245,9 +254,10 @@ some_feature_flags dw 1			; DATA XREF: read_config_and_resize_memory+BCr
 					;	     = 11 = 3 (>= 0x8000 free paragraphs)
 					; -------------------------
           
+IFNDEF CLEANUP          
 IFDEF DIRECT_START
 
-   db 4 dup(NOOP)
+   db 4 dup(EMPTY)
 
 ELSE
           
@@ -260,6 +270,7 @@ text_y_offset db 0      ; DATA XREF: MAIN_MENU_sub_8+5w
           ; GFX_SELECT_MENU_sub_9+5w ...
 
 ENDIF
+ENDIF
 
 subprogram_exit_code db	0		; DATA XREF: GAME_START_sub_7+B3w
 					; start_0+32Fr
@@ -267,7 +278,7 @@ dos_version db 0      ; DATA XREF: start_0+1Aw
           ; interrupt_0x24r
           
 IFDEF DIRECT_START
-  db 5 dup(NOOP)
+  db 5 dup(EMPTY)
 ELSE
           
 grafic_type_supported_table db 5 dup(0)	; DATA XREF: GFX_SELECT_MENU_sub_9+18o
@@ -290,26 +301,31 @@ grafic_type_supported_table db 5 dup(0)	; DATA XREF: GFX_SELECT_MENU_sub_9+18o
 					; ---------------------------
 ENDIF          
        
+IFNDEF CLEANUP       
 IFDEF DIRECT_START
-  db 4 dup(NOOP)
+  db 4 dup(EMPTY)
 ELSE
   word_752	dw 0,0		; DATA XREF: START_GAME_IS_GFX_SUPPORTED_sub_12+1r
 					; START_GAME_IS_GFX_SUPPORTED_sub_12:loc_92r ...
 					; [0] =	active display
 					; [1] =	alternate display
-ENDIF          
+ENDIF         
+ENDIF 
 
+IFNDEF CLEANUP
 IFDEF DIRECT_START
-  db NOOP
+  db EMPTY
 ELSE          
 current_dos_drive db 0			; DATA XREF: START_GAME_DOES_FILE_EXIST_sub_19+14w
 					; START_GAME_DOES_FILE_EXIST_sub_19+5Ar
 ENDIF
+ENDIF
 
 saved_video_mode db 0			; DATA XREF: start_0+89r
 
+IFNDEF CLEANUP
 IFDEF DIRECT_START
-  db 177h dup(NOOP)
+  db 177h dup(EMPTY)
 ELSE
 
           ; INIT_PART_init_stuff_sub_26+5w
@@ -358,9 +374,11 @@ text_esc_or_space_message db 8 dup(53h), 2Eh, 0Dh, 50h,	72h, 65h, 2 dup(73h), 20
     db 2 dup(24h)
     
 ENDIF    
-    
+ENDIF
+   
+IFNDEF CLEANUP   
 IFDEF DIRECT_START
-  db 0EEh dup(NOOP)
+  db 0EEh dup(EMPTY)
 ELSE    
     
 ; __int16 text_main_menu2
@@ -382,9 +400,11 @@ text_main_menu	db 0Dh dup(20h), 48h, 4Fh, 53h,	54h, 41h, 47h, 45h, 10h	dup(20h)
     db 53h, 10h dup(20h), 0BAh, 20h, 0Dh
     
 ENDIF    
+ENDIF
     
+IFNDEF CLEANUP      
 IFDEF DIRECT_START
-    db 63h dup(NOOP)
+    db 63h dup(EMPTY)
 ELSE        
     
 ; __int16 press_a_function_key_text
@@ -397,11 +417,13 @@ press_a_function_key_text db 20h, 0BAh, 20h, 2, 23h, 0BAh, 20h, 0Dh, 20h, 0C8h, 
     db 0BCh, 24h
     
 ENDIF    
+ENDIF
     
+IFNDEF CLEANUP      
 IFDEF DIRECT_START
-    db 42h dup(NOOP)
+    db 42h dup(EMPTY)
 ELSE    
-    
+   
 ; __int16 select_video_card_text
 select_video_card_text db 0Dh, 20h, 0C9h, 0CDh, 2, 23h, 0BBh, 20h, 0Dh, 20h, 0BAh
           ; DATA XREF: GFX_SELECT_MENU_sub_9+11o
@@ -411,9 +433,11 @@ select_video_card_text db 0Dh, 20h, 0C9h, 0CDh, 2, 23h, 0BBh, 20h, 0Dh, 20h, 0BA
     db 0Dh, 20h, 0BAh, 20h, 2, 23h, 0BAh, 20h, 24h
     
 ENDIF
-    
+ENDIF
+
+IFNDEF CLEANUP      
 IFDEF DIRECT_START    
-  db 4dh dup(NOOP)
+  db 4dh dup(EMPTY)
 ELSE
     
 ; __int16 byte_631
@@ -447,9 +471,11 @@ press_a_key_text db 0C9h, 0CDh, 2, 14h, 0BBh, 0Dh, 0BAh, 5 dup(20h), 50h
           ;
           ;
 ENDIF
-          
+ENDIF
+     
+IFNDEF CLEANUP       
 IFDEF DIRECT_START
-  db 0d7h dup(NOOP)
+  db 0d7h dup(EMPTY)
 ELSE          
           ; byte_630 = grafic card selection
           ; ---------
@@ -493,10 +519,12 @@ text_gfx_menu	db 20h,	0BAh, 2	dup(20h), 46h, 31h, 3 dup(20h),	43h, 47h ;
 					;  §  F4   VGA	    16	colors		§ $
 					;  §  F5   HERCULES 2 colors		§ $
 ENDIF          
-          
+ENDIF
+     
+IFNDEF CLEANUP  
 IFDEF DIRECT_START
 
-  db 6Ah dup(NOOP)
+  db 6Ah dup(EMPTY)
 
 ELSE
           
@@ -514,9 +542,11 @@ text_drive_name_placeholder db 20h dup(31h), 0Dh, 69h, 6Eh, 20h, 74h, 68h, 65h,	
     db 69h, 76h, 65h, 2Eh, 24h
     
 ENDIF    
-    
+ENDIF
+
+IFNDEF CLEANUP      
 IFDEF DIRECT_START
-  db 186h dup(NOOP)
+  db 186h dup(EMPTY)
 ELSE    
     
 ; __int16 text_no_joystick_card_detected
@@ -573,6 +603,7 @@ text_joystick_calibration_error	db 2 dup(0Dh), 3, 10h, 4, 87h, 50h, 72h, 6Fh, 62
     db 72h, 20h, 6Ah, 6Fh, 79h, 73h, 74h, 69h, 63h, 6Bh, 2Eh
     db 24h
 
+ENDIF
 ENDIF
 
 ; =============== S U B R O U T I N E =======================================
@@ -1718,9 +1749,10 @@ start_0   endp ; sp-analysis failed ; AL = exit code
 
 ; =============== S U B R O U T I N E =======================================
 
+IFNDEF CLEANUP  
 IFDEF DIRECT_START
    
-   db 4Ch dup(NOOP)
+   db 4Ch dup(EMPTY)
 
 ELSE
 
@@ -1769,12 +1801,14 @@ loc_813:				; CODE XREF: MAIN_MENU_sub_8+3Dj
 MAIN_MENU_sub_8 endp
 
 ENDIF
+ENDIF
 
 ; =============== S U B R O U T I N E =======================================
 
+IFNDEF CLEANUP  
 IFDEF DIRECT_START
 
-  db 0A2h dup(NOOP) ; nops
+  db 0A2h dup(EMPTY) ; nops
 
 ELSE
 
@@ -1912,6 +1946,7 @@ loc_169:        ; CODE XREF: GFX_SELECT_MENU_sub_9+71j
     retn
 GFX_SELECT_MENU_sub_9 endp
 
+ENDIF
 ENDIF
 
 ; =============== S U B R O U T I N E =======================================
@@ -2112,11 +2147,10 @@ interrupt_0x97	endp
 ; ---------------------------------------------------------------------------
 ; START OF FUNCTION CHUNK FOR start_0
 
-select_gfx:       ; CODE XREF: start_0+82j
-
 IFDEF DIRECT_START
     db 6 dup(NOOP) ; nops
 ELSE    
+select_gfx:       ; CODE XREF: start_0+82j
           ; DATA XREF: seg000:01D9o
     call  GFX_SELECT_MENU_sub_9
 		jmp	main_menu_screen
@@ -2351,8 +2385,9 @@ START_GAME_sub_11    endp
 
 ; =============== S U B R O U T I N E =======================================
 
+IFNDEF CLEANUP
 IFDEF DIRECT_START
-  db 84h dup(NOOP)
+  db 84h dup(EMPTY)
 ELSE
 
 START_GAME_IS_GFX_SUPPORTED_sub_12 proc	near ; CODE XREF: start_0+2F1p
@@ -2429,9 +2464,11 @@ error:					; CODE XREF: START_GAME_IS_GFX_SUPPORTED_sub_12+7Cj
 START_GAME_IS_GFX_SUPPORTED_sub_12 endp
 
 ENDIF
+ENDIF
 
+IFNDEF CLEANUP
 IFDEF DIRECT_START
-  db 6 dup(NOOP) ; nops
+  db 6 dup(EMPTY) ; nops
 ELSE
 ; =============== S U B	R O U T	I N E =======================================
 ; no caller?
@@ -2445,11 +2482,13 @@ JOYSTICK_CALIBRATION proc near
 JOYSTICK_CALIBRATION endp
 
 ENDIF
+ENDIF
 
 ; =============== S U B R O U T I N E =======================================
 
+IFNDEF CLEANUP
 IFDEF DIRECT_START
-  db 1ah dup(NOOP)
+  db 1ah dup(EMPTY)
 ELSE
 
 ; void __usercall SOME_PRINTING_show_msg_box_sub_13(__int16 text_offset_@<ax>, __int16 seems_unused1_@<cx>, __int16 seems_unused2_@<dx>)
@@ -2471,11 +2510,13 @@ SOME_PRINTING_show_msg_box_sub_13 proc near ; CODE XREF: read_config_and_resize_
 SOME_PRINTING_show_msg_box_sub_13 endp
 
 ENDIF
+ENDIF
 
 ; =============== S U B R O U T I N E =======================================
 
+IFNDEF CLEANUP
 IFDEF DIRECT_START
-  db 3fh dup(NOOP)
+  db 3fh dup(EMPTY)
 ELSE
 
 SOME_PRINTING_THREE_sub_14 proc	near	; CODE XREF: SOME_PRINTING_show_msg_box_sub_13+1p
@@ -2510,11 +2551,13 @@ loc_633:        ; CODE XREF: SOME_PRINTING_THREE_sub_14+2Aj
 SOME_PRINTING_THREE_sub_14 endp
 
 ENDIF
+ENDIF
 
 ; =============== S U B R O U T I N E =======================================
 
+IFNDEF CLEANUP
 IFDEF DIRECT_START
-  db 1Dh dup(NOOP)
+  db 1Dh dup(EMPTY)
 ELSE
 
 init_video_mode_and_cursor proc near  ; CODE XREF: SOME_PRINTING_THREE_sub_14+3p
@@ -2551,11 +2594,13 @@ init_video_mode_and_cursor proc near  ; CODE XREF: SOME_PRINTING_THREE_sub_14+3
 init_video_mode_and_cursor endp
 
 ENDIF
+ENDIF
 
 ; =============== S U B R O U T I N E =======================================
 
+IFNDEF CLEANUP
 IFDEF DIRECT_START
-  db 1ah dup(NOOP)
+  db 1ah dup(EMPTY)
 ELSE
 
 LOADING_MSG_sub_16 proc near    ; CODE XREF: start_0+79p
@@ -2573,11 +2618,13 @@ LOADING_MSG_sub_16 proc near    ; CODE XREF: start_0+79p
 LOADING_MSG_sub_16 endp
 
 ENDIF
+ENDIF
 
 ; =============== S U B R O U T I N E =======================================
 
+IFNDEF CLEANUP
 IFDEF DIRECT_START
-  db 33h dup(NOOP)
+  db 33h dup(EMPTY)
 ELSE
 
 SOME_PRINTING_TWO_sub_17 proc near  ; CODE XREF: MAIN_MENU_sub_8p
@@ -2614,12 +2661,14 @@ SOME_PRINTING_TWO_sub_17 proc near  ; CODE XREF: MAIN_MENU_sub_8p
 SOME_PRINTING_TWO_sub_17 endp
 
 ENDIF
+ENDIF
 
 ; =============== S U B R O U T I N E =======================================
 
+IFNDEF CLEANUP
 IFDEF DIRECT_START
 
-  db 81h dup(NOOP)
+  db 81h dup(EMPTY)
 
 ELSE
 
@@ -2727,6 +2776,7 @@ loc_187:        ; CODE XREF: SOME_PRINTING_sub_18+33j
 SOME_PRINTING_sub_18 endp
 
 ENDIF
+ENDIF
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -2790,7 +2840,7 @@ patch8_end:
   IF patch8_rest_nops LT 0
     .ERR <patch8 code too big>
   ENDIF
-  db patch8_rest_nops dup(NOOP) ; nops
+  db patch8_rest_nops dup(EMPTY) ; nops
   ;----  
 
 ELSE
@@ -2929,7 +2979,7 @@ ENDIF
 ; =============== S U B R O U T I N E =======================================
 
 IFDEF DIRECT_START
-  db 20h dup(NOOP)
+  db 20h dup(EMPTY)
 ELSE
 
 WAIT_F_KEY_sub_20 proc near   ; CODE XREF: start_0:wait_key_loc_604p
@@ -3148,7 +3198,7 @@ interrupt_0x24	endp ; sp-analysis failed
 ; =============== S U B R O U T I N E =======================================
 
 IFDEF DIRECT_START
-  db 8 dup(NOOP)
+  db 8 dup(EMPTY)
 ELSE
 
 wait_key_check_esc proc	near		; CODE XREF: SOME_PRINTING_show_msg_box_sub_13+Ep
@@ -3165,7 +3215,7 @@ ENDIF
 
 IFDEF DIRECT_START
   ; remove joystick detection dead code
-  db 1F5h dup(NOOP) ; nops
+  db 1F5h dup(EMPTY) ; nops
 ELSE
 
 JOYSTICK_STUFF_sub_29 proc near		; CODE XREF: JOYSTICK_CALIBRATIONp
@@ -3553,7 +3603,14 @@ set_interrupt_vectors_0x97_and_0x24 endp
 ; ---------------------------------------------------------------------------
 dos_country_information db 20h dup(0) ; DATA XREF: INIT_PART_is_currency_franco
           ; INIT_PART_is_currency_franc+Co
-    db 1DEh dup(0)    ; also stack space !!!
+          
+IFDEF DIRECT_START
+  STACK_VALUE = 0BBh
+ELSE
+  STACK_VALUE = 0
+ENDIF          
+          
+    db 1DEh dup(STACK_VALUE)    ; also stack space !!!
 stack_space_end_unk_342 dw 0 ; DATA XREF: start_0+Ao start_0+31o
 
 IFDEF DIRECT_START
@@ -3579,7 +3636,7 @@ IF 1
 ENDIF  
 
 config_tat_buffer:
-  db 2Ch dup(NOOP) ; nops
+  db 2Ch dup(EMPTY) ; nops
   
 ELSE
 
@@ -3718,6 +3775,7 @@ SIMPLE_INIT_routine endp
   
   patch2_end:
   
+IFNDEF CLEANUP  
   ;----
   ; keep all the offsets around intact
   patch2_size = patch2_end - patch2_begin
@@ -3725,8 +3783,10 @@ SIMPLE_INIT_routine endp
   IF patch2_rest_nops LT 0
     .ERR <patch2 code too big>
   ENDIF
-  db patch2_rest_nops dup(NOOP) ; nops
+  db patch2_rest_nops dup(EMPTY) ; nops
   ;----
+ENDIF  
+  
 ELSE
 
 INIT_PART_is_tandy_system proc near ; CODE XREF: INIT_PART_init_stuff_sub_26+5Bp
