@@ -2,7 +2,7 @@ BINARY_EQUAL = 1 ; keep resulting AE.COM file 100% binary equal to ALPHA_E.COM i
 
 %OUT ====================================
 IFDEF DIRECT_START
-  %OUT DIRECT_START not set
+  %OUT DIRECT_START set
 ELSE
   %OUT DIRECT_START not set
 ENDIF
@@ -1948,7 +1948,6 @@ IFDEF DIRECT_START
     mov ah,09h
     int 21h
     jmp just_exit  
-    error4 db '4','$'
   patch4_end:    
   ;----
   ; keep all the offsets around intact
@@ -2134,7 +2133,6 @@ IFDEF DIRECT_START
     mov ah,09h
     int 21h
     jmp just_exit  
-    error5 db '5','$'
   patch5_end:    
   ;----
   ; keep all the offsets around intact
@@ -2775,8 +2773,7 @@ found_null_in_name:
     mov ah,09h
     int 21h
     jmp just_exit 
-    error8 db '8','$'
-    
+   
     
 file_exists:   
     cld ; always return file exists
@@ -3016,7 +3013,6 @@ IFDEF DIRECT_START
     mov ah,09h
     int 21h
     jmp just_exit 
-    error6 db '6','$'
   patch6_end:    
   ;----
   ; keep all the offsets around intact
@@ -3575,6 +3571,11 @@ IF 1
             db '  example: ae.com 4',0dh,0ah
             db '  for VGA',0dh,0ah,0dh,0ah
             db '$'
+            
+  error6 db '6','$'
+  error8 db '8','$'
+  error5 db '5','$'
+  error4 db '4','$'
 ENDIF  
 
 config_tat_buffer:

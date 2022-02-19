@@ -12,6 +12,24 @@ set INCLUDE=%watcom%\h
 set PATH=%WATCOM_BIN%;%PATH%
 set wlink_exe=%watcom_bin%\wlink.exe
 
+::goto do_uasm
+
+set tasm32_exe=%tools_dir%\TASM\BIN\TASM32.EXE
+echo TASM32 build
+%tasm32_exe% /dIS_TASM ae.asm
+%wlink_exe% name ae_org_tasm.com format dos com file ae.obj
+
+fc /B %org_dir%\ALPHA_E.COM ae_org_tasm.COM
+if %ERRORLEVEL% == 0 goto success
+echo !!!!
+echo !!!! Resulting AE_ORG.COM is not binary identical to original ALPHA_E.COM !!!
+echo !!!!
+
+pause
+exit /b 1
+
+:do_uasm
+
 %uasm_exe% ae.asm 
 %wlink_exe% name ae_org.com format dos com file ae.obj
 
