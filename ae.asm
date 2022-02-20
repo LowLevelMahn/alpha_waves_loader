@@ -137,8 +137,17 @@ word_50		dw 0			; DATA XREF: GAME_START_sub_7+96w
 					; GAME_START_sub_7+A9r
 word_51		dw 0			; DATA XREF: GAME_START_sub_7+91w
 					; GAME_START_sub_7+A4r
-byte_52		db 28h dup(0)		; DATA XREF: GAME_START_sub_6+5Do
+maybe_exe_header db 28h	dup(0)		; DATA XREF: GAME_START_sub_6+5Do
 					; start_0+35o ...
+					; ----
+					;
+					; https://wiki.osdev.org/MZ is sizeof 28h
+					;
+					;
+					; seems	do be always 0???
+					;
+					;
+					; ----
 stru_53		ptr16 <0>		; DATA XREF: read_some_file_sub_4+137w
           ; read_some_file_sub_4:loc_584w ...
 byte_55		db 0			; DATA XREF: EXE_HEADER_sub_2+1r
@@ -166,7 +175,7 @@ word_62		dw 0			; DATA XREF: EXE_HEADER_sub_2+17w
 					; EXE_HEADER_sub_2+9Ar	...
 word_63		dw 0			; DATA XREF: EXE_HEADER_sub_2+1Cw
 					; EXE_HEADER_sub_2+95r	...
-word_64		dw 0			; DATA XREF: EXE_HEADER_sub_2+2Dr
+dta_seg		dw 0			; DATA XREF: EXE_HEADER_sub_2+2Dr
 					; EXE_HEADER_sub_2+103r ...
 word_558	dw 0			; DATA XREF: EXE_HEADER_sub_2:loc_557w
 word_559	dw 0			; DATA XREF: EXE_HEADER_sub_2+12w
@@ -225,8 +234,6 @@ config_tat_disk_name_string dw 0	; DATA XREF: read_config_and_resize_memory+71w
           ; SOME_PRINTING_TWO_sub_17+1Cr
 config_tat_size	dw 0			; DATA XREF: read_config_and_resize_memory:loc_817w
 
-;------------
-; is 0C001h after INIT_PART_init_stuff_sub_26 in dosbox
 some_feature_flags dw 1			; DATA XREF: read_config_and_resize_memory+BCr
 					; read_config_and_resize_memory+C5w ...
 					;
@@ -688,7 +695,7 @@ loc_557:				; CODE XREF: EXE_HEADER_sub_2+7j
 		mov	cs:exe_pointer.ofs, si
 		mov	cs:exe_pointer.segm, ds
     mov ah, 50h
-    mov bx, cs:word_64
+		mov	bx, cs:dta_seg
     int 21h   ; DOS - 2+ internal - SET PSP SEGMENT
           ; BX = segment address of new PSP
     push  es
@@ -714,7 +721,7 @@ loc_557:				; CODE XREF: EXE_HEADER_sub_2+7j
 ; ---------------------------------------------------------------------------
 
 loc_560:				; CODE XREF: EXE_HEADER_sub_2+62j
-		cmp	word ptr [si], 5A4Dh ; 'MZ' or 'ZM' exe header signature??
+		cmp	word ptr [si], 'ZM' ; 'MZ' or 'ZM' exe header signature??
     jz  short loc_562
     stc
     pop bx
@@ -783,7 +790,7 @@ loc_563:				; CODE XREF: EXE_HEADER_sub_2+C0j
     mov word ptr cs:dword_70+2, ax
     mov ax, es:[si+14h]
     mov word ptr cs:dword_70, ax
-    mov es, cs:word_64
+		mov	es, cs:dta_seg
     cld
     mov di, es
     mov ax, cs:word_68
@@ -802,7 +809,7 @@ loc_563:				; CODE XREF: EXE_HEADER_sub_2+C0j
 
 loc_561:				; CODE XREF: EXE_HEADER_sub_2+64j
     cli
-    mov ax, cs:word_64
+		mov	ax, cs:dta_seg
     mov es, ax
     mov ds, ax
     mov ss, ax
@@ -1050,7 +1057,7 @@ GAME_START_sub_3 endp ;	sp-analysis failed
 read_some_file_sub_4 proc near		; CODE XREF: GAME_START_sub_7+2Ap
     mov ax, cs
     mov ds, ax
-    mov dx, bx
+		mov	dx, bx		; bx = offset filename
     mov ah, 3Dh
     mov al, 0
     int 21h   ; DOS - 2+ - OPEN DISK FILE WITH HANDLE
@@ -1387,12 +1394,12 @@ GAME_START_sub_6 proc near		; CODE XREF: GAME_START_sub_7+25p
 		mov	cs:far_ptr3.ofs, 100h
 		mov	dx, cs:maybe_exe_buffer.segm
 		add	cs:maybe_exe_buffer.segm, 16
-    mov cs:word_64, dx
+		mov	cs:dta_seg, dx
     mov ah, 26h
     int 21h   ; DOS - CREATE PSP
           ; DX = segment number at which to set up PSP
-		mov	dx, 128
-    mov ds, cs:word_64
+		mov	dx, 128		; dta_offs
+		mov	ds, cs:dta_seg
     mov ah, 1Ah
     int 21h   ; DOS - SET DISK TRANSFER AREA ADDRESS
           ; DS:DX -> disk transfer buffer
@@ -1414,7 +1421,7 @@ loc_592:				; CODE XREF: GAME_START_sub_6+11j
     mov ax, cs
     mov ds, ax
     assume ds:seg000
-    lea si, byte_52
+		lea	si, maybe_exe_header
 
 loc_594:				; CODE XREF: GAME_START_sub_6+6Bj
     mov ax, [si]
@@ -1579,11 +1586,11 @@ main_menu_screen::          ; CODE XREF: start_0+2B4j start_0+2CAj ...  ; make
     mov es, ax
     mov sp, offset stack_space_end_unk_342
     sti
-    lea ax, byte_52
+		lea	ax, maybe_exe_header
 		mov	cx, 10
     mov ax, cs
     mov ds, ax
-    lea si, byte_52
+		lea	si, maybe_exe_header
 
 loc_844:				; CODE XREF: start_0+53j
     les ax, [si]
@@ -1598,12 +1605,12 @@ loc_844:				; CODE XREF: start_0+53j
 loc_843:				; CODE XREF: start_0+4Aj
     add si, 4
 		loop	loc_844
-    lea di, byte_52
+		lea	di, maybe_exe_header
     mov ax, cs
     mov es, ax
     assume es:seg000
     xor ax, ax
-    mov cx, 40
+		mov	cx, 28h
     rep stosw
 
 IFDEF DIRECT_START
