@@ -38,157 +38,7 @@ start   proc near
     jmp start_0
 start   endp
 
-
-
 ; ---------------------------------------------------------------------------
-word_38		dw 0			; DATA XREF: GAME_START_sub_7+79w
-					; GAME_START_sub_7+8Do
-    db 80h, 0
-word_597	dw 0			; DATA XREF: GAME_START_sub_7+7Ew
-    db 5Ch, 0
-word_598	dw 0			; DATA XREF: GAME_START_sub_7+83w
-    db 6Ch, 0
-word_599	dw 0			; DATA XREF: GAME_START_sub_7+88w
-maybe_exe_buffer ptr16 <0>		; DATA XREF: read_some_file_sub_4+20r
-          ; read_some_file_sub_4+3Er ...
-					;
-					;
-					;
-					; --------------
-					;
-					; the_overwrite_buffer_begin
-					; [config.tat]
-					; [maybe_exe_buffer]
-					;
-					;
-					;
-					; --------------
-some_game_ptr	ptr16 <0>		; DATA XREF: read_some_file_sub_4+D7w
-          ; read_some_file_sub_4+1B5r ...
-word_44   dw 0      ; DATA XREF: read_some_file_sub_4+25w
-          ; read_some_file_sub_4+C2w ...
-word_45   dw 0      ; DATA XREF: read_some_file_sub_4+2Cw
-          ; read_some_file_sub_4+C7w ...
-far_ptr3	ptr16 <0>		; DATA XREF: GAME_START_sub_5+4Br
-					; GAME_START_sub_6+3w ...
-another_far_ptr	ptr16 <0>		; DATA XREF: read_some_file_sub_4:loc_580w
-          ; read_some_file_sub_4+145r ...
-somway_exe_buffer_seg dw 0		; DATA XREF: GAME_START_sub_5+Dr
-					; GAME_START_sub_5+63r	...
-word_50		dw 0			; DATA XREF: GAME_START_sub_7+96w
-					; GAME_START_sub_7+A9r
-word_51		dw 0			; DATA XREF: GAME_START_sub_7+91w
-					; GAME_START_sub_7+A4r
-maybe_exe_header db 28h	dup(0)		; DATA XREF: GAME_START_sub_6+5Do
-					; start_0+35o ...
-					; ----
-					;
-					; https://wiki.osdev.org/MZ is sizeof 28h
-					;
-					;
-					; seems	do be always 0???
-					;
-					;
-					; ----
-stru_53		ptr16 <0>		; DATA XREF: read_some_file_sub_4+137w
-          ; read_some_file_sub_4:loc_584w ...
-byte_55		db 0			; DATA XREF: EXE_HEADER_sub_2+1r
-					; EXE_HEADER_sub_2+5Cr	...
-        
-byte_57		db 0			; DATA XREF: GAME_START_sub_3+42o
-					; GAME_START_sub_3+7Cr	...
-byte_569	db 0			; DATA XREF: GAME_START_sub_3:loc_577r
-word_60		dw 0			; DATA XREF: GAME_START_sub_3+76r
-					; GAME_START_sub_3+EDr	...
-    db 4 dup(0)
-stru_61		ptr16 <0>		; DATA XREF: GAME_START_sub_3+49r
-					; GAME_START_sub_3+61w	...
-word_62		dw 0			; DATA XREF: EXE_HEADER_sub_2+17w
-					; EXE_HEADER_sub_2+9Ar	...
-word_63		dw 0			; DATA XREF: EXE_HEADER_sub_2+1Cw
-					; EXE_HEADER_sub_2+95r	...
-dta_seg		dw 0			; DATA XREF: EXE_HEADER_sub_2+2Dr
-					; EXE_HEADER_sub_2+103r ...
-word_558	dw 0			; DATA XREF: EXE_HEADER_sub_2:loc_557w
-word_559	dw 0			; DATA XREF: EXE_HEADER_sub_2+12w
-word_68		dw 0			; DATA XREF: EXE_HEADER_sub_2+E3w
-					; EXE_HEADER_sub_2+10Br
-word_69		dw 0			; DATA XREF: EXE_HEADER_sub_2+EDw
-					; EXE_HEADER_sub_2+10Fr
-dword_70	dd 0			; DATA XREF: EXE_HEADER_sub_2+FFw
-					; EXE_HEADER_sub_2+129r ...
-; __int16 exe_pointer
-exe_pointer	ptr16 <0>		; DATA XREF: EXE_HEADER_sub_2+21w
-					; EXE_HEADER_sub_2+57r	...
-pointer3	ptr16 <0>		; DATA XREF: EXE_HEADER_sub_2+4Dw
-					; EXE_HEADER_sub_2+85r	...
-start_psp dw 0      ; DATA XREF: start_0+11w start_0+8Fr
-saved_int1_ptr	ptr16 <0>		; DATA XREF: EXE_HEADER_sub_2+3Br
-					; start_0+9Er ...
-saved_5_interrupt_pointers ptr16 5 dup(<0>) ; DATA XREF: start_0+B9o
-          ; INIT_PART_init_stuff_sub_26+4Ao
-    
-config_tat_gfx_table_offset dw 0	; DATA XREF: GFX_SELECT_MENU_sub_9+27r
-          ; read_config_and_resize_memory+4Aw ...
-					; -------------------------------------------
-					;
-					;
-					;
-					; its a	pointer	to a uint16_t[5] table of offsets
-          ;
-          ; uint16_t* gfx_related_table
-					;
-					;
-					; contains (i think) the code offsets for each grafic card type	in the progs.cc
-					;
-					;
-					;
-					;
-					;
-					; -------------------------------------------
-config_tat_game_name_string dw 0	; DATA XREF: MAIN_MENU_sub_8+1Cr
-          ; MAIN_MENU_sub_8+35r ...
-config_tat_publisher_string dw 0	; DATA XREF: read_config_and_resize_memory+64w
-					; START_GAME_DOES_FILE_EXIST_sub_19+6Dr
-config_tat_content_end dw 0		; DATA XREF: read_config_and_resize_memory+7Ew
-config_tat_filename db 'Config.tat',0   ; DATA XREF: read_config_and_resize_memory+5o
-config_tat_disk_name_string dw 0	; DATA XREF: read_config_and_resize_memory+71w
-          ; SOME_PRINTING_TWO_sub_17+1Cr
-config_tat_size	dw 0			; DATA XREF: read_config_and_resize_memory:loc_817w
-
-some_feature_flags dw 1			; DATA XREF: read_config_and_resize_memory+BCr
-					; read_config_and_resize_memory+C5w ...
-					;
-					;
-					;
-					; --------------------------
-					; bit[	0] = ??? [active on startup]
-					; bit[ 1]
-					; bit[ 2]
-					; bit[ 3]
-					; bit[ 4]
-					; bit[ 5]
-					; bit[ 6]
-					; bit[ 7]
-					; bit[ 8]
-					; bit[ 9]
-					; bit[10]
-					; bit[11]
-					; bit[12] = joystick detected
-					; bit[ 13] = currency =	franc
-					; bit[14+15]  =	mem size type?
-					;	     = 00 = 0 (< 0x4000	free paragraphs)
-					;	     = 01 = 1 (>= 0x4000 free paragraphs)
-					;	     = 10 = 2 (>= 0x6000 free paragraphs)
-					;	     = 11 = 3 (>= 0x8000 free paragraphs)
-					; -------------------------
-
-subprogram_exit_code db	0		; DATA XREF: GAME_START_sub_7+B3w
-					; start_0+32Fr
-dos_version db 0      ; DATA XREF: start_0+1Aw
-          ; interrupt_0x24r
-
-saved_video_mode db 0			; DATA XREF: start_0+89r
 
     
 ; =============== S U B R O U T I N E =======================================
@@ -1668,8 +1518,23 @@ START_GAME_DOES_FILE_EXIST_sub_19 endp
 
 ; =============== S U B R O U T I N E =======================================
 
-; ---------------------------------------------------------------------------
-; START	OF FUNCTION CHUNK FOR START_GAME_FEATURE_FLAG_STUFF_sub_21
+START_GAME_FEATURE_FLAG_STUFF_sub_21 proc near ; CODE XREF: START_GAME_sub_22+3p
+
+  	mov	si, cs:[bx+gfx_block_t.word_16h]
+		mov	ax, si		; always 0
+		and	ax, 0F000h	; 0xF000 = 0b1111000000000000
+		mov	cx, cs:some_feature_flags
+		and	cx, 0F000h	; 0xF000 = 0b1111000000000000
+		and	si, 3		; 0x0003 = 0b0000000000000011
+
+    cmp si, 0
+    jz loc_206
+    cmp si, 1
+    jz loc_203
+    cmp si, 2
+    jz loc_205
+    ; or 3
+    jmp loc_205
 
 loc_203:				; CODE XREF: START_GAME_FEATURE_FLAG_STUFF_sub_21+17j
           ; DATA XREF: seg000:154Co
@@ -1693,15 +1558,25 @@ loc_204:				; CODE XREF: START_GAME_FEATURE_FLAG_STUFF_sub_21-31j
     retn
 ; ---------------------------------------------------------------------------
 
+   ; TODO: analyse again - error reporting
 loc_206:				; CODE XREF: START_GAME_FEATURE_FLAG_STUFF_sub_21+17j
 					; DATA XREF: seg000:jump_table_off_653o
     cmp ax, cx
     jb  short loc_651
 
+    ; just exit
     mov dx,offset error6
     mov ah,09h
     int 21h
     jmp just_exit 
+    
+loc_651:
+    stc
+    retn    
+
+IF 0
+    ; dead code in loader
+    ; TODO: analyse - could be old XT stuff
 
     cli
     in  al, 61h   ; PC/XT PPI port B bits:
@@ -1712,7 +1587,9 @@ loc_206:				; CODE XREF: START_GAME_FEATURE_FLAG_STUFF_sub_21+17j
           ; 5: 0=enable I/O channel check
           ; 6: 0=hold keyboard clock low
           ; 7: 0=enable kbrd
-    and al, 0FCh
+    and al, 0FCh ; 0b11111100
+      ; 6: hold keyboard clock low = 0
+      ; 7: enable kbrd = 0
     out 61h, al   ; PC/XT PPI port B bits:
 					; 0: Tmr 2 gate	ÍËÍ OR	03H=spkr ON
 					; 1: Tmr 2 data	Í¼  AND	0fcH=spkr OFF
@@ -1723,33 +1600,14 @@ loc_206:				; CODE XREF: START_GAME_FEATURE_FLAG_STUFF_sub_21+17j
           ; 7: 0=enable kbrd
     sti
 		jmp	main_menu_screen
+
 ; ---------------------------------------------------------------------------
 
 loc_651:				; CODE XREF: START_GAME_FEATURE_FLAG_STUFF_sub_21-23j
     stc
     retn
-; END OF FUNCTION CHUNK	FOR START_GAME_FEATURE_FLAG_STUFF_sub_21
-; ---------------------------------------------------------------------------
-jump_table_off_653 dw offset loc_206	; DATA XREF: START_GAME_FEATURE_FLAG_STUFF_sub_21+17r
-    dw offset loc_203
-    dw offset loc_205
-    dw offset loc_205
+ENDIF    
 
-; =============== S U B R O U T I N E =======================================
-
-
-START_GAME_FEATURE_FLAG_STUFF_sub_21 proc near ; CODE XREF: START_GAME_sub_22+3p
-
-; FUNCTION CHUNK AT 151F SIZE 0000002B BYTES
-
-		mov	si, cs:[bx+gfx_block_t.word_16h]
-		mov	ax, si		; always 0
-		and	ax, 0F000h	; 0xF000 = 0b1111000000000000
-		mov	cx, cs:some_feature_flags
-		and	cx, 0F000h	; 0xF000 = 0b1111000000000000
-		and	si, 3		; 0x0003 = 0b0000000000000011
-		shl	si, 1		; si *=	2
-		jmp	cs:jump_table_off_653[si] ; always si =	0
 START_GAME_FEATURE_FLAG_STUFF_sub_21 endp
 
 
@@ -1757,7 +1615,8 @@ START_GAME_FEATURE_FLAG_STUFF_sub_21 endp
 
 
 START_GAME_sub_22 proc near		; CODE XREF: start_0+305p start_0+31Fp ...
-		call	set_interrupt_vectors_0x97_and_0x24 ; -------
+IF 0		
+    call	set_interrupt_vectors_0x97_and_0x24 ; -------
 					;
 					;
 					;
@@ -1767,6 +1626,7 @@ START_GAME_sub_22 proc near		; CODE XREF: start_0+305p start_0+31Fp ...
 					;
 					;
 					; ---------------
+ENDIF    
 		call	START_GAME_FEATURE_FLAG_STUFF_sub_21
 		jnb	short locret_654 ; if(!CF)...
 		call	START_GAME_DOES_FILE_EXIST_sub_19
@@ -1832,28 +1692,6 @@ set_interrupt_vectors_0x97_and_0x24 proc near ;	CODE XREF: START_GAME_sub_22p
           ; DS:DX = new vector to be used for specified interrupt
     retn
 set_interrupt_vectors_0x97_and_0x24 endp
-
-          
-    db 1DEh dup(0BBh)    ; also stack space !!!
-stack_space_end_unk_342 dw 0 ; DATA XREF: start_0+Ao start_0+31o
-
-  gfx_mode dw 0
-  cmd_error db 'you need to select the video card type',0dh,0ah,0dh,0ah
-            db 'ae.com 0-4',0dh,0ah
-            db '  0=CGA',0dh,0ah
-            db '  1=EGA',0dh,0ah
-            db '  2=Tandy',0dh,0ah
-            db '  3=Hercules',0dh,0ah
-            db '  4=VGA',0dh,0ah
-            db 0dh,0ah
-            db '  example: ae.com 4',0dh,0ah
-            db '  for VGA',0dh,0ah,0dh,0ah
-            db '$'
-            
-  error6 db '6','$'
-  error8 db '8','$'
-  error5 db '5','$'
-  error4 db '4','$'
 
 SIMPLE_INIT_routine proc near ; CODE XREF: start_0+1Fp
     push  ds
@@ -1931,7 +1769,180 @@ ok:
     retn
 SIMPLE_INIT_routine endp    
 
-config_tat_buffer:
+; Data
+
+word_38		dw 0			; DATA XREF: GAME_START_sub_7+79w
+					; GAME_START_sub_7+8Do
+    db 80h, 0
+word_597	dw 0			; DATA XREF: GAME_START_sub_7+7Ew
+    db 5Ch, 0
+word_598	dw 0			; DATA XREF: GAME_START_sub_7+83w
+    db 6Ch, 0
+word_599	dw 0			; DATA XREF: GAME_START_sub_7+88w
+maybe_exe_buffer ptr16 <0>		; DATA XREF: read_some_file_sub_4+20r
+          ; read_some_file_sub_4+3Er ...
+					;
+					;
+					;
+					; --------------
+					;
+					; the_overwrite_buffer_begin
+					; [config.tat]
+					; [maybe_exe_buffer]
+					;
+					;
+					;
+					; --------------
+some_game_ptr	ptr16 <0>		; DATA XREF: read_some_file_sub_4+D7w
+          ; read_some_file_sub_4+1B5r ...
+word_44   dw 0      ; DATA XREF: read_some_file_sub_4+25w
+          ; read_some_file_sub_4+C2w ...
+word_45   dw 0      ; DATA XREF: read_some_file_sub_4+2Cw
+          ; read_some_file_sub_4+C7w ...
+far_ptr3	ptr16 <0>		; DATA XREF: GAME_START_sub_5+4Br
+					; GAME_START_sub_6+3w ...
+another_far_ptr	ptr16 <0>		; DATA XREF: read_some_file_sub_4:loc_580w
+          ; read_some_file_sub_4+145r ...
+somway_exe_buffer_seg dw 0		; DATA XREF: GAME_START_sub_5+Dr
+					; GAME_START_sub_5+63r	...
+word_50		dw 0			; DATA XREF: GAME_START_sub_7+96w
+					; GAME_START_sub_7+A9r
+word_51		dw 0			; DATA XREF: GAME_START_sub_7+91w
+					; GAME_START_sub_7+A4r
+maybe_exe_header db 28h	dup(0)		; DATA XREF: GAME_START_sub_6+5Do
+					; start_0+35o ...
+					; ----
+					;
+					; https://wiki.osdev.org/MZ is sizeof 28h
+					;
+					;
+					; seems	do be always 0???
+					;
+					;
+					; ----
+stru_53		ptr16 <0>		; DATA XREF: read_some_file_sub_4+137w
+          ; read_some_file_sub_4:loc_584w ...
+byte_55		db 0			; DATA XREF: EXE_HEADER_sub_2+1r
+					; EXE_HEADER_sub_2+5Cr	...
+        
+byte_57		db 0			; DATA XREF: GAME_START_sub_3+42o
+					; GAME_START_sub_3+7Cr	...
+byte_569	db 0			; DATA XREF: GAME_START_sub_3:loc_577r
+word_60		dw 0			; DATA XREF: GAME_START_sub_3+76r
+					; GAME_START_sub_3+EDr	...
+    db 4 dup(0)
+stru_61		ptr16 <0>		; DATA XREF: GAME_START_sub_3+49r
+					; GAME_START_sub_3+61w	...
+word_62		dw 0			; DATA XREF: EXE_HEADER_sub_2+17w
+					; EXE_HEADER_sub_2+9Ar	...
+word_63		dw 0			; DATA XREF: EXE_HEADER_sub_2+1Cw
+					; EXE_HEADER_sub_2+95r	...
+dta_seg		dw 0			; DATA XREF: EXE_HEADER_sub_2+2Dr
+					; EXE_HEADER_sub_2+103r ...
+word_558	dw 0			; DATA XREF: EXE_HEADER_sub_2:loc_557w
+word_559	dw 0			; DATA XREF: EXE_HEADER_sub_2+12w
+word_68		dw 0			; DATA XREF: EXE_HEADER_sub_2+E3w
+					; EXE_HEADER_sub_2+10Br
+word_69		dw 0			; DATA XREF: EXE_HEADER_sub_2+EDw
+					; EXE_HEADER_sub_2+10Fr
+dword_70	dd 0			; DATA XREF: EXE_HEADER_sub_2+FFw
+					; EXE_HEADER_sub_2+129r ...
+; __int16 exe_pointer
+exe_pointer	ptr16 <0>		; DATA XREF: EXE_HEADER_sub_2+21w
+					; EXE_HEADER_sub_2+57r	...
+pointer3	ptr16 <0>		; DATA XREF: EXE_HEADER_sub_2+4Dw
+					; EXE_HEADER_sub_2+85r	...
+start_psp dw 0      ; DATA XREF: start_0+11w start_0+8Fr
+saved_int1_ptr	ptr16 <0>		; DATA XREF: EXE_HEADER_sub_2+3Br
+					; start_0+9Er ...
+saved_5_interrupt_pointers ptr16 5 dup(<0>) ; DATA XREF: start_0+B9o
+          ; INIT_PART_init_stuff_sub_26+4Ao
+    
+config_tat_gfx_table_offset dw 0	; DATA XREF: GFX_SELECT_MENU_sub_9+27r
+          ; read_config_and_resize_memory+4Aw ...
+					; -------------------------------------------
+					;
+					;
+					;
+					; its a	pointer	to a uint16_t[5] table of offsets
+          ;
+          ; uint16_t* gfx_related_table
+					;
+					;
+					; contains (i think) the code offsets for each grafic card type	in the progs.cc
+					;
+					;
+					;
+					;
+					;
+					; -------------------------------------------
+config_tat_game_name_string dw 0	; DATA XREF: MAIN_MENU_sub_8+1Cr
+          ; MAIN_MENU_sub_8+35r ...
+config_tat_publisher_string dw 0	; DATA XREF: read_config_and_resize_memory+64w
+					; START_GAME_DOES_FILE_EXIST_sub_19+6Dr
+config_tat_content_end dw 0		; DATA XREF: read_config_and_resize_memory+7Ew
+config_tat_filename db 'Config.tat',0   ; DATA XREF: read_config_and_resize_memory+5o
+config_tat_disk_name_string dw 0	; DATA XREF: read_config_and_resize_memory+71w
+          ; SOME_PRINTING_TWO_sub_17+1Cr
+config_tat_size	dw 0			; DATA XREF: read_config_and_resize_memory:loc_817w
+
+some_feature_flags dw 1			; DATA XREF: read_config_and_resize_memory+BCr
+					; read_config_and_resize_memory+C5w ...
+					;
+					;
+					;
+					; --------------------------
+					; bit[	0] = ??? [active on startup]
+					; bit[ 1]
+					; bit[ 2]
+					; bit[ 3]
+					; bit[ 4]
+					; bit[ 5]
+					; bit[ 6]
+					; bit[ 7]
+					; bit[ 8]
+					; bit[ 9]
+					; bit[10]
+					; bit[11]
+					; bit[12] = joystick detected
+					; bit[ 13] = currency =	franc
+					; bit[14+15]  =	mem size type?
+					;	     = 00 = 0 (< 0x4000	free paragraphs)
+					;	     = 01 = 1 (>= 0x4000 free paragraphs)
+					;	     = 10 = 2 (>= 0x6000 free paragraphs)
+					;	     = 11 = 3 (>= 0x8000 free paragraphs)
+					; -------------------------
+
+subprogram_exit_code db	0		; DATA XREF: GAME_START_sub_7+B3w
+					; start_0+32Fr
+dos_version db 0      ; DATA XREF: start_0+1Aw
+          ; interrupt_0x24r
+
+saved_video_mode db 0			; DATA XREF: start_0+89r
+          
+    db 1DEh dup(0BBh)    ; also stack space !!!
+stack_space_end_unk_342 dw 0 ; DATA XREF: start_0+Ao start_0+31o
+
+  gfx_mode dw 0
+  cmd_error db 'you need to select the video card type',0dh,0ah,0dh,0ah
+            db 'ae.com 0-4',0dh,0ah
+            db '  0=CGA',0dh,0ah
+            db '  1=EGA',0dh,0ah
+            db '  2=Tandy',0dh,0ah
+            db '  3=Hercules',0dh,0ah
+            db '  4=VGA',0dh,0ah
+            db 0dh,0ah
+            db '  example: ae.com 4',0dh,0ah
+            db '  for VGA',0dh,0ah,0dh,0ah
+            db '$'
+            
+  error6 db '6','$'
+  error8 db '8','$'
+  error5 db '5','$'
+  error4 db '4','$'
+
+; here gets the config.tat content stored
+config_tat_buffer db 563 dup(0CCh)
 
 seg000    ends
 
