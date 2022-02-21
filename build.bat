@@ -12,42 +12,51 @@ set INCLUDE=%watcom%\h
 set PATH=%WATCOM_BIN%;%PATH%
 set wlink_exe=%watcom_bin%\wlink.exe
 
-goto do_uasm
-
-set tasm32_exe=%tools_dir%\TASM\BIN\TASM32.EXE
-echo TASM32 build
-%tasm32_exe% /dIS_TASM ae.asm
-%wlink_exe% name ae_org_tasm.com format dos com file ae.obj
-
-fc /B %org_dir%\ALPHA_E.COM ae_org_tasm.COM
-if %ERRORLEVEL% == 0 goto success
-echo !!!!
-echo !!!! Resulting AE_ORG.COM is not binary identical to original ALPHA_E.COM !!!
-echo !!!!
-
+%uasm_exe% ae.asm
+if %ERRORLEVEL% EQU 0 goto next1
+echo errorlevel %ERRORLEVEL%
 pause
 exit /b 1
 
-:do_uasm
-
-%uasm_exe% ae.asm 
+:next1
 %wlink_exe% name ae_org.com format dos com file ae.obj
+if %ERRORLEVEL% EQU 0 goto next2
+echo errorlevel %ERRORLEVEL%
+pause
+exit /b 1
 
+:next2
 fc /B %org_dir%\ALPHA_E.COM ae_org.COM
-if %ERRORLEVEL% == 0 goto success
+if %ERRORLEVEL% == 0 goto next3
 echo !!!!
 echo !!!! Resulting AE_ORG.COM is not binary identical to original ALPHA_E.COM !!!
 echo !!!!
-
 pause
 exit /b 1
 
 rem with reduced code down to start the game and exit
 
-:success
-
+:next3
 %uasm_exe% -DDIRECT_START -DCLEANUP ae.asm 
+if %ERRORLEVEL% EQU 0 goto next4
+echo errorlevel %ERRORLEVEL%
+pause
+exit /b 1
+
+:next4
 %wlink_exe% name ae.com format dos com file ae.obj
+if %ERRORLEVEL% EQU 0 goto next5
+echo errorlevel %ERRORLEVEL%
+pause
+exit /b 1
+
+:next5
 copy ae.com %org_dir%
+if %ERRORLEVEL% EQU 0 goto next6
+echo errorlevel %ERRORLEVEL%
+pause
+exit /b 1
+
+:next6
 
 pause

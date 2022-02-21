@@ -12,8 +12,26 @@ set INCLUDE=%watcom%\h
 set PATH=%WATCOM_BIN%;%PATH%
 set wlink_exe=%watcom_bin%\wlink.exe
 
-%uasm_exe% loader.asm 
+%uasm_exe% loader.asm
+if %ERRORLEVEL% EQU 0 goto next1
+echo errorlevel %ERRORLEVEL%
+pause
+exit /b 1
+
+:next1
 %wlink_exe% name loader.com format dos com file loader.obj
+if %ERRORLEVEL% EQU 0 goto next2
+echo errorlevel %ERRORLEVEL%
+pause
+exit /b 1
+
+:next2
 copy loader.com %org_dir%
+if %ERRORLEVEL% EQU 0 goto next3
+echo errorlevel %ERRORLEVEL%
+pause
+exit /b 1
+
+:next3
 
 pause
