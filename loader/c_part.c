@@ -5,10 +5,15 @@
 #include <string.h>
 #endif
 
-#if defined(__DMC__)
+#if defined(__DMC__) || defined(__BORLANDC__)
 #include <dos.h>
 #else
 #include <i86.h>
+#endif
+
+#if defined(__BORLANDC__)  
+// BCC 5.02 got no inline/__inline/__forceinline ?
+#define inline
 #endif
 
 typedef signed char int8_t;
@@ -34,6 +39,8 @@ STATIC_ASSERT(sizeof(uint32_t)==4)
 #define VERSION 1
 
 #if VERSION == 0
+
+// only compiles with Watcom wcc
 
 // original reverse engineering function
 void cdecl near memcopy_c(uint16_t es_, uint16_t di_, uint16_t ds_, uint16_t si_, uint16_t bx_, uint16_t cx_)
@@ -114,7 +121,8 @@ modify [ax dx si di cx bx];
     SEG_ += (OFS_ / 16); \
     OFS_ = OFS_ % 16; \
   }
-  
+ 
+// does not crash game if inlined
 static /*inline*/ void normalize_ptr(uint16_t* seg_, uint16_t* ofs_)
 {
   NORMALIZE_PTR(*seg_, *ofs_);
@@ -145,7 +153,8 @@ void cdecl near memcopy_c(uint16_t es_, uint16_t di_, uint16_t ds_, uint16_t si_
     bytes = rest < 512 ? rest : 512;
     rest -= bytes;
     
-#if 0
+#if 0 // crash at call cs:0A6A
+    // crashes game (tested with wcc/dmc/bcc + wlink/ulink)
     normalize_ptr(&es_, &di_);
     normalize_ptr(&ds_, &si_);
 #else

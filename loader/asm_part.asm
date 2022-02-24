@@ -41,7 +41,6 @@ GAME_START_sub_1_memcpy proc near
     push  bx
     push  cx
     
-IF 1
     push cx ; lo_size
     push bx ; hi_size
     ; src_
@@ -50,17 +49,7 @@ IF 1
     ; dest_
     push di ; dest.ofs    
     push es ; dest.seg
-ELSE    
-    ; 32bit size_
-    push bx ; hi_size
-    push cx ; lo_size
-    ; uint8_t far* src_
-    push ds ; src.seg
-    push si ; src.ofs
-    ; uint8_t far* dest_
-    push es ; dest.seg
-    push di ; dest.ofs    
-ENDIF    
+   
     call _memcopy_c
     add sp,6*2
     

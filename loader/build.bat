@@ -4,16 +4,14 @@ rem ASSEMBLER=WASM,UASM,MASM
 rem COMPILER=WCC,DMC(,BCC)
 rem LINKER=WLINK,ULINK,OPTLINK
 
-rem set use_uasm=1
-rem set use_masm=0
-rem set use_wasm=0
+rem which_asm=0,1,2
+rem 0=uasm, 1=masm, 2=wasm
 
-rem set use_wcc=1
-rem set use_dmc=0
+rem which_compiler=0,1,2
+rem 0=wcc, 1=dmc, 2=bcc
 
-rem set use_wlink=1
-rem set use_ulink=0
-rem set use_optlink=0
+rem which_linker=0,1,2
+rem 0=wlink, 1=ulink, 2=optlink
 
 rem if %use_masm% equ 1 (
 rem ...
@@ -45,15 +43,12 @@ copy wc_cp.exe %org_dir%
 echo =======================
 pause
 
-::goto ende
+goto no_ml
 
-:: masm 6.15 supports .286
-:: https://sites.google.com/site/pcdosretro/masmhist
 :: Version 9 (VS2008) seems to be latest with 16bit support, Version 10 (VS2010) dropped 16-bit assembly support
 :: Version 9 needs /omf, Version 6.15 has omf as only output
 :: Version 10 does not support .286
 
-::set PATH=%PATH%;%tools_dir%\masm\6.15\bin;%PATH%
 set PATH=%PATH%;%tools_dir%\masm\9
 
 ml.exe /c /omf main.asm
@@ -70,11 +65,12 @@ echo errorlevel %ERRORLEVEL%
 pause
 exit /b 1
 
-:next2
-goto next4
+:no_ml
 
-%wasm_exe% main.asm -mt -bt=dos
-::%uasm_exe% main.asm -mt -bt=dos
+:next2
+
+::%wasm_exe% main.asm -mt -bt=dos
+%uasm_exe% main.asm -mt -bt=dos
 if %ERRORLEVEL% EQU 0 goto next3
 echo errorlevel %ERRORLEVEL%
 pause
@@ -82,8 +78,8 @@ exit /b 1
 
 :next3
 
-%wasm_exe% asm_part.asm -mt -bt=dos
-::%uasm_exe% asm_part.asm
+::%wasm_exe% asm_part.asm -mt -bt=dos
+%uasm_exe% asm_part.asm
 if %ERRORLEVEL% EQU 0 goto next4
 echo errorlevel %ERRORLEVEL%
 pause
@@ -91,25 +87,40 @@ exit /b 1
 
 :next4
 
+rem -nt=seg000 renames _TEXT to seg000 make it cleanly combineable with wlink
+%wcc_exe% c_part.c -2 -zl -zls -s -bt=dos -ms -nt=seg000
+
+goto no_dmc_no_bcc
+
 set DMC_DIR=%tools_dir%\dm857c\dm
 set DMC_BIN_DIR=%DMC_DIR%\bin
 set INCLUDE=%DMC_DIR%\include
-SET LIB=%DMC_DIR%\lib;%LIB%
+SET LIB=%DMC_DIR%\lib
 set PATH=%DMC_BIN_DIR%;%PATH%
 
 pause
 dmc -odmc_cp.exe c_part.c -2 -ms -DWITH_MAIN
 copy dmc_cp.exe %org_dir%
 
-rem -nt=seg000 renames _TEXT to seg000 make it cleanly combineable with wlink
-rem %wcc_exe% c_part.c -2 -zl -zls -s -bt=dos -ms -nt=seg000
 dmc -NL -NTseg000 -c -2 -ms c_part.c 
 pause
+
+rem http://bitsavers.informatik.uni-stuttgart.de/pdf/borland/borland_C++/Borland_C++_Version_3.1_Users_Guide_1992.pdf
+set BCC_DIR=%tools_dir%\BC5.02
+set BCC_BIN=%BCC_DIR%\BIN
+set INCLUDE=%BCC_DIR%\INCLUDE
+set PATH=%BCC_BIN%;%PATH%
+set LIB=%BCC_DIR%\LIB
+set bcc_exe=%BCC_BIN%\bcc.exe
+
+bcc -zCseg000 -c -2 -ms -I%INCLUDE% -L%LIB% c_part.c
 
 if %ERRORLEVEL% EQU 0 goto next5
 echo errorlevel %ERRORLEVEL%
 pause
 exit /b 1
+
+:no_dmc_no_bcc
 
 :next5
 
