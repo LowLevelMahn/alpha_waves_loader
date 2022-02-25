@@ -1207,6 +1207,29 @@ start_0   endp ; sp-analysis failed ; AL = exit code
 
 ; =============== S U B R O U T I N E =======================================
 
+public C config_tat_filename
+public C config_tat_buffer
+public C config_tat_size
+public C maybe_exe_buffer
+public C some_feature_flags
+public C config_tat_game_name_string
+public C config_tat_publisher_string
+public C config_tat_disk_name_string
+public C config_tat_content_end
+public C config_tat_gfx_table_offset
+
+IF 1
+
+read_config_and_resize_memory proc near
+
+  extern _read_config_and_resize_memory_C:near ; void read_config_and_resize_memory_C()
+  call _read_config_and_resize_memory_C
+  clc
+  retn
+
+read_config_and_resize_memory endp
+
+ELSE
 
 read_config_and_resize_memory proc near ; CODE XREF: start_0+22p
     push  ds
@@ -1366,6 +1389,7 @@ loc_170:        ; CODE XREF: read_config_and_resize_memory+A2j
     retn      ; CF still 0 - No Error
 read_config_and_resize_memory endp
 
+ENDIF
 
 ; =============== S U B R O U T I N E =======================================
 

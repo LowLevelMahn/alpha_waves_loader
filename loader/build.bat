@@ -89,7 +89,6 @@ exit /b 1
 
 rem -nt=seg000 renames _TEXT to seg000 make it cleanly combineable with wlink
 %wcc_exe% c_part.c -2 -zl -zls -s -bt=dos -ms -nt=seg000
-
 goto no_dmc_no_bcc
 
 set DMC_DIR=%tools_dir%\dm857c\dm
