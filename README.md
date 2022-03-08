@@ -42,6 +42,8 @@ my reduced loader
 | tools_howto.txt   | how to get the needed build tools (UASM, WLink) - very easy to install                                 |
 | ae_org.com        | ae.asm build as-is - is binary identical to ALPHA_E.com (checked by build.bat)                         |
 | ae.com            | ae.asm build with DIRECT_START, direct start of the game, no menu, most code NOPed out                 |
+| loader.asm        | like ae.asm but all dead code removed (just the loader code)                                           |
+| build_loader.bat  | builds the loader.asm                                                                                  |
 
  **tools_dir** variable in build.bat needs to be set to suits your environment
  
