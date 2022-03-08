@@ -93,8 +93,15 @@ maybe_exe_header db 28h	dup(0)		; DATA XREF: GAME_START_sub_6+5Do
 					; ----
 also_a_pointer	ptr16 <0>		; DATA XREF: read_some_file_sub_4+137w
           ; read_some_file_sub_4:loc_584w ...
+          
 byte_55		db 0			; DATA XREF: EXE_HEADER_sub_2+1r
 					; EXE_HEADER_sub_2+5Cr	...
+          ; gets tested with test byte_55 and the following values
+          ;   0xC0 = 0b11000000
+          ;   0x40 = 0b01000000
+          ;   0x20 = 0b00100000
+          ;   0x18 = 0b00011000
+          ;   0x10 = 0b00010000  
         
 byte_57		db 0			; DATA XREF: GAME_START_sub_3+42o
 					; GAME_START_sub_3+7Cr	...
@@ -147,14 +154,22 @@ config_tat_gfx_table_offset dw 0	; DATA XREF: GFX_SELECT_MENU_sub_9+27r
 					;
 					;
 					; -------------------------------------------
+
+IF 0          
 config_tat_game_name_string dw 0	; DATA XREF: MAIN_MENU_sub_8+1Cr
           ; MAIN_MENU_sub_8+35r ...
 config_tat_publisher_string dw 0	; DATA XREF: read_config_and_resize_memory+64w
 					; START_GAME_DOES_FILE_EXIST_sub_19+6Dr
 config_tat_content_end dw 0		; DATA XREF: read_config_and_resize_memory+7Ew
+ENDIF          
+
 config_tat_filename db 'Config.tat',0   ; DATA XREF: read_config_and_resize_memory+5o
+
+IF 0
 config_tat_disk_name_string dw 0	; DATA XREF: read_config_and_resize_memory+71w
           ; SOME_PRINTING_TWO_sub_17+1Cr
+ENDIF
+          
 config_tat_size	dw 0			; DATA XREF: read_config_and_resize_memory:loc_817w
 
 some_feature_flags dw 1			; DATA XREF: read_config_and_resize_memory+BCr
@@ -185,11 +200,16 @@ some_feature_flags dw 1			; DATA XREF: read_config_and_resize_memory+BCr
 					; -------------------------
 
 subprogram_exit_code db	0		; DATA XREF: GAME_START_sub_7+B3w
+
+IF 0
 					; start_0+32Fr
 dos_version db 0      ; DATA XREF: start_0+1Aw
           ; interrupt_0x24r
+ENDIF          
 
 saved_video_mode db 0			; DATA XREF: start_0+89r
+    
+progs_cc1_filename db 'PROGS.CC1',0   
     
 ; =============== S U B R O U T I N E =======================================
 
@@ -381,11 +401,14 @@ loc_563:				; CODE XREF: EXE_HEADER_sub_2+C0j
     push  ax
     sti
 		jmp	dword ptr cs:maybe_game_code_ptr.ofs ; jump into game code?
+    ;its a jump - no return 
 ; ---------------------------------------------------------------------------
 
 loc_561:				; CODE XREF: EXE_HEADER_sub_2+64j
+    
     cli
-		mov	ax, cs:dta_seg
+		
+    mov	ax, cs:dta_seg
     mov es, ax
     mov ds, ax
     mov ss, ax
@@ -394,14 +417,16 @@ loc_561:				; CODE XREF: EXE_HEADER_sub_2+64j
     push  bx
     push  ax
     mov ax, 100h
-    push  ax
+    push  ax ; does that creates a correct retf at the end?
     mov ax, bx
     mov cx, bx
     mov dx, bx
     mov bp, bx
     mov si, bx
     mov di, bx
+    
     sti
+    
     retf
 EXE_HEADER_sub_2 endp
 
@@ -631,9 +656,17 @@ GAME_START_sub_3 endp ;	sp-analysis failed
 
 
 read_some_file_sub_4 proc near		; CODE XREF: GAME_START_sub_7+2Ap
+    ; bx = offset 0 of gfx block == filename == always progs.cc1
     mov ax, cs
     mov ds, ax
-		mov	dx, bx		; bx = offset filename
+
+IF 1		
+    ; its always "progs.cc1"
+    mov dx, offset progs_cc1_filename
+ELSE    
+    mov	dx, bx		; bx = offset filename
+ENDIF    
+    
     mov ah, 3Dh
     mov al, 0
     int 21h   ; DOS - 2+ - OPEN DISK FILE WITH HANDLE
@@ -1078,7 +1111,11 @@ loc_596:				; CODE XREF: GAME_START_sub_7+2Dj
     retn
 ; ---------------------------------------------------------------------------
 
+IF 0
 loc_600::				; CODE XREF: GAME_START_sub_7+9Ej
+ELSE
+loc_600:
+ENDIF
 					; DATA XREF: GAME_START_sub_6+3Eo
     cli
     mov sp, cs:word_51
@@ -1099,10 +1136,12 @@ GAME_START_sub_7 endp ;	sp-analysis failed
 
 start_0   proc near   ; CODE XREF: startj
 
-; FUNCTION CHUNK AT 11BB SIZE 000000A8 BYTES
-
+    ; prepare registers, stack etc.
     cld
+    
+    ;==================
     cli
+    
     mov ax, cs
     mov ss, ax
     assume ss:seg000
@@ -1110,22 +1149,32 @@ start_0   proc near   ; CODE XREF: startj
     mov es, ax
     assume es:seg000
     mov sp, offset stack_space_end_unk_342
+
+    ; get inital PSP
     mov ah, 51h
     int 21h   ; DOS - 2+ internal - GET PSP SEGMENT
           ; Return: BX = current PSP segment
     mov cs:start_psp, bx
+    
+    ; get dos version
+IF 0    
     mov ah, 30h
     int 21h   ; DOS - GET DOS VERSION
           ; Return: AL = major version number (00h for DOS 1.x)
     mov cs:dos_version, al
+ENDIF    
+    
     sti
+    ;==================
     
     call SIMPLE_INIT_routine
    
     call  read_config_and_resize_memory ; CF = 1 on error
     jb  short shutdown_cleanup ; shutdown on error
 
-main_menu_screen::          ; CODE XREF: start_0+2B4j start_0+2CAj ...  ; make label public available
+    ; former menu screen start loop
+    
+    ; prepare, registers and stack
     cld
     cli
     mov ax, cs
@@ -1134,6 +1183,8 @@ main_menu_screen::          ; CODE XREF: start_0+2B4j start_0+2CAj ...  ; make
     mov es, ax
     mov sp, offset stack_space_end_unk_342
     sti
+    
+;====== ??? free game memory for restart?
 		lea	ax, maybe_exe_header
 		mov	cx, 10
     mov ax, cs
@@ -1160,20 +1211,30 @@ loc_843:				; CODE XREF: start_0+4Aj
     xor ax, ax
 		mov	cx, 28h
     rep stosw
+;======    
 
     jmp start_game
 ; ---------------------------------------------------------------------------
 
+IF 0
 shutdown_cleanup::      ; CODE XREF: start_0+25j start_0+82j ; // :: for public label
-          ; DATA XREF: ...
+ELSE
+shutdown_cleanup:
+ENDIF
+
+    ; restore video mode
     xor ah, ah
 		mov	al, cs:saved_video_mode
     int 10h   ; - VIDEO - SET VIDEO MODE
           ; AL = mode
+          
+    ; restore PSP
     mov bx, cs:start_psp
     mov ah, 50h
     int 21h   ; DOS - 2+ internal - SET PSP SEGMENT
           ; BX = segment address of new PSP
+
+    ; restore int1
     push  es
     push  ds
     xor ax, ax
@@ -1184,6 +1245,8 @@ shutdown_cleanup::      ; CODE XREF: start_0+25j start_0+82j ; // :: for publi
     mov word ptr es:6, ds
     pop ds
     pop es
+
+    ; restore 5 interrupts
     assume es:nothing
     push  es
     push  ds
@@ -1205,6 +1268,8 @@ shutdown_cleanup::      ; CODE XREF: start_0+25j start_0+82j ; // :: for publi
 					; --------
 		mov	cx, 20		; 5*sizeof(far-pointer)
 		rep movsb		; DS:SI	to address ES:DI
+
+    ; check if adlib was used by game - interrupt F0 is then set - with adlib signature
 		lds	si, es:3C0h	; ------
 					;
 					; the game sets	Interrupt 0xF0 for sound stuff
@@ -1259,19 +1324,15 @@ exit_program:				; CODE XREF: start_0+CEj start_0+DAj ...
     pop ds
     pop es
     assume es:nothing
+IF 0    
 just_exit::    
+ELSE
+just_exit:
+ENDIF
     xor al, al
     mov ah, 4Ch
     int 21h   ; DOS - 2+ - QUIT WITH EXIT CODE (EXIT)
 start_0   endp ; sp-analysis failed ; AL = exit code
-
-
-; =============== S U B R O U T I N E =======================================
-
-; =============== S U B R O U T I N E =======================================
-
-; =============== S U B R O U T I N E =======================================
-
 
 read_config_and_resize_memory proc near ; CODE XREF: start_0+22p
     push  ds
@@ -1309,7 +1370,7 @@ loc_816:				; CODE XREF: read_config_and_resize_memory+Ej
 loc_817:				; CODE XREF: read_config_and_resize_memory+1Cj
     mov cs:config_tat_size, ax
 		add	ax, offset config_tat_buffer
-		mov	cs:maybe_exe_buffer.ofs, ax ; targets the_overwrite_buffer_begin + filesize("config.tat")
+		mov	cs:maybe_exe_buffer.ofs, ax ; targets config_tat_buffer + config_tat_size
 		mov	cs:maybe_exe_buffer.segm, cs ; segment
     mov ah, 3Eh
     int 21h   ; DOS - 2+ - CLOSE A FILE WITH HANDLE
@@ -1318,11 +1379,11 @@ loc_817:				; CODE XREF: read_config_and_resize_memory+1Cj
           ;
           ;
           ;
-          ; word_78 = offset the_overwrite_buffer_begin + *(word*)&the_overwrite_buffer_begin[0]
-          ; word_79 = offset the_overwrite_buffer_begin + *(word*)&the_overwrite_buffer_begin[2]
-          ; word_79 = offset the_overwrite_buffer_begin + *(word*)&the_overwrite_buffer_begin[4]
-          ; word_326 = offset the_overwrite_buffer_begin + *(word*)&the_overwrite_buffer_begin[6]
-          ; word_81 = offset the_overwrite_buffer_begin + *(word*)&the_overwrite_buffer_begin[8]
+          ; word_78 = offset config_tat_buffer + *(word*)&config_tat_buffer[0]
+          ; word_79 = offset config_tat_buffer + *(word*)&config_tat_buffer[2]
+          ; word_79 = offset config_tat_buffer + *(word*)&config_tat_buffer[4]
+          ; word_326 = offset config_tat_buffer + *(word*)&config_tat_buffer[6]
+          ; word_81 = offset config_tat_buffer + *(word*)&config_tat_buffer[8]
 		mov	bx, offset config_tat_buffer ; ----------
 					;
 					; get the 5 offsets in head of config.tat
@@ -1331,42 +1392,75 @@ loc_817:				; CODE XREF: read_config_and_resize_memory+1Cj
     mov ax, cs:[bx] ; 0x0E
 		add	ax, offset config_tat_buffer
 		mov	cs:config_tat_gfx_table_offset,	ax
+
     add bx, 2
     mov ax, cs:[bx] ; 0x1FD
 		add	ax, offset config_tat_buffer
+    ; not needed
+IF 0    
 		mov	cs:config_tat_game_name_string,	ax
+ENDIF    
+
     add bx, 2
     mov ax, cs:[bx] ; 0x21E
 		add	ax, offset config_tat_buffer
+IF 0 
 		mov	cs:config_tat_publisher_string,	ax
+ENDIF
+
     add bx, 2
     mov ax, cs:[bx] ; 0x209
 		add	ax, offset config_tat_buffer
+IF 0 
 		mov	cs:config_tat_disk_name_string,	ax
+ENDIF    
+
     add bx, 2
     mov ax, cs:[bx] ; 0x233
 		add	ax, offset config_tat_buffer
+IF 0 
 		mov	cs:config_tat_content_end, ax
+ENDIF    
+
+    ;===================== reduce com program memory usage to minimum
+
+    ; calc paragraphs
+    ; maybe_exe_buffer points to end of loader.com
 		les	bx, dword ptr cs:maybe_exe_buffer.ofs ;	es=ds=cs, bx = 1BEBh = 19B8h+233h
     shr bx, 1   ; shr bx,4 => bx / 16
     shr bx, 1
     shr bx, 1
     shr bx, 1
-    inc bx    ; bx = (bx / 16) + 1 => 1BFh Paragraphs
+    inc bx    ; bx = (bx / 16) + 1
+    
+    ; the content of maybe_exe_buffer is just a tempoary value for the calculation - can be set to 0 here
+    mov ax,0
+    mov	cs:maybe_exe_buffer.ofs,ax
+    mov cs:maybe_exe_buffer.segm,ax
+    
+    ; adjust memory block of this program
+    ; free as much memory as possible
     mov ah, 4Ah
     int 21h   ; DOS - 2+ - ADJUST MEMORY BLOCK SIZE (SETBLOCK)
           ; ES = segment address of block to change
           ; BX = new size in paragraphs
+    
+    ;===================== how much memory is now available, maybe the different gfx selection need more memory, vga more then cga?
+    
+    ; ONLY check free memory - do NOT allocate
+    ; bx = dos_get_free_paragraphs();
     mov ah, 48h
-    mov bx, 0FFFFh  ; maximum available
+    mov bx, 0FFFFh  ; maximum available -> will always fail
     int 21h   ; DOS - 2+ - ALLOCATE MEMORY
           ; BX = number of 16-byte paragraphs desired
           ;
           ; CF gets set -> Error
-          ; ax = 8 --> insufficient memory
-          ; block will as large as possible
-          ;
-          ; bx = new size in paragraphs, with my DOSBOX = 9C62h paragraphs
+          ; ax = 8 --> Not Enough Mem
+          ; bx = size in paras of the largest block of memory available
+          ;      with my DOSBOX = 9C62h paragraphs
+          
+    ; get free memory type
+          
     mov si, 0
     cmp bx, 4000h
     jb  short loc_170
@@ -1424,6 +1518,8 @@ loc_170:        ; CODE XREF: read_config_and_resize_memory+A2j
     or  si, ax
 		mov	cs:some_feature_flags, si ; some_feature_flags = C001
     pop ds
+    ;==========================================
+    
     retn      ; CF still 0 - No Error
 read_config_and_resize_memory endp
 
@@ -1448,13 +1544,7 @@ interrupt_0x97	endp
 
 ; ---------------------------------------------------------------------------
 
-some_loading_msg_some_PPI_action_and_back_to_main_menu:	; CODE XREF: start_0+308j
-          ; start_0+322j
-    mov dx,offset error5
-    mov ah,09h
-    int 21h
-    jmp just_exit  
-
+shutdown_speaker proc near
     cli
     in  al, 61h   ; PC/XT PPI port B bits:
 					; 0: Tmr 2 gate	ÍËÍ OR	03H=spkr ON
@@ -1464,7 +1554,8 @@ some_loading_msg_some_PPI_action_and_back_to_main_menu:	; CODE XREF: start_0+308
           ; 5: 0=enable I/O channel check
           ; 6: 0=hold keyboard clock low
           ; 7: 0=enable kbrd
-    and al, 0FCh
+    and al, 0FCh ; 0b11111100
+    ; !!!! shutdown speaker
     out 61h, al   ; PC/XT PPI port B bits:
 					; 0: Tmr 2 gate	ÍËÍ OR	03H=spkr ON
 					; 1: Tmr 2 data	Í¼  AND	0fcH=spkr OFF
@@ -1473,14 +1564,29 @@ some_loading_msg_some_PPI_action_and_back_to_main_menu:	; CODE XREF: start_0+308
           ; 5: 0=enable I/O channel check
           ; 6: 0=hold keyboard clock low
           ; 7: 0=enable kbrd
-		jmp	main_menu_screen ; on exit to DOS (but seems to	be not always)
+    sti
+    retn
+shutdown_speaker endp
+
+
+some_loading_msg_some_PPI_action_and_back_to_main_menu:	; CODE XREF: start_0+308j
+          ; start_0+322j
+
+    call shutdown_speaker
+
+    mov dx,offset error5
+    mov ah,09h
+    int 21h
+    jmp just_exit  
+
 ; ---------------------------------------------------------------------------
 
 start_game:       ; CODE XREF: start_0+82j
           ; DATA XREF: seg000:main_menu_jump_tableo
     
     mov bx,gfx_mode
-    
+
+    ; set interrupt_vt[0x9F].offset = gxf_mode - this is how the game knows the to start gfx mode?   
     push  ds
     push  ax
     xor ax, ax
@@ -1490,11 +1596,13 @@ start_game:       ; CODE XREF: start_0+82j
     mov ds:27Ch, ax ; 27Ch / 4 => interrupt_vt[0x9F]
     pop ax
     pop ds
+
+    ; select gfx code offsets in progs.cc1
     assume ds:seg000
     shl bx, 1   ; gfx-index*2
 		add	bx, cs:config_tat_gfx_table_offset
     mov bx, cs:[bx]
-    or  bx, bx
+    or  bx, bx ; offset for this select gfx not null?
 		jz	short cancel_game_start
 		add	bx, offset config_tat_buffer
 
@@ -1576,7 +1684,7 @@ after_game_run:				; CODE XREF: start_0+313j start_0+31Dj
 		jnz	short cancel_game_start
 		call	START_GAME_sub_22
 		jb	short cancel_game_start
-    add bx, 18h
+    add bx, size gfx_block_t
     jmp short loc_173
 ; ---------------------------------------------------------------------------
 
@@ -1593,7 +1701,7 @@ back_to_menu:				; CODE XREF: start_0+33Aj
 
 START_GAME_sub_11 proc near		; CODE XREF: start_0:loc_173p
 					; start_0:before_and_after_game_runp ...
-		cmp	cs:[bx+gfx_block_t.filename], 0FFh ; GFX-Block[GFX][0] == 0xFF?
+		cmp	cs:[bx+gfx_block_t.filename], 0FFh ; GFX-Block[GFX][0] == 0xFF? last block
 		jz	short is_end_block ; starting with 0xFF
 		test	cs:[bx+gfx_block_t.byte_13h], 20h ; -----
 					;
@@ -1641,7 +1749,7 @@ find_first_blank_loop:			; CODE XREF: START_GAME_DOES_FILE_EXIST_sub_19+9j
 		mov	byte ptr [si-1], 0 ; set filename asciiz 0 at first found 0x20 (blank)
 
 found_null_in_name:
-
+IF 0
     mov ah, 3Dh
     mov al, 0
     mov si, cs
@@ -1658,12 +1766,12 @@ found_null_in_name:
     mov ah,09h
     int 21h
     jmp just_exit 
-   
     
 file_exists:   
+ENDIF    
+
     cld ; always return file exists
     retn  
-
 START_GAME_DOES_FILE_EXIST_sub_19 endp
 
 ; =============== S U B R O U T I N E =======================================
@@ -1675,7 +1783,7 @@ START_GAME_FEATURE_FLAG_STUFF_sub_21 proc near ; CODE XREF: START_GAME_sub_22+3
 		and	ax, 0F000h	; 0xF000 = 0b1111000000000000
 		mov	cx, cs:some_feature_flags
 		and	cx, 0F000h	; 0xF000 = 0b1111000000000000
-		and	si, 3		; 0x0003 = 0b0000000000000011
+		and	si, 3		    ; 0x0003 = 0b0000000000000011
 
     cmp si, 0
     jz loc_206
@@ -1714,6 +1822,8 @@ loc_206:				; CODE XREF: START_GAME_FEATURE_FLAG_STUFF_sub_21+17j
     cmp ax, cx
     jb  short loc_651
 
+    call shutdown_speaker
+
     ; just exit
     mov dx,offset error6
     mov ah,09h
@@ -1724,63 +1834,14 @@ loc_651:
     stc
     retn    
 
-IF 0
-    ; dead code in loader
-    ; TODO: analyse - could be old XT stuff
-
-    cli
-    in  al, 61h   ; PC/XT PPI port B bits:
-					; 0: Tmr 2 gate	ÍËÍ OR	03H=spkr ON
-					; 1: Tmr 2 data	Í¼  AND	0fcH=spkr OFF
-          ; 3: 1=read high switches
-          ; 4: 0=enable RAM parity checking
-          ; 5: 0=enable I/O channel check
-          ; 6: 0=hold keyboard clock low
-          ; 7: 0=enable kbrd
-    and al, 0FCh ; 0b11111100
-      ; 6: hold keyboard clock low = 0
-      ; 7: enable kbrd = 0
-    out 61h, al   ; PC/XT PPI port B bits:
-					; 0: Tmr 2 gate	ÍËÍ OR	03H=spkr ON
-					; 1: Tmr 2 data	Í¼  AND	0fcH=spkr OFF
-          ; 3: 1=read high switches
-          ; 4: 0=enable RAM parity checking
-          ; 5: 0=enable I/O channel check
-          ; 6: 0=hold keyboard clock low
-          ; 7: 0=enable kbrd
-    sti
-		jmp	main_menu_screen
-
-; ---------------------------------------------------------------------------
-
-loc_651:				; CODE XREF: START_GAME_FEATURE_FLAG_STUFF_sub_21-23j
-    stc
-    retn
-ENDIF    
-
 START_GAME_FEATURE_FLAG_STUFF_sub_21 endp
 
-
-; =============== S U B R O U T I N E =======================================
-
-
 START_GAME_sub_22 proc near		; CODE XREF: start_0+305p start_0+31Fp ...
-IF 0		
-    call	set_interrupt_vectors_0x97_and_0x24 ; -------
-					;
-					;
-					;
-					; set serveral times? just stupid but ok
-					;
-					;
-					;
-					;
-					; ---------------
-ENDIF    
+
 		call	START_GAME_FEATURE_FLAG_STUFF_sub_21
 		jnb	short locret_654 ; if(!CF)...
-		call	START_GAME_DOES_FILE_EXIST_sub_19
-		jnb	short loc_655	; if(!CF)... CF	set on file exists
+
+    jmp loc_655
 
 locret_654:				; CODE XREF: START_GAME_sub_22+6j
     retn
@@ -1792,10 +1853,11 @@ loc_655:				; CODE XREF: START_GAME_sub_22+Bj
     retn
 START_GAME_sub_22 endp
 
-
-; =============== S U B R O U T I N E =======================================
-
 interrupt_0x24	proc far		; DATA XREF: set_interrupt_vectors_0x97_and_0x24+12o
+IF 1
+    mov al, 3 ; dosbox is always DOS 5
+    iret
+ELSE
     cmp cs:dos_version, 3
 		jb	short below_DOS_3 ; < DOS 3?
     mov al, 3
@@ -1819,6 +1881,7 @@ below_DOS_3:				; CODE XREF: interrupt_0x24+6j
     pop es
     assume es:nothing
     iret
+ENDIF    
 interrupt_0x24	endp ; sp-analysis failed
 
 set_interrupt_vectors_0x97_and_0x24 proc near ;	CODE XREF: START_GAME_sub_22p
