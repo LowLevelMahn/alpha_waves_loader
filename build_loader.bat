@@ -16,7 +16,7 @@ pause
 exit /b 1
 
 :next1
-wlink.exe name loader.com format dos com file loader.obj DEBUG ALL
+wlink.exe DEBUG ALL name loader.com format dos com file loader.obj
 if %ERRORLEVEL% EQU 0 goto next2
 echo errorlevel %ERRORLEVEL%
 pause
