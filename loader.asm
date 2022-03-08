@@ -155,20 +155,7 @@ config_tat_gfx_table_offset dw 0	; DATA XREF: GFX_SELECT_MENU_sub_9+27r
 					;
 					; -------------------------------------------
 
-IF 0          
-config_tat_game_name_string dw 0	; DATA XREF: MAIN_MENU_sub_8+1Cr
-          ; MAIN_MENU_sub_8+35r ...
-config_tat_publisher_string dw 0	; DATA XREF: read_config_and_resize_memory+64w
-					; START_GAME_DOES_FILE_EXIST_sub_19+6Dr
-config_tat_content_end dw 0		; DATA XREF: read_config_and_resize_memory+7Ew
-ENDIF          
-
 config_tat_filename db 'Config.tat',0   ; DATA XREF: read_config_and_resize_memory+5o
-
-IF 0
-config_tat_disk_name_string dw 0	; DATA XREF: read_config_and_resize_memory+71w
-          ; SOME_PRINTING_TWO_sub_17+1Cr
-ENDIF
           
 config_tat_size	dw 0			; DATA XREF: read_config_and_resize_memory:loc_817w
 
@@ -200,12 +187,6 @@ some_feature_flags dw 1			; DATA XREF: read_config_and_resize_memory+BCr
 					; -------------------------
 
 subprogram_exit_code db	0		; DATA XREF: GAME_START_sub_7+B3w
-
-IF 0
-					; start_0+32Fr
-dos_version db 0      ; DATA XREF: start_0+1Aw
-          ; interrupt_0x24r
-ENDIF          
 
 saved_video_mode db 0			; DATA XREF: start_0+89r
     
@@ -1111,11 +1092,7 @@ loc_596:				; CODE XREF: GAME_START_sub_7+2Dj
     retn
 ; ---------------------------------------------------------------------------
 
-IF 0
-loc_600::				; CODE XREF: GAME_START_sub_7+9Ej
-ELSE
 loc_600:
-ENDIF
 					; DATA XREF: GAME_START_sub_6+3Eo
     cli
     mov sp, cs:word_51
@@ -1155,14 +1132,6 @@ start_0   proc near   ; CODE XREF: startj
     int 21h   ; DOS - 2+ internal - GET PSP SEGMENT
           ; Return: BX = current PSP segment
     mov cs:start_psp, bx
-    
-    ; get dos version
-IF 0    
-    mov ah, 30h
-    int 21h   ; DOS - GET DOS VERSION
-          ; Return: AL = major version number (00h for DOS 1.x)
-    mov cs:dos_version, al
-ENDIF    
     
     sti
     ;==================
@@ -1216,11 +1185,7 @@ loc_843:				; CODE XREF: start_0+4Aj
     jmp start_game
 ; ---------------------------------------------------------------------------
 
-IF 0
-shutdown_cleanup::      ; CODE XREF: start_0+25j start_0+82j ; // :: for public label
-ELSE
 shutdown_cleanup:
-ENDIF
 
     ; restore video mode
     xor ah, ah
@@ -1324,11 +1289,7 @@ exit_program:				; CODE XREF: start_0+CEj start_0+DAj ...
     pop ds
     pop es
     assume es:nothing
-IF 0    
-just_exit::    
-ELSE
 just_exit:
-ENDIF
     xor al, al
     mov ah, 4Ch
     int 21h   ; DOS - 2+ - QUIT WITH EXIT CODE (EXIT)
@@ -1376,9 +1337,6 @@ loc_817:				; CODE XREF: read_config_and_resize_memory+1Cj
     int 21h   ; DOS - 2+ - CLOSE A FILE WITH HANDLE
           ; BX = file handle
           ;
-          ;
-          ;
-          ;
           ; word_78 = offset config_tat_buffer + *(word*)&config_tat_buffer[0]
           ; word_79 = offset config_tat_buffer + *(word*)&config_tat_buffer[2]
           ; word_79 = offset config_tat_buffer + *(word*)&config_tat_buffer[4]
@@ -1393,34 +1351,7 @@ loc_817:				; CODE XREF: read_config_and_resize_memory+1Cj
 		add	ax, offset config_tat_buffer
 		mov	cs:config_tat_gfx_table_offset,	ax
 
-    add bx, 2
-    mov ax, cs:[bx] ; 0x1FD
-		add	ax, offset config_tat_buffer
-    ; not needed
-IF 0    
-		mov	cs:config_tat_game_name_string,	ax
-ENDIF    
-
-    add bx, 2
-    mov ax, cs:[bx] ; 0x21E
-		add	ax, offset config_tat_buffer
-IF 0 
-		mov	cs:config_tat_publisher_string,	ax
-ENDIF
-
-    add bx, 2
-    mov ax, cs:[bx] ; 0x209
-		add	ax, offset config_tat_buffer
-IF 0 
-		mov	cs:config_tat_disk_name_string,	ax
-ENDIF    
-
-    add bx, 2
-    mov ax, cs:[bx] ; 0x233
-		add	ax, offset config_tat_buffer
-IF 0 
-		mov	cs:config_tat_content_end, ax
-ENDIF    
+    ; only the config_tat_gfx_table_offset is relevant - all other offsets are not needed
 
     ;===================== reduce com program memory usage to minimum
 
@@ -1517,10 +1448,11 @@ loc_170:        ; CODE XREF: read_config_and_resize_memory+A2j
 		and	ax, 3001h	; 0b0011000000000001
     or  si, ax
 		mov	cs:some_feature_flags, si ; some_feature_flags = C001
-    pop ds
     ;==========================================
-    
+
+    pop ds
     retn      ; CF still 0 - No Error
+    
 read_config_and_resize_memory endp
 
 
@@ -1749,27 +1681,6 @@ find_first_blank_loop:			; CODE XREF: START_GAME_DOES_FILE_EXIST_sub_19+9j
 		mov	byte ptr [si-1], 0 ; set filename asciiz 0 at first found 0x20 (blank)
 
 found_null_in_name:
-IF 0
-    mov ah, 3Dh
-    mov al, 0
-    mov si, cs
-    mov ds, si
-		mov	dx, bx		; bx = offset gfx_block.filename = 'progs.cc1'
-    int 21h   ; DOS - 2+ - OPEN DISK FILE WITH HANDLE
-          ; DS:DX -> ASCIZ filename
-          ; AL = access mode
-          ; 0 - read
-    ; search for data disk if file can't be loaded
-    jnb  short file_exists
-    
-    mov dx,offset error8
-    mov ah,09h
-    int 21h
-    jmp just_exit 
-    
-file_exists:   
-ENDIF    
-
     cld ; always return file exists
     retn  
 START_GAME_DOES_FILE_EXIST_sub_19 endp
@@ -1935,6 +1846,7 @@ command_line_error:
     int 21h
     
 ok:    
+    ; save current video mode
     mov ah, 0Fh
     int 10h   ; - VIDEO - GET CURRENT VIDEO MODE
           ; Return: AH = number of columns on screen
@@ -1942,6 +1854,7 @@ ok:
           ; BH = current active display page
 		mov	cs:saved_video_mode, al
     
+    ; save interrrupt ptr 1
     push  es
     xor ax, ax
     mov es, ax    ; https://wiki.osdev.org/Memory_Map_(x86)
@@ -1957,6 +1870,8 @@ ok:
 		mov	cs:saved_int1_ptr.segm,	ax
     pop es
     assume es:nothing
+    
+    ; save 5 interrupt pointers
     push  es
     push  ds
     xor ax, ax

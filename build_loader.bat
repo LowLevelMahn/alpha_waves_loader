@@ -9,14 +9,16 @@ set WATCOM_BIN=%watcom%\binnt64
 set INCLUDE=%watcom%\h
 set PATH=%WATCOM_BIN%;%PATH%
 
-wasm.exe -wx -d1 loader.asm
+::wasm.exe -wx -d3 loader.asm
+wasm.exe -wx loader.asm
 if %ERRORLEVEL% EQU 0 goto next1
 echo errorlevel %ERRORLEVEL%
 pause
 exit /b 1
 
 :next1
-wlink.exe DEBUG ALL name loader.com format dos com file loader.obj
+::wlink.exe DEBUG ALL name loader.com format dos com file loader.obj
+wlink.exe name loader.com format dos com file loader.obj
 if %ERRORLEVEL% EQU 0 goto next2
 echo errorlevel %ERRORLEVEL%
 pause
