@@ -148,7 +148,7 @@ maybe_exe_header db 28h	dup(0)		; DATA XREF: GAME_START_sub_6+5Do
 					;
 					;
 					; ----
-stru_53		ptr16 <0>		; DATA XREF: read_some_file_sub_4+137w
+also_a_pointer	ptr16 <0>		; DATA XREF: read_some_file_sub_4+137w
           ; read_some_file_sub_4:loc_584w ...
 byte_55		db 0			; DATA XREF: EXE_HEADER_sub_2+1r
 					; EXE_HEADER_sub_2+5Cr	...
@@ -169,7 +169,7 @@ byte_569	db 0			; DATA XREF: GAME_START_sub_3:loc_577r
 word_60		dw 0			; DATA XREF: GAME_START_sub_3+76r
 					; GAME_START_sub_3+EDr	...
     db 4 dup(0)
-stru_61		ptr16 <0>		; DATA XREF: GAME_START_sub_3+49r
+another_pointer2 ptr16 <0>		; DATA XREF: GAME_START_sub_3+49r
 					; GAME_START_sub_3+61w	...
 word_62		dw 0			; DATA XREF: EXE_HEADER_sub_2+17w
 					; EXE_HEADER_sub_2+9Ar	...
@@ -183,7 +183,7 @@ word_68		dw 0			; DATA XREF: EXE_HEADER_sub_2+E3w
 					; EXE_HEADER_sub_2+10Br
 word_69		dw 0			; DATA XREF: EXE_HEADER_sub_2+EDw
 					; EXE_HEADER_sub_2+10Fr
-dword_70	dd 0			; DATA XREF: EXE_HEADER_sub_2+FFw
+maybe_game_code_ptr ptr16 <0>		; DATA XREF: EXE_HEADER_sub_2+FFw
 					; EXE_HEADER_sub_2+129r ...
 ; __int16 exe_pointer
 exe_pointer	ptr16 <0>		; DATA XREF: EXE_HEADER_sub_2+21w
@@ -684,7 +684,7 @@ EXE_HEADER_sub_2 proc far		; CODE XREF: GAME_START_sub_7+9Bp
     xor ax, ax
     clc
     pop bx
-    retn
+		retn			; near ret from	far proc - manually fixed stack?
 ; ---------------------------------------------------------------------------
 
 loc_557:				; CODE XREF: EXE_HEADER_sub_2+7j
@@ -725,7 +725,7 @@ loc_560:				; CODE XREF: EXE_HEADER_sub_2+62j
     jz  short loc_562
     stc
     pop bx
-    retn
+		retn			; near ret from	far proc - manually fixed stack?
 ; ---------------------------------------------------------------------------
 
 loc_562:				; CODE XREF: EXE_HEADER_sub_2+6Bj
@@ -787,9 +787,9 @@ loc_563:				; CODE XREF: EXE_HEADER_sub_2+C0j
     mov cs:word_69, ax
     mov ax, es:[si+16h]
     add ax, bp
-    mov word ptr cs:dword_70+2, ax
+		mov	cs:maybe_game_code_ptr.segm, ax
     mov ax, es:[si+14h]
-    mov word ptr cs:dword_70, ax
+		mov	cs:maybe_game_code_ptr.ofs, ax
 		mov	es, cs:dta_seg
     cld
     mov di, es
@@ -804,7 +804,7 @@ loc_563:				; CODE XREF: EXE_HEADER_sub_2+C0j
     xor ax, ax
     push  ax
     sti
-    jmp cs:dword_70
+		jmp	dword ptr cs:maybe_game_code_ptr.ofs ; jump into game code?
 ; ---------------------------------------------------------------------------
 
 loc_561:				; CODE XREF: EXE_HEADER_sub_2+64j
@@ -879,7 +879,7 @@ GAME_START_sub_3 proc near		; CODE XREF: GAME_START_sub_3+101j
     mov ax, cs
     mov es, ax
     assume es:seg000
-		lds	si, dword ptr cs:stru_61.ofs
+		lds	si, dword ptr cs:another_pointer2.ofs
     mov ax, si
     shr ax, 1
     shr ax, 1
@@ -889,9 +889,9 @@ GAME_START_sub_3 proc near		; CODE XREF: GAME_START_sub_3+101j
     add ax, dx
     mov ds, ax
     and si, 0Fh
-		mov	cs:stru_61.ofs,	si
-		mov	cs:stru_61.segm, ds
-		add	cs:stru_61.ofs,	cx
+		mov	cs:another_pointer2.ofs, si
+		mov	cs:another_pointer2.segm, ds
+		add	cs:another_pointer2.ofs, cx
     rep movsb
     pop di
     pop si
@@ -915,18 +915,18 @@ loc_565:				; CODE XREF: GAME_START_sub_3+82j
     mov ax, ds
     mov es, ax
     assume es:seg000
-		mov	ds, cs:stru_61.segm
-		mov	si, cs:stru_61.ofs
-		add	cs:stru_61.ofs,	cx
+		mov	ds, cs:another_pointer2.segm
+		mov	si, cs:another_pointer2.ofs
+		add	cs:another_pointer2.ofs, cx
     rep movsb
     mov cl, cs:byte_57
     xor ch, ch
     mov di, 1
-		add	cs:stru_61.ofs,	cx
+		add	cs:another_pointer2.ofs, cx
     rep movsb
     mov cl, cs:byte_57
     mov di, 101h
-		add	cs:stru_61.ofs,	cx
+		add	cs:another_pointer2.ofs, cx
     rep movsb
     pop di
     pop es
@@ -966,11 +966,11 @@ locret_570:				; CODE XREF: GAME_START_sub_3+FFj
 
 loc_568:				; CODE XREF: GAME_START_sub_3+F7j
     push  ds
-		mov	si, cs:stru_61.segm
+		mov	si, cs:another_pointer2.segm
     mov ds, si
-		mov	si, cs:stru_61.ofs
+		mov	si, cs:another_pointer2.ofs
     lodsb
-		mov	cs:stru_61.ofs,	si
+		mov	cs:another_pointer2.ofs, si
     pop ds
     mov bx, ax
     cmp byte ptr [bx+301h], 0
@@ -1040,9 +1040,9 @@ loc_566:				; CODE XREF: GAME_START_sub_3+84j
     push  es
     mov cx, cs:word_60
     push  cx
-		mov	ds, cs:stru_61.segm
-		mov	si, cs:stru_61.ofs
-		add	cs:stru_61.ofs,	cx
+		mov	ds, cs:another_pointer2.segm
+		mov	si, cs:another_pointer2.ofs
+		add	cs:another_pointer2.ofs, cx
     rep movsb
     pop cx
     pop es
@@ -1210,12 +1210,12 @@ loc_582:        ; CODE XREF: read_some_file_sub_4+ADj
 loc_580:        ; CODE XREF: read_some_file_sub_4+33j
 		mov	cs:another_far_ptr.ofs,	cx
 		mov	cs:another_far_ptr.segm, ds
-		mov	cs:stru_61.ofs,	cx
-		mov	cs:stru_61.segm, ds
+		mov	cs:another_pointer2.ofs, cx
+		mov	cs:another_pointer2.segm, ds
     mov si, cs:word_44
     mov di, cs:word_45
-		mov	cs:stru_53.ofs,	0
-		mov	cs:stru_53.segm, 0
+		mov	cs:also_a_pointer.ofs, 0
+		mov	cs:also_a_pointer.segm,	0
 		lds	dx, dword ptr cs:another_far_ptr.ofs
 
 loc_586:        ; CODE XREF: read_some_file_sub_4+18Dj
@@ -1248,8 +1248,8 @@ loc_583:        ; CODE XREF: read_some_file_sub_4+165j
 ; ---------------------------------------------------------------------------
 
 loc_584:        ; CODE XREF: read_some_file_sub_4+175j
-		add	cs:stru_53.ofs,	ax
-		adc	cs:stru_53.segm, 0
+		add	cs:also_a_pointer.ofs, ax
+		adc	cs:also_a_pointer.segm,	0
     add dx, ax
     cmp ax, cx
     jnz short loc_585
@@ -1302,7 +1302,7 @@ loc_585:        ; CODE XREF: read_some_file_sub_4+187j
 ; ---------------------------------------------------------------------------
 
 loc_587:        ; CODE XREF: read_some_file_sub_4+199j
-		lds	si, dword ptr cs:stru_53.ofs
+		lds	si, dword ptr cs:also_a_pointer.ofs
 		mov	cs:some_game_ptr.ofs, si
 		mov	cs:some_game_ptr.segm, ds
     clc
@@ -2059,7 +2059,8 @@ loc_817:				; CODE XREF: read_config_and_resize_memory+1Cj
     shr bx, 1
     shr bx, 1
     shr bx, 1
-    inc bx    ; bx = (bx / 16) + 1 => 1BFh Paragraphs
+		inc	bx		; align	exe_buffer.offset to Paragraphs
+					; bx = (bx / 16) + 1 =>	1BFh
     mov ah, 4Ah
     int 21h   ; DOS - 2+ - ADJUST MEMORY BLOCK SIZE (SETBLOCK)
           ; ES = segment address of block to change
