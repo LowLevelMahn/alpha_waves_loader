@@ -157,15 +157,13 @@ config_tat_gfx_table_offset dw 0	; DATA XREF: GFX_SELECT_MENU_sub_9+27r
 
 config_tat_filename db 'Config.tat',0   ; DATA XREF: read_config_and_resize_memory+5o
           
-config_tat_size	dw 0			; DATA XREF: read_config_and_resize_memory:loc_817w
-
 some_feature_flags dw 1			; DATA XREF: read_config_and_resize_memory+BCr
 					; read_config_and_resize_memory+C5w ...
 					;
 					;
 					;
 					; --------------------------
-					; bit[	0] = ??? [active on startup]
+					; bit[ 0] = ??? [active on startup]
 					; bit[ 1]
 					; bit[ 2]
 					; bit[ 3]
@@ -178,12 +176,12 @@ some_feature_flags dw 1			; DATA XREF: read_config_and_resize_memory+BCr
 					; bit[10]
 					; bit[11]
 					; bit[12] = joystick detected
-					; bit[ 13] = currency =	franc
+					; bit[13] = currency =	franc
 					; bit[14+15]  =	mem size type?
-					;	     = 00 = 0 (< 0x4000	free paragraphs)
-					;	     = 01 = 1 (>= 0x4000 free paragraphs)
-					;	     = 10 = 2 (>= 0x6000 free paragraphs)
-					;	     = 11 = 3 (>= 0x8000 free paragraphs)
+					;	     = 0b00 = 0 (< 0x4000	free paragraphs)
+					;	     = 0b01 = 1 (>= 0x4000 free paragraphs)
+					;	     = 0b10 = 2 (>= 0x6000 free paragraphs)
+					;	     = 0b11 = 3 (>= 0x8000 free paragraphs)
 					; -------------------------
 
 subprogram_exit_code db	0		; DATA XREF: GAME_START_sub_7+B3w
