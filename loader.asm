@@ -1329,10 +1329,6 @@ loc_816:				; CODE XREF: read_config_and_resize_memory+Ej
 ; ---------------------------------------------------------------------------
 
 loc_817:				; CODE XREF: read_config_and_resize_memory+1Cj
-    mov cs:config_tat_size, ax
-		add	ax, offset config_tat_buffer
-		mov	cs:maybe_exe_buffer.ofs, ax ; targets config_tat_buffer + config_tat_size
-		mov	cs:maybe_exe_buffer.segm, cs ; segment
     mov ah, 3Eh
     int 21h   ; DOS - 2+ - CLOSE A FILE WITH HANDLE
           ; BX = file handle
@@ -1355,19 +1351,13 @@ loc_817:				; CODE XREF: read_config_and_resize_memory+1Cj
 
     ;===================== reduce com program memory usage to minimum
 
-    ; calc paragraphs
-    ; maybe_exe_buffer points to end of loader.com
-		les	bx, dword ptr cs:maybe_exe_buffer.ofs ;	es=ds=cs, bx = 1BEBh = 19B8h+233h
+    ; calc paragraphs for complete program
+		mov	bx,offset config_tat_buffer + size config_tat_buffer
     shr bx, 1   ; shr bx,4 => bx / 16
     shr bx, 1
     shr bx, 1
     shr bx, 1
     inc bx    ; bx = (bx / 16) + 1
-    
-    ; the content of maybe_exe_buffer is just a tempoary value for the calculation - can be set to 0 here
-    mov ax,0
-    mov	cs:maybe_exe_buffer.ofs,ax
-    mov cs:maybe_exe_buffer.segm,ax
     
     ; adjust memory block of this program
     ; free as much memory as possible
