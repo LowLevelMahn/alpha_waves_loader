@@ -137,7 +137,7 @@ word_50		dw 0			; DATA XREF: GAME_START_sub_7+96w
 					; GAME_START_sub_7+A9r
 word_51		dw 0			; DATA XREF: GAME_START_sub_7+91w
 					; GAME_START_sub_7+A4r
-maybe_exe_header db 28h	dup(0)		; DATA XREF: GAME_START_sub_6+5Do
+maybe_10_ptr	ptr16 0Ah dup(<0>)	; DATA XREF: GAME_START_sub_6+5Do
 					; start_0+35o ...
 					; ----
 					;
@@ -1417,15 +1417,15 @@ loc_592:				; CODE XREF: GAME_START_sub_6+11j
     lea ax, ds:169h
     mov ds:26Ch, ax
     mov word ptr ds:26Eh, cs
-    mov cx, 0Ah
+		mov	cx, 10
     mov ax, cs
     mov ds, ax
     assume ds:seg000
-		lea	si, maybe_exe_header
+		lea	si, maybe_10_ptr
 
 loc_594:				; CODE XREF: GAME_START_sub_6+6Bj
-    mov ax, [si]
-    or  ax, [si+2]
+		mov	ax, [si+ptr16.ofs]
+		or	ax, [si+ptr16.segm]
     jz  short loc_593
     add si, 4
     loop  loc_594
@@ -1436,8 +1436,8 @@ loc_594:				; CODE XREF: GAME_START_sub_6+6Bj
 
 loc_593:				; CODE XREF: GAME_START_sub_6+66j
 		mov	ax, cs:maybe_exe_buffer.segm
-    mov [si+2], ax
-    mov word ptr [si], 0
+		mov	[si+ptr16.segm], ax
+		mov	[si+ptr16.ofs],	0
     clc
     pop bx
     retn
@@ -1586,11 +1586,11 @@ main_menu_screen::          ; CODE XREF: start_0+2B4j start_0+2CAj ...  ; make
     mov es, ax
     mov sp, offset stack_space_end_unk_342
     sti
-		lea	ax, maybe_exe_header
+		lea	ax, maybe_10_ptr
 		mov	cx, 10
     mov ax, cs
     mov ds, ax
-		lea	si, maybe_exe_header
+		lea	si, maybe_10_ptr
 
 loc_844:				; CODE XREF: start_0+53j
     les ax, [si]
@@ -1603,9 +1603,9 @@ loc_844:				; CODE XREF: start_0+53j
           ; ES = segment address of area to be freed
 
 loc_843:				; CODE XREF: start_0+4Aj
-    add si, 4
+		add	si, size ptr16
 		loop	loc_844
-		lea	di, maybe_exe_header
+		lea	di, maybe_10_ptr
     mov ax, cs
     mov es, ax
     assume es:seg000
