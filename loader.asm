@@ -987,10 +987,12 @@ loc_592:				; CODE XREF: GAME_START_sub_6+11j
     xor ax, ax
     mov ds, ax
     assume ds:nothing
-    lea ax, ds:169h
-    mov ds:26Ch, ax
-    mov word ptr ds:26Eh, cs
-		mov	cx, 10
+    lea ax, ds:((90*size ptr16)+1) ; ??? Interrupt[90]+1 ???
+    ; Interrupt[155]
+    mov ds:(155*size ptr16+ptr16.ofs), ax 
+    mov word ptr ds:(155*size ptr16+ptr16.segm), cs
+    ;====
+		mov	cx, (size maybe_10_ptr / size ptr16)
     mov ax, cs
     mov ds, ax
     assume ds:seg000
@@ -1000,7 +1002,7 @@ loc_594:				; CODE XREF: GAME_START_sub_6+6Bj
 		mov	ax, [si+ptr16.ofs]
 		or	ax, [si+ptr16.segm]
     jz  short loc_593
-    add si, 4
+    add si, size ptr16
     loop  loc_594
     stc
     pop bx
@@ -1092,7 +1094,11 @@ loc_596:				; CODE XREF: GAME_START_sub_7+2Dj
     retn
 ; ---------------------------------------------------------------------------
 
+IFDEF __WASM__
 loc_600:
+ELSE
+loc_600::
+ENDIF
 					; DATA XREF: GAME_START_sub_6+3Eo
     cli
     mov sp, cs:word_51
@@ -1142,24 +1148,12 @@ start_0   proc near   ; CODE XREF: startj
     jb  short shutdown_cleanup ; shutdown on error
 
     ; former menu screen start loop
-
-IF 0    
-    ; prepare, registers and stack (the second time, from the former menu cycle)
-    cld
-    cli
-    mov ax, cs
-    mov ss, ax
-    mov ds, ax
-    mov es, ax
-    mov sp, offset stack_space_end_unk_342
-    sti
-ENDIF    
     
 ;====== ??? free game memory for restart? im currently missing the free part due to menu cycle change
 ; TODO split first start and cleanup - move cleanup to shutdown
 
 		lea	ax, maybe_10_ptr
-		mov	cx, 10
+		mov	cx, (size maybe_10_ptr / size ptr16)
     mov ax, cs
     mov ds, ax
 		lea	si, maybe_10_ptr
@@ -1182,14 +1176,22 @@ loc_843:				; CODE XREF: start_0+4Aj
     mov es, ax
     assume es:seg000
     xor ax, ax
-		mov	cx, 28h
+IF 0
+		mov	cx, size maybe_10_ptr ; WASM produces: 78h, UASM/MASM: 28h
+ELSE
+    mov	cx, 28h ; the correct value
+ENDIF    
     rep stosw
 ;======    
 
     jmp start_game
 ; ---------------------------------------------------------------------------
 
+IFDEF __WASM__
 shutdown_cleanup:
+ELSE
+shutdown_cleanup::
+ENDIF
 
     ; restore video mode
     xor ah, ah
@@ -1293,7 +1295,11 @@ exit_program:				; CODE XREF: start_0+CEj start_0+DAj ...
     pop ds
     pop es
     assume es:nothing
+IFDEF __WASM__
 just_exit:
+ELSE    
+just_exit::
+ENDIF
     xor al, al
     mov ah, 4Ch
     int 21h   ; DOS - 2+ - QUIT WITH EXIT CODE (EXIT)
