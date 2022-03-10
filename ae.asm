@@ -1414,10 +1414,14 @@ loc_592:				; CODE XREF: GAME_START_sub_6+11j
     xor ax, ax
     mov ds, ax
     assume ds:nothing
-    lea ax, ds:169h
-    mov ds:26Ch, ax
-    mov word ptr ds:26Eh, cs
-		mov	cx, 10
+    lea ax, ds:((90*size ptr16)+1) ; ??? Interrupt[90]+1 ???
+    ; Interrupt[155]
+    mov ds:(155*size ptr16+ptr16.ofs), ax 
+    mov word ptr ds:(155*size ptr16+ptr16.segm), cs
+    
+    ;====
+    
+		mov	cx, (size maybe_10_ptr / size ptr16)
     mov ax, cs
     mov ds, ax
     assume ds:seg000
@@ -1427,7 +1431,7 @@ loc_594:				; CODE XREF: GAME_START_sub_6+6Bj
 		mov	ax, [si+ptr16.ofs]
 		or	ax, [si+ptr16.segm]
     jz  short loc_593
-    add si, 4
+    add si, size ptr16
     loop  loc_594
     stc
     pop bx
@@ -1587,7 +1591,7 @@ main_menu_screen::          ; CODE XREF: start_0+2B4j start_0+2CAj ...  ; make
     mov sp, offset stack_space_end_unk_342
     sti
 		lea	ax, maybe_10_ptr
-		mov	cx, 10
+		mov	cx, (size maybe_10_ptr / size ptr16)
     mov ax, cs
     mov ds, ax
 		lea	si, maybe_10_ptr
@@ -1610,7 +1614,7 @@ loc_843:				; CODE XREF: start_0+4Aj
     mov es, ax
     assume es:seg000
     xor ax, ax
-		mov	cx, 28h
+		mov	cx, size maybe_10_ptr
     rep stosw
 
 IFDEF DIRECT_START
@@ -1670,8 +1674,8 @@ shutdown_cleanup::      ; CODE XREF: start_0+25j start_0+82j ; // :: for publi
     mov es, ax
     assume es:nothing
 		lds	ax, dword ptr cs:saved_int1_ptr.ofs
-    mov es:4, ax
-    mov word ptr es:6, ds
+    mov es:(1*size ptr16+ptr16.ofs), ax
+    mov word ptr es:(1*size ptr16+ptr16.segm), ds
     pop ds
     pop es
     assume es:nothing
@@ -1684,18 +1688,19 @@ shutdown_cleanup::      ; CODE XREF: start_0+25j start_0+82j ; // :: for publi
     mov ds, ax
     cld
 		lea	si, saved_5_interrupt_pointers
-		mov	di, 25Ch	; from Interrupt 151(0x97) 5 pointers saved
-					;
-					; Interrupt[151]
+		mov	di, (97h*size ptr16)	; from Interrupt 151(0x97) 5 pointers saved
+					; Interrupt[0x97 = 151]
 					; Interrupt[152]
 					; Interrupt[153]
 					; Interrupt[154]
 					; Interrupt[155]
 					;
 					; --------
-		mov	cx, 20		; 5*sizeof(far-pointer)
+		mov	cx, 5*size ptr16		; 5*sizeof(far-pointer)
 		rep movsb		; DS:SI	to address ES:DI
-		lds	si, es:3C0h	; ------
+    
+    ; was adlib sound used by game - then the F0 interrupt is overwritten?
+		lds	si, es:(0F0h*size ptr16)	; ------
 					;
 					; the game sets	Interrupt 0xF0 for sound stuff
 					; (gets	not set	if the game is not started with	F1)
@@ -2249,7 +2254,7 @@ ENDIF
     mov ds, ax
     assume ds:nothing
     mov ax, bx
-    mov ds:27Ch, ax ; 27Ch / 4 => interrupt_vt[0x9F]
+    mov ds:(9Fh*size ptr16), ax ; Interrupt[9F]
     pop ax
     pop ds
     assume ds:seg000
@@ -4196,9 +4201,9 @@ loc_716:        ; CODE XREF: INIT_PART_init_stuff_sub_26+18j
           ;
           ; interrupt 1 is reserved
     assume es:nothing
-		mov	ax, es:4	; interrupt 1 ofs
+		mov	ax, es:(1*size ptr16+ptr16.ofs)	; interrupt 1 ofs
     mov cs:saved_int1_ptr.ofs, ax
-		mov	ax, es:6	; interrupt 1 seg
+		mov	ax, es:(1*size ptr16+ptr16.segm)	; interrupt 1 seg
 		mov	cs:saved_int1_ptr.segm,	ax
     pop es
     assume es:nothing
@@ -4212,9 +4217,8 @@ loc_716:        ; CODE XREF: INIT_PART_init_stuff_sub_26+18j
     assume es:seg000
     cld
 		lea	di, saved_5_interrupt_pointers
-		mov	si, 25Ch	; 0x97 * sizeof(ptr16) = 0x25C -> save 5 interrupt far ptrs
-					; starting with	interrupt 0x97 (151)
-		mov	cx, 20		; sizeof(ptr16)*5
+		mov	si, 97h*size ptr16 ; Interrupt[97h]
+		mov	cx, 5*size ptr16 ;  5 interrupts
     rep movsb
     pop ds
     assume ds:seg000
