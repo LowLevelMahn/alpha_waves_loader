@@ -11,8 +11,8 @@ set WATCOM_BIN=%watcom%\binnt64
 set INCLUDE=%watcom%\h
 set PATH=%WATCOM_BIN%;%PATH%
 
-wasm.exe -wx loader.asm
-::%uasm_exe% loader.asm
+::wasm.exe -wx loader.asm
+%uasm_exe% -WX loader.asm
 if %ERRORLEVEL% NEQ 0 goto error
 
 wlink.exe name loader.com format dos com file loader.obj

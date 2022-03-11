@@ -5,6 +5,8 @@ set tools_dir=%my_root%\tools
 set org_dir=%my_root%\alpha_waves_dev\tests\alpha
 
 set uasm_exe=%tools_dir%\uasm_x64\uasm64.exe
+:: latest 16bit able ML 9 from VS2008 Express
+set ml_exe=%tools_dir%\masm\9\ml.exe 
 
 set WATCOM=%tools_dir%\open-watcom-2_0-c-win-x64
 set WATCOM_BIN=%watcom%\binnt64
@@ -12,51 +14,66 @@ set INCLUDE=%watcom%\h
 set PATH=%WATCOM_BIN%;%PATH%
 set wlink_exe=%watcom_bin%\wlink.exe
 
-%uasm_exe% ae.asm
-if %ERRORLEVEL% EQU 0 goto next1
-echo errorlevel %ERRORLEVEL%
-pause
-exit /b 1
+:: binary equal build tests
 
-:next1
-%wlink_exe% name ae_org.com format dos com file ae.obj
-if %ERRORLEVEL% EQU 0 goto next2
-echo errorlevel %ERRORLEVEL%
-pause
-exit /b 1
+:: im building with multiple assembler to detect bugs in the tool-chain (every assembler gots its own micro problems)
 
-:next2
-fc /B %org_dir%\ALPHA_E.COM ae_org.COM
-if %ERRORLEVEL% == 0 goto next3
-echo !!!!
-echo !!!! Resulting AE_ORG.COM is not binary identical to original ALPHA_E.COM !!!
-echo !!!!
-pause
-exit /b 1
+:: ==================================================
+:: MASM/ML
+:: ==================================================
 
-rem with reduced code down to start the game and exit
+%ml_exe% /c /omf /DBINARY_EQUAL ae.asm
+if %ERRORLEVEL% NEQ 0 goto error
 
-:next3
+%wlink_exe% name ae_org_m.com format dos com file ae.obj
+if %ERRORLEVEL% NEQ 0 goto error
+
+fc /B %org_dir%\ALPHA_E.COM ae_org_m.COM
+if %ERRORLEVEL% NEQ 0 goto error
+
+:: ==================================================
+:: UASM
+:: ==================================================
+
+%uasm_exe% -WX -DBINARY_EQUAL ae.asm
+if %ERRORLEVEL% NEQ 0 goto error
+
+%wlink_exe% name ae_org_u.com format dos com file ae.obj
+if %ERRORLEVEL% NEQ 0 goto error
+
+fc /B %org_dir%\ALPHA_E.COM ae_org_u.COM
+if %ERRORLEVEL% NEQ 0 goto error
+
+:: ==================================================
+:: WASM
+:: ==================================================
+
+::TODO: make binary compatible
+wasm.exe -wx -dBINARY_EQUAL ae.asm
+if %ERRORLEVEL% NEQ 0 goto error
+
+%wlink_exe% name ae_org_w.com format dos com file ae.obj
+if %ERRORLEVEL% NEQ 0 goto error
+
+fc /B %org_dir%\ALPHA_E.COM ae_org_w.COM
+if %ERRORLEVEL% NEQ 0 goto error
+
+:: ==================================================
+:: with reduced code down to just start the game and exit, binary equality not needed here
+:: ==================================================
+
 %uasm_exe% -DDIRECT_START -DCLEANUP ae.asm 
-if %ERRORLEVEL% EQU 0 goto next4
-echo errorlevel %ERRORLEVEL%
-pause
-exit /b 1
+if %ERRORLEVEL% NEQ 0 goto error
 
-:next4
 %wlink_exe% name ae.com format dos com file ae.obj
-if %ERRORLEVEL% EQU 0 goto next5
-echo errorlevel %ERRORLEVEL%
-pause
-exit /b 1
+if %ERRORLEVEL% NEQ 0 goto error
 
-:next5
 copy ae.com %org_dir%
-if %ERRORLEVEL% EQU 0 goto next6
-echo errorlevel %ERRORLEVEL%
+if %ERRORLEVEL% NEQ 0 goto error
+
+exit /b 0
+
+:error
 pause
 exit /b 1
 
-:next6
-
-pause

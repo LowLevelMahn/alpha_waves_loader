@@ -1,19 +1,40 @@
-BINARY_EQUAL = 1 ; keep resulting AE.COM file 100% binary equal to ALPHA_E.COM in non GFX build
-
-%OUT ====================================
-IFDEF DIRECT_START
-  %OUT DIRECT_START set
-ELSE
-  %OUT DIRECT_START not set
+IFNDEF __WASM__
+  IFNDEF __UASM__
+    IS_MASM = 1
+  ENDIF
 ENDIF
 
-IFDEF CLEANUP
-  %OUT CLEANUP unused data/code
-ELSE
-  %OUT CLEANUP not set  
+IFNDEF __WASM__
+
+  %OUT ====================================
+  ; keep resulting ae_org.com file 100% binary equal to ALPHA_E.COM in non DIRECT_START/CLEANUP build
+  IFDEF BINARY_EQUAL
+    %OUT BINARY_EQUAL set
+  ELSE
+    %OUT BINARY_EQUAL not set
+  ENDIF
+  
+  IFDEF DIRECT_START
+    %OUT DIRECT_START set
+  ELSE
+    %OUT DIRECT_START not set
+  ENDIF
+
+  IFDEF CLEANUP
+    %OUT CLEANUP unused data/code
+  ELSE
+    %OUT CLEANUP not set  
+  ENDIF
+
+  %OUT ====================================
+
 ENDIF
 
-%OUT ====================================
+IFDEF BINARY_EQUAL
+  IFDEF __WASM__
+    WASM_BINARY_EQUAL = 1
+  ENDIF
+ENDIF  
 
 NOOP = 90h
 EMPTY = 0AAh
@@ -757,7 +778,12 @@ loc_562:				; CODE XREF: EXE_HEADER_sub_2+6Bj
     mov bx, cs:word_63
     mov cx, cs:word_62
     sub cx, si
-    sbb bx, dx
+IFDEF WASM_BINARY_EQUAL
+  db 1Bh,0DAh
+ELSE
+  sbb bx, dx
+ENDIF    
+    
     mov cs:word_63, bx
     mov cs:word_62, cx
 		les	di, dword ptr cs:exe_pointer.ofs
@@ -1103,7 +1129,11 @@ ENDIF
     jnz short loc_136
     mov di, dx
     mov cx, [di]
+IFDEF WASM_BINARY_EQUAL
+  db 86h,0CDh
+ELSE
     xchg  cl, ch
+ENDIF
     mov di, cx
     mov al, cs:[si+12h]
     xor ah, ah
@@ -1133,9 +1163,17 @@ ENDIF
     jnz short loc_136
     mov si, dx
     mov cx, [si]
+IFDEF WASM_BINARY_EQUAL
+    db 86h,0CDh
+ELSE
     xchg  cl, ch
+ENDIF    
     mov dx, [si+2]
+IFDEF WASM_BINARY_EQUAL
+    db 86h,0D6h
+ELSE
     xchg  dl, dh
+ENDIF   
     shl di, 1
     shl di, 1
     add di, 2
@@ -1174,14 +1212,24 @@ loc_582:        ; CODE XREF: read_some_file_sub_4+ADj
 		lds	bp, dword ptr cs:maybe_exe_buffer.ofs
     mov ax, ds:[bp+0]
     mov cx, ds:[bp+2]
+IFDEF WASM_BINARY_EQUAL
+    db 86h,0C4h
+    db 86h,0CDh
+ELSE
     xchg  al, ah
     xchg  cl, ch
+ENDIF
     mov cs:word_44, cx
     mov cs:word_45, ax
     mov ax, ds:[bp+4]
     mov cx, ds:[bp+6]
+IFDEF WASM_BINARY_EQUAL
+    db 86h,0C4h
+    db 86h,0CDh
+ELSE
     xchg  al, ah
     xchg  cl, ch
+ENDIF     
 		mov	cs:some_game_ptr.ofs, cx
 		mov	cs:some_game_ptr.segm, ax
     mov si, cx
@@ -1414,14 +1462,18 @@ loc_592:				; CODE XREF: GAME_START_sub_6+11j
     xor ax, ax
     mov ds, ax
     assume ds:nothing
-    lea ax, ds:((90*size ptr16)+1) ; ??? Interrupt[90]+1 ???
+    lea ax, ds:((90*sizeof ptr16)+1) ; ??? Interrupt[90]+1 ???
     ; Interrupt[155]
-    mov ds:(155*size ptr16+ptr16.ofs), ax 
-    mov word ptr ds:(155*size ptr16+ptr16.segm), cs
+    mov ds:(155*sizeof ptr16+ptr16.ofs), ax 
+    mov word ptr ds:(155*sizeof ptr16+ptr16.segm), cs
     
     ;====
     
-		mov	cx, (size maybe_10_ptr / size ptr16)
+IFNDEF __WASM__ ; Issue: https://github.com/open-watcom/open-watcom-v2/issues/841
+		mov	cx, lengthof maybe_10_ptr ; item count not bytes ; WASM sets 1Eh, UASM/MASM 0Ah
+ELSE
+    mov	cx, 10
+ENDIF    
     mov ax, cs
     mov ds, ax
     assume ds:seg000
@@ -1529,7 +1581,11 @@ ENDIF
     retn
 ; ---------------------------------------------------------------------------
 
-loc_600::				; CODE XREF: GAME_START_sub_7+9Ej
+IFDEF __WASM__
+loc_600:				; CODE XREF: GAME_START_sub_7+9Ej
+ELSE
+loc_600::
+ENDIF
 					; DATA XREF: GAME_START_sub_6+3Eo
     cli
     mov sp, cs:word_51
@@ -1581,7 +1637,11 @@ ENDIF
     call  read_config_and_resize_memory ; CF = 1 on error
     jb  short shutdown_cleanup ; shutdown on error
 
+IFDEF __WASM__
+main_menu_screen:
+ELSE
 main_menu_screen::          ; CODE XREF: start_0+2B4j start_0+2CAj ...  ; make label public available
+ENDIF
     cld
     cli
     mov ax, cs
@@ -1591,7 +1651,11 @@ main_menu_screen::          ; CODE XREF: start_0+2B4j start_0+2CAj ...  ; make
     mov sp, offset stack_space_end_unk_342
     sti
 		lea	ax, maybe_10_ptr
-		mov	cx, (size maybe_10_ptr / size ptr16)
+IFNDEF __WASM__ ; Issue: https://github.com/open-watcom/open-watcom-v2/issues/841
+		mov	cx, lengthof maybe_10_ptr ; item count not bytes ; WASM sets 1Eh, UASM/MASM 0Ah
+ELSE
+    mov	cx, 10
+ENDIF 
     mov ax, cs
     mov ds, ax
 		lea	si, maybe_10_ptr
@@ -1614,7 +1678,11 @@ loc_843:				; CODE XREF: start_0+4Aj
     mov es, ax
     assume es:seg000
     xor ax, ax
-		mov	cx, size maybe_10_ptr
+IFNDEF __WASM__ ; Issue: https://github.com/open-watcom/open-watcom-v2/issues/841
+		mov	cx, sizeof maybe_10_ptr ; WASM sets cx wrongly to 78h, UASM/MASM are ok
+ELSE
+    mov	cx, 28h
+ENDIF    
     rep stosw
 
 IFDEF DIRECT_START
@@ -1636,7 +1704,7 @@ IFDEF DIRECT_START
   ;----
 ELSE
     ; original code (23h bytes)
-		cmp	cs:IN_MAIN_MENU_selected_gfx_index, 0FFFFh
+		cmp	word ptr cs:IN_MAIN_MENU_selected_gfx_index, 0FFFFh
 		jnz	short loc_845
     call  GFX_SELECT_MENU_sub_9
 
@@ -1658,7 +1726,11 @@ wait_key_loc_604:     ; CODE XREF: start_0+77j
 ENDIF    
 ; ---------------------------------------------------------------------------
 
+IFDEF __WASM__
+shutdown_cleanup:
+ELSE
 shutdown_cleanup::      ; CODE XREF: start_0+25j start_0+82j ; // :: for public label
+ENDIF
           ; DATA XREF: ...
     xor ah, ah
 		mov	al, cs:saved_video_mode
@@ -1674,8 +1746,8 @@ shutdown_cleanup::      ; CODE XREF: start_0+25j start_0+82j ; // :: for publi
     mov es, ax
     assume es:nothing
 		lds	ax, dword ptr cs:saved_int1_ptr.ofs
-    mov es:(1*size ptr16+ptr16.ofs), ax
-    mov word ptr es:(1*size ptr16+ptr16.segm), ds
+    mov es:(1*sizeof ptr16+ptr16.ofs), ax
+    mov word ptr es:(1*sizeof ptr16+ptr16.segm), ds
     pop ds
     pop es
     assume es:nothing
@@ -1688,7 +1760,7 @@ shutdown_cleanup::      ; CODE XREF: start_0+25j start_0+82j ; // :: for publi
     mov ds, ax
     cld
 		lea	si, saved_5_interrupt_pointers
-		mov	di, (97h*size ptr16)	; from Interrupt 151(0x97) 5 pointers saved
+		mov	di, (97h*sizeof ptr16)	; from Interrupt 151(0x97) 5 pointers saved
 					; Interrupt[0x97 = 151]
 					; Interrupt[152]
 					; Interrupt[153]
@@ -1696,11 +1768,11 @@ shutdown_cleanup::      ; CODE XREF: start_0+25j start_0+82j ; // :: for publi
 					; Interrupt[155]
 					;
 					; --------
-		mov	cx, 5*size ptr16		; 5*sizeof(far-pointer)
+		mov	cx, 5*sizeof ptr16		; 5*sizeof(far-pointer)
 		rep movsb		; DS:SI	to address ES:DI
     
     ; was adlib sound used by game - then the F0 interrupt is overwritten?
-		lds	si, es:(0F0h*size ptr16)	; ------
+		lds	si, es:(0F0h*sizeof ptr16)	; ------
 					;
 					; the game sets	Interrupt 0xF0 for sound stuff
 					; (gets	not set	if the game is not started with	F1)
@@ -1754,7 +1826,11 @@ exit_program:				; CODE XREF: start_0+CEj start_0+DAj ...
     pop ds
     pop es
     assume es:nothing
+IFDEF __WASM__
+just_exit:
+ELSE
 just_exit::    
+ENDIF
     xor al, al
     mov ah, 4Ch
     int 21h   ; DOS - 2+ - QUIT WITH EXIT CODE (EXIT)
@@ -1886,7 +1962,11 @@ print_grafic_card_type:     ; CODE XREF: GFX_SELECT_MENU_sub_9+5Dj
 					; the grafic_card_types_text_offset table
 					; switches the last two	and renumbers the F keys accordingly
     push  dx
+IFDEF WASM_BINARY_EQUAL
+    db 86h,0F2h
+ELSE
     xchg  dh, dl    ; x_@
+ENDIF
     add dh, 4   ; y_@
     call  SOME_PRINTING_sub_18
     pop dx
@@ -1898,7 +1978,11 @@ loc_815:				; CODE XREF: GFX_SELECT_MENU_sub_9+33j
 		cmp	cx, 5		; 5 types printed?
     jnz short print_grafic_card_type
     mov ax, dx
+IFDEF WASM_BINARY_EQUAL
+    db 86h,0F2h
+ELSE
     xchg  dh, dl    ; x_@
+ENDIF     
     add dh, 4   ; y_@
     lea ax, press_a_function_key_text ; text_offset_@ "Press a function key"
     call  SOME_PRINTING_sub_18
@@ -2254,7 +2338,7 @@ ENDIF
     mov ds, ax
     assume ds:nothing
     mov ax, bx
-    mov ds:(9Fh*size ptr16), ax ; Interrupt[9F]
+    mov ds:(9Fh*sizeof ptr16), ax ; Interrupt[9F]
     pop ax
     pop ds
     assume ds:seg000
@@ -2462,7 +2546,7 @@ loc_624:				; CODE XREF: START_GAME_IS_GFX_SUPPORTED_sub_12+50j
     mov cx, 8
     rep movsb
     xor dx, dx    ; seems_unused2_@
-		mov	cs:IN_MAIN_MENU_selected_gfx_index, 0FFFFh
+		mov	word ptr cs:IN_MAIN_MENU_selected_gfx_index, 0FFFFh
 		lea	ax, text_problem ; text_offset_@
     mov cx, 5   ; seems_unused1_@
 		call	SOME_PRINTING_show_msg_box_sub_13
@@ -4094,7 +4178,11 @@ INIT_PART_sub_269 proc near   ; CODE XREF: INIT_PART_sub_276+3p
 loc_696:        ; CODE XREF: INIT_PART_sub_269:loc_696j
     loop  loc_696
     in  al, dx
+IFDEF WASM_BINARY_EQUAL
+    db 86h,0E0h
+ELSE
     xchg  ah, al
+ENDIF    
     out dx, al
     cmp ah, 66h
     jz  short locret_697
@@ -4201,9 +4289,9 @@ loc_716:        ; CODE XREF: INIT_PART_init_stuff_sub_26+18j
           ;
           ; interrupt 1 is reserved
     assume es:nothing
-		mov	ax, es:(1*size ptr16+ptr16.ofs)	; interrupt 1 ofs
+		mov	ax, es:(1*sizeof ptr16+ptr16.ofs)	; interrupt 1 ofs
     mov cs:saved_int1_ptr.ofs, ax
-		mov	ax, es:(1*size ptr16+ptr16.segm)	; interrupt 1 seg
+		mov	ax, es:(1*sizeof ptr16+ptr16.segm)	; interrupt 1 seg
 		mov	cs:saved_int1_ptr.segm,	ax
     pop es
     assume es:nothing
@@ -4217,8 +4305,8 @@ loc_716:        ; CODE XREF: INIT_PART_init_stuff_sub_26+18j
     assume es:seg000
     cld
 		lea	di, saved_5_interrupt_pointers
-		mov	si, 97h*size ptr16 ; Interrupt[97h]
-		mov	cx, 5*size ptr16 ;  5 interrupts
+		mov	si, 97h*sizeof ptr16 ; Interrupt[97h]
+		mov	cx, 5*sizeof ptr16 ;  5 interrupts
     rep movsb
     pop ds
     assume ds:seg000

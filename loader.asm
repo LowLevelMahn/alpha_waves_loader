@@ -641,12 +641,8 @@ read_some_file_sub_4 proc near		; CODE XREF: GAME_START_sub_7+2Ap
     mov ax, cs
     mov ds, ax
 
-IF 1		
     ; its always "progs.cc1"
     mov dx, offset progs_cc1_filename
-ELSE    
-    mov	dx, bx		; bx = offset filename
-ENDIF    
     
     mov ah, 3Dh
     mov al, 0
@@ -987,12 +983,16 @@ loc_592:				; CODE XREF: GAME_START_sub_6+11j
     xor ax, ax
     mov ds, ax
     assume ds:nothing
-    lea ax, ds:((90*size ptr16)+1) ; ??? Interrupt[90]+1 ???
+    lea ax, ds:((90*sizeof ptr16)+1) ; ??? Interrupt[90]+1 ???
     ; Interrupt[155]
-    mov ds:(155*size ptr16+ptr16.ofs), ax 
-    mov word ptr ds:(155*size ptr16+ptr16.segm), cs
+    mov ds:(155*sizeof ptr16+ptr16.ofs), ax 
+    mov word ptr ds:(155*sizeof ptr16+ptr16.segm), cs
     ;====
-		mov	cx, (size maybe_10_ptr / size ptr16)
+IFNDEF __WASM__ ; Issue: https://github.com/open-watcom/open-watcom-v2/issues/841
+		mov	cx, lengthof maybe_10_ptr ; item count not bytes ; WASM sets 1Eh, UASM/MASM 0Ah
+ELSE
+    mov	cx, 10
+ENDIF    
     mov ax, cs
     mov ds, ax
     assume ds:seg000
@@ -1153,7 +1153,11 @@ start_0   proc near   ; CODE XREF: startj
 ; TODO split first start and cleanup - move cleanup to shutdown
 
 		lea	ax, maybe_10_ptr
-		mov	cx, (size maybe_10_ptr / size ptr16)
+IFNDEF __WASM__ ; Issue: https://github.com/open-watcom/open-watcom-v2/issues/841
+		mov	cx, lengthof maybe_10_ptr ; item count not bytes ; WASM sets 1Eh, UASM/MASM 0Ah
+ELSE
+    mov	cx, 10
+ENDIF 
     mov ax, cs
     mov ds, ax
 		lea	si, maybe_10_ptr
@@ -1176,10 +1180,11 @@ loc_843:				; CODE XREF: start_0+4Aj
     mov es, ax
     assume es:seg000
     xor ax, ax
-IF 0
-		mov	cx, size maybe_10_ptr ; WASM produces: 78h, UASM/MASM: 28h
+
+IFNDEF __WASM__ ; Issue: https://github.com/open-watcom/open-watcom-v2/issues/841
+		mov	cx, sizeof maybe_10_ptr ; WASM sets cx wrongly to 78h, UASM/MASM are ok
 ELSE
-    mov	cx, 28h ; the correct value
+    mov	cx, 28h
 ENDIF    
     rep stosw
 ;======    
@@ -1212,8 +1217,8 @@ ENDIF
     mov es, ax
     assume es:nothing
 		lds	ax, dword ptr cs:saved_int1_ptr.ofs
-    mov es:4, ax
-    mov word ptr es:6, ds
+    mov es:(1*sizeof ptr16+ptr16.ofs), ax
+    mov word ptr es:(1*sizeof ptr16+ptr16.segm), ds
     pop ds
     pop es
 
@@ -1228,20 +1233,19 @@ ENDIF
     mov ds, ax
     cld
 		lea	si, saved_5_interrupt_pointers
-		mov	di, 25Ch	; from Interrupt 151(0x97) 5 pointers saved
-					;
-					; Interrupt[151]
+		mov	di, (97h*sizeof ptr16)	; from Interrupt 151(0x97) 5 pointers saved
+					; Interrupt[0x97 = 151]
 					; Interrupt[152]
 					; Interrupt[153]
 					; Interrupt[154]
 					; Interrupt[155]
 					;
 					; --------
-		mov	cx, 20		; 5*sizeof(far-pointer)
+		mov	cx, 5*sizeof ptr16		; 5*sizeof(far-pointer)
 		rep movsb		; DS:SI	to address ES:DI
 
-    ; check if adlib was used by game - interrupt F0 is then set - with adlib signature
-		lds	si, es:3C0h	; ------
+    ; was adlib sound used by game - then the F0 interrupt is overwritten?
+		lds	si, es:(0F0h*sizeof ptr16)	; ------
 					;
 					; the game sets	Interrupt 0xF0 for sound stuff
 					; (gets	not set	if the game is not started with	F1)
