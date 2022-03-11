@@ -17,3 +17,4 @@ folder - in the end these executables need to be reachable
 
 tools\uasm_x64\uasm64.exe
 tools\open-watcom-2_0-c-win-x64\binnt64\wlink.exe
+[tools\masm\9\ml.exe]
