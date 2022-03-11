@@ -43,7 +43,7 @@ my reduced loader
 | ae_org_m.com      | ae.asm build with MASM V9 as-is - is binary identical to ALPHA_E.com (checked by build.bat)            |
 | ae_org_u.com      | ae.asm build with UASM64 2.52 as-is - is binary identical to ALPHA_E.com (checked by build.bat)        |
 | ae_org_w.com      | ae.asm build with recent WASM as-is - is binary identical to ALPHA_E.com (checked by build.bat)        |
-| ae.com            | ae.asm build with DIRECT_START, direct start of the game, no menu, most code NOPed out                 |
+| ae.com            | ae.asm build with DIRECT_START/CLEANUP, direct start of the game, no menu, most code NOPed out with defines |
 | loader.asm        | like ae.asm but all dead code removed (just the loader code)                                           |
 | loader.com        | source reduced ae.asm but only game loading code                                                       |
 | build_loader.bat  | builds the loader.asm                                                                                  |
