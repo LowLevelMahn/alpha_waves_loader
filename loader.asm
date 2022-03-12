@@ -96,14 +96,14 @@ start   endp
 
 ; Data
 
-word_38		dw 0			; DATA XREF: GAME_START_sub_7+79w
+someway_cs_registe_value1 dw 0		; DATA XREF: GAME_START_sub_7+79w
 					; GAME_START_sub_7+8Do
     db 80h, 0
-word_597	dw 0			; DATA XREF: GAME_START_sub_7+7Ew
+someway_cs_registe_value2 dw 0		; DATA XREF: GAME_START_sub_7+7Ew
     db 5Ch, 0
-word_598	dw 0			; DATA XREF: GAME_START_sub_7+83w
+someway_cs_registe_value3 dw 0		; DATA XREF: GAME_START_sub_7+83w
     db 6Ch, 0
-word_599	dw 0			; DATA XREF: GAME_START_sub_7+88w
+someway_cs_registe_value4 dw 0		; DATA XREF: GAME_START_sub_7+88w
 maybe_exe_buffer ptr16 <0>		; DATA XREF: read_some_file_sub_4+20r
           ; read_some_file_sub_4+3Er ...
 					;
@@ -130,9 +130,9 @@ another_far_ptr	ptr16 <0>		; DATA XREF: read_some_file_sub_4:loc_580w
           ; read_some_file_sub_4+145r ...
 somway_exe_buffer_seg dw 0		; DATA XREF: GAME_START_sub_5+Dr
 					; GAME_START_sub_5+63r	...
-word_50		dw 0			; DATA XREF: GAME_START_sub_7+96w
+some_register_ss_value dw 0		; DATA XREF: GAME_START_sub_7+96w
 					; GAME_START_sub_7+A9r
-word_51		dw 0			; DATA XREF: GAME_START_sub_7+91w
+some_register_sp_value dw 0		; DATA XREF: GAME_START_sub_7+91w
 					; GAME_START_sub_7+A4r
 
 maybe_10_ptr	ptr16 0Ah dup(<0>)	; DATA XREF: GAME_START_sub_6+5Do
@@ -169,17 +169,17 @@ another_pointer2 ptr16 <0>		; DATA XREF: GAME_START_sub_3+49r
 					; GAME_START_sub_3+61w	...
 word_62		dw 0			; DATA XREF: EXE_HEADER_sub_2+17w
 					; EXE_HEADER_sub_2+9Ar	...
-word_63		dw 0			; DATA XREF: EXE_HEADER_sub_2+1Cw
+some_game_pointer_seg dw 0		; DATA XREF: EXE_HEADER_sub_2+1Cw
 					; EXE_HEADER_sub_2+95r	...
 new_psp_seg	dw 0			; DATA XREF: EXE_HEADER_sub_2+2Dr
 					; EXE_HEADER_sub_2+103r ...
 word_558	dw 0			; DATA XREF: EXE_HEADER_sub_2:loc_557w
-word_559	dw 0			; DATA XREF: EXE_HEADER_sub_2+12w
-word_68		dw 0			; DATA XREF: EXE_HEADER_sub_2+E3w
+some_register_cs_value dw 0		; DATA XREF: EXE_HEADER_sub_2+12w
+register_sp_value dw 0			; DATA XREF: EXE_HEADER_sub_2+E3w
 					; EXE_HEADER_sub_2+10Br
-word_69		dw 0			; DATA XREF: EXE_HEADER_sub_2+EDw
+register_ss_value dw 0			; DATA XREF: EXE_HEADER_sub_2+EDw
 					; EXE_HEADER_sub_2+10Fr
-maybe_game_code_ptr ptr16 <0>		; DATA XREF: EXE_HEADER_sub_2+FFw
+exe_cs_ip_ptr	ptr16 <0>		; DATA XREF: EXE_HEADER_sub_2+FFw
 					; EXE_HEADER_sub_2+129r ...
 ; __int16 exe_pointer
 exe_pointer	ptr16 <0>		; DATA XREF: EXE_HEADER_sub_2+21w
@@ -319,12 +319,12 @@ EXE_HEADER_sub_2 proc far		; CODE XREF: GAME_START_sub_7+9Bp
 ; ---------------------------------------------------------------------------
 
 loc_557:				; CODE XREF: EXE_HEADER_sub_2+7j
-    mov cs:word_558, ax
-    mov cs:word_559, dx
-    mov cs:word_62, cx
-    mov cs:word_63, bx
-		mov	cs:exe_pointer.ofs, si
-		mov	cs:exe_pointer.segm, ds
+		mov	cs:word_558, ax	; something with someway_cs_registe_value1 - lea instruction
+		mov	cs:some_register_cs_value, dx ;	= cs
+		mov	cs:word_62, cx	; = some_game_ptr.ofs
+		mov	cs:some_game_pointer_seg, bx ; = some_game_ptr.segm
+		mov	cs:exe_pointer.ofs, si ; = 0
+		mov	cs:exe_pointer.segm, ds	; = somway_exe_buffer_seg + 10h
     mov ah, 50h
 		mov	bx, cs:new_psp_seg
     int 21h   ; DOS - 2+ internal - SET PSP SEGMENT
@@ -385,11 +385,11 @@ loc_562:				; CODE XREF: EXE_HEADER_sub_2+6Bj
 		call	GAME_START_sub_1
     mov dx, bx
     mov si, cx    ; unknown_@
-    mov bx, cs:word_63
+		mov	bx, cs:some_game_pointer_seg
     mov cx, cs:word_62
     sub cx, si
     sbb bx, dx
-    mov cs:word_63, bx
+    mov cs:some_game_pointer_seg, bx
     mov cs:word_62, cx
 		les	di, dword ptr cs:exe_pointer.ofs
 		call	GAME_START_sub_1
@@ -412,22 +412,22 @@ loc_564:				; CODE XREF: EXE_HEADER_sub_2+D8j
 loc_563:				; CODE XREF: EXE_HEADER_sub_2+C0j
 		les	si, dword ptr cs:pointer3.ofs
 		mov	ax, es:[si+EXE_Header.initSP]
-    mov cs:word_68, ax
+		mov	cs:register_sp_value, ax
 		mov	ax, es:[si+EXE_Header.initSS]
     add ax, bp
-    mov cs:word_69, ax
+		mov	cs:register_ss_value, ax
 		mov	ax, es:[si+EXE_Header.initCS]
     add ax, bp
-		mov	cs:maybe_game_code_ptr.segm, ax
+		mov	cs:exe_cs_ip_ptr.segm, ax
 		mov	ax, es:[si+EXE_Header.initIP]
-		mov	cs:maybe_game_code_ptr.ofs, ax
+		mov	cs:exe_cs_ip_ptr.ofs, ax
 		mov	es, cs:new_psp_seg
     cld
     mov di, es
-    mov ax, cs:word_68
-    mov dx, cs:word_69
+		mov	ax, cs:register_sp_value
+		mov	dx, cs:register_ss_value
     mov cx, cs:word_62
-    mov bx, cs:word_63
+		mov	bx, cs:some_game_pointer_seg
     cli
     mov ss, dx
     mov sp, ax
@@ -435,8 +435,7 @@ loc_563:				; CODE XREF: EXE_HEADER_sub_2+C0j
     xor ax, ax
     push  ax
     sti
-		jmp	dword ptr cs:maybe_game_code_ptr.ofs ; jump into game code?
-    ;its a jump - no return 
+		jmp	dword ptr cs:exe_cs_ip_ptr.ofs ; jump into game	code?
 ; ---------------------------------------------------------------------------
 
 loc_561:				; CODE XREF: EXE_HEADER_sub_2+64j
@@ -1134,13 +1133,13 @@ loc_596:				; CODE XREF: GAME_START_sub_7+2Dj
     mov ds, ax
     xor si, si
     mov dx, cs
-    mov cs:word_38, dx
-    mov cs:word_597, dx
-    mov cs:word_598, dx
-    mov cs:word_599, dx
-    lea ax, word_38
-    mov cs:word_51, sp
-    mov cs:word_50, ss
+		mov	cs:someway_cs_registe_value1, dx
+		mov	cs:someway_cs_registe_value2, dx
+		mov	cs:someway_cs_registe_value3, dx
+		mov	cs:someway_cs_registe_value4, dx
+		lea	ax, someway_cs_registe_value1
+		mov	cs:some_register_sp_value, sp
+		mov	cs:some_register_ss_value, ss
 		call	near ptr EXE_HEADER_sub_2 ; !!!!calls the game code
     jnb short loc_600
     stc
@@ -1155,8 +1154,8 @@ loc_600::
 ENDIF
 					; DATA XREF: GAME_START_sub_6+3Eo
     cli
-    mov sp, cs:word_51
-    mov ss, cs:word_50
+		mov	sp, cs:some_register_sp_value
+		mov	ss, cs:some_register_ss_value
     sti
     mov ah, 4Dh
     int 21h   ; DOS - 2+ - GET EXIT CODE OF SUBPROGRAM (WAIT)
