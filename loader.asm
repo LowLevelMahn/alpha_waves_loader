@@ -1723,32 +1723,6 @@ is_end_block:				; CODE XREF: START_GAME_sub_11+4j
     retn
 START_GAME_sub_11    endp
 
-; --------------------
-;
-; gets called 4	times
-;
-;
-; checks if prog1.cc exists
-; AND sets 0 at end of progs1.cc filename
-;
-; --------------------
-
-START_GAME_DOES_FILE_EXIST_sub_19 proc near ; CODE XREF: START_GAME_sub_22+8p
-		mov	si, bx		; bx = offset gfx_block.filename
-
-find_first_blank_loop:			; CODE XREF: START_GAME_DOES_FILE_EXIST_sub_19+9j
-		lodsb			; load first char of filename, ++si
-    or  al, al
-		jz	short found_null_in_name
-    cmp al, 20h
-		jnz	short find_first_blank_loop
-		mov	byte ptr [si-1], 0 ; set filename asciiz 0 at first found 0x20 (blank)
-
-found_null_in_name:
-    cld ; always return file exists
-    retn  
-START_GAME_DOES_FILE_EXIST_sub_19 endp
-
 ; =============== S U B R O U T I N E =======================================
 
 START_GAME_FEATURE_FLAG_STUFF_sub_21 proc near ; CODE XREF: START_GAME_sub_22+3p
