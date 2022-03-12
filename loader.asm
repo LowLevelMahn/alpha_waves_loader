@@ -1717,6 +1717,10 @@ START_GAME_sub_11    endp
 
 START_GAME_FEATURE_FLAG_STUFF_sub_21 proc near ; CODE XREF: START_GAME_sub_22+3p
 
+IF 0
+
+; check if enough memory - based on word_16h - but that word is always 0 - so no memory size check at all
+
   	mov	si, cs:[bx+gfx_block_t.word_16h]
 		mov	ax, si		; always 0
 		and	ax, 0F000h	; 0xF000 = 0b1111000000000000
@@ -1762,23 +1766,27 @@ loc_206:				; CODE XREF: START_GAME_FEATURE_FLAG_STUFF_sub_21+17j
     jmp just_exit 
     
 loc_651:
+
+ENDIF
     stc
     retn    
 
 START_GAME_FEATURE_FLAG_STUFF_sub_21 endp
 
 START_GAME_sub_22 proc near		; CODE XREF: start_0+305p start_0+31Fp ...
-
+IF 0
 		call	START_GAME_FEATURE_FLAG_STUFF_sub_21
 		jnb	short locret_654 ; if(!CF)...
 
     jmp loc_655
+   
 
 locret_654:				; CODE XREF: START_GAME_sub_22+6j
     retn
 ; ---------------------------------------------------------------------------
 
 loc_655:				; CODE XREF: START_GAME_sub_22+Bj
+ENDIF
 		call	GAME_START_sub_7 ; starts the game code
 					; gets also called several times
     retn
