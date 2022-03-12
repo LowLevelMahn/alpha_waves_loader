@@ -10,7 +10,7 @@ ptr16   ends
 
 gfx_block_t	struc ;	(sizeof=0x18)
 filename	db 18 dup(?)		; XREF:	start_0+30Ao start_0+324o ...
-byte_12h	db ?
+byte_12h	db ?			; XREF:	read_some_file_sub_4+54r
 byte_13h	db ?			; XREF:	GAME_START_sub_7+1Dr
 					; start_0+2FBr	...
 byte_14h	db ?			; XREF:	START_GAME_IS_GFX_SUPPORTED_sub_12+5r
@@ -429,13 +429,20 @@ loc_563:				; CODE XREF: EXE_HEADER_sub_2+C0j
     mov cx, cs:word_62
 		mov	bx, cs:some_game_pointer_seg
     cli
-    mov ss, dx
+		mov	ss, dx		;
+					;
+					; --
+					;
+					; prepare registers for	exe start
+					;
+					;
+					; --
     mov sp, ax
     mov ds, di
     xor ax, ax
     push  ax
     sti
-		jmp	dword ptr cs:exe_cs_ip_ptr.ofs ; jump into game	code?
+		jmp	dword ptr cs:exe_cs_ip_ptr.ofs ; jump into game	code
 ; ---------------------------------------------------------------------------
 
 loc_561:				; CODE XREF: EXE_HEADER_sub_2+64j
@@ -712,7 +719,7 @@ loc_136:        ; CODE XREF: read_some_file_sub_4+45j
 ; ---------------------------------------------------------------------------
 
 loc_578:        ; CODE XREF: read_some_file_sub_4+Cj
-    mov si, bx
+    mov si, bx ; block start
     mov bx, ax
     mov ah, 3Fh
     mov cl, cs:byte_55
@@ -739,7 +746,7 @@ loc_579:        ; CODE XREF: read_some_file_sub_4+1Ej
     mov cx, [di]
     xchg  cl, ch
     mov di, cx
-    mov al, cs:[si+12h]
+		mov	al, cs:[si+gfx_block_t.byte_12h]
     xor ah, ah
     shl ax, 1
     shl ax, 1
@@ -850,7 +857,7 @@ loc_586:        ; CODE XREF: read_some_file_sub_4+18Dj
     add ax, cx
     mov ds, ax
     and dx, 0Fh
-    mov ax, 0BB80h
+		mov	ax, 48000
     sub si, ax
     sbb di, 0
     jnb short loc_583
@@ -1582,7 +1589,7 @@ start_game:       ; CODE XREF: start_0+82j
     mov ds, ax
     assume ds:nothing
     mov ax, bx
-    mov ds:27Ch, ax ; 27Ch / 4 => interrupt_vt[0x9F]
+    mov ds:(9Fh*sizeof ptr16), ax ; Interrupt[9F]
     pop ax
     pop ds
 

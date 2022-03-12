@@ -51,7 +51,7 @@ ptr16   ends
 
 gfx_block_t	struc ;	(sizeof=0x18)
 filename	db 18 dup(?)		; XREF:	start_0+30Ao start_0+324o ...
-byte_12h	db ?
+byte_12h	db ?			; XREF:	read_some_file_sub_4+54r
 byte_13h	db ?			; XREF:	GAME_START_sub_7+1Dr
 					; start_0+2FBr	...
 byte_14h	db ?			; XREF:	START_GAME_IS_GFX_SUPPORTED_sub_12+5r
@@ -878,13 +878,20 @@ loc_563:				; CODE XREF: EXE_HEADER_sub_2+C0j
     mov cx, cs:word_62
 		mov	bx, cs:some_game_pointer_seg
     cli
-    mov ss, dx
+		mov	ss, dx		;
+					;
+					; --
+					;
+					; prepare registers for	exe start
+					;
+					;
+					; --
     mov sp, ax
     mov ds, di
     xor ax, ax
     push  ax
     sti
-		jmp	dword ptr cs:exe_cs_ip_ptr.ofs ; jump into game	code?
+		jmp	dword ptr cs:exe_cs_ip_ptr.ofs ; jump into game	code
 ; ---------------------------------------------------------------------------
 
 loc_561:				; CODE XREF: EXE_HEADER_sub_2+64j
@@ -1137,7 +1144,7 @@ GAME_START_sub_3 endp ;	sp-analysis failed
 read_some_file_sub_4 proc near		; CODE XREF: GAME_START_sub_7+2Ap
     mov ax, cs
     mov ds, ax
-		mov	dx, bx		; bx = offset filename
+		mov	dx, bx		; bx = gfx-block start = offset	filename
     mov ah, 3Dh
     mov al, 0
     int 21h   ; DOS - 2+ - OPEN DISK FILE WITH HANDLE
@@ -1189,7 +1196,7 @@ ELSE
     xchg  cl, ch
 ENDIF
     mov di, cx
-    mov al, cs:[si+12h]
+		mov	al, cs:[si+gfx_block_t.byte_12h]
     xor ah, ah
     shl ax, 1
     shl ax, 1
@@ -1330,7 +1337,7 @@ loc_586:        ; CODE XREF: read_some_file_sub_4+18Dj
     add ax, cx
     mov ds, ax
     and dx, 0Fh
-    mov ax, 0BB80h
+		mov	ax, 48000
     sub si, ax
     sbb di, 0
     jnb short loc_583
