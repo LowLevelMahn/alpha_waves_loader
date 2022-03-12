@@ -1047,12 +1047,10 @@ loc_592:				; CODE XREF: GAME_START_sub_6+11j
     ; Interrupt[155]
     mov ds:(155*sizeof ptr16+ptr16.ofs), ax 
     mov word ptr ds:(155*sizeof ptr16+ptr16.segm), cs
+    
     ;====
-IFNDEF __WASM__ ; Issue: https://github.com/open-watcom/open-watcom-v2/issues/841
+    
 		mov	cx, lengthof maybe_10_ptr ; item count not bytes ; WASM sets 1Eh, UASM/MASM 0Ah
-ELSE
-    mov	cx, 10
-ENDIF    
     mov ax, cs
     mov ds, ax
     assume ds:seg000
@@ -1213,11 +1211,7 @@ start_0   proc near   ; CODE XREF: startj
 ; TODO split first start and cleanup - move cleanup to shutdown
 
 		lea	ax, maybe_10_ptr
-IFNDEF __WASM__ ; Issue: https://github.com/open-watcom/open-watcom-v2/issues/841
 		mov	cx, lengthof maybe_10_ptr ; item count not bytes ; WASM sets 1Eh, UASM/MASM 0Ah
-ELSE
-    mov	cx, 10
-ENDIF 
     mov ax, cs
     mov ds, ax
 		lea	si, maybe_10_ptr
@@ -1241,11 +1235,7 @@ loc_843:				; CODE XREF: start_0+4Aj
     assume es:seg000
     xor ax, ax
 
-IFNDEF __WASM__ ; Issue: https://github.com/open-watcom/open-watcom-v2/issues/841
 		mov	cx, sizeof maybe_10_ptr ; WASM sets cx wrongly to 78h, UASM/MASM are ok
-ELSE
-    mov	cx, 28h
-ENDIF    
     rep stosw
 ;======    
 
