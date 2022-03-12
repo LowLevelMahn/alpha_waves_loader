@@ -10,8 +10,11 @@ just unzip the exe - no installation needed!!
 
 2. unpack and copy the folders into the tools folder
 
+[3. MASM/ML V9 - can be found in the VS2008 Express installation - newer releases won't work for 16bit, but still for 32bit dos]
+
 rename the folder to match this hierarchy, no moving of single files - just the complete
 folder - in the end these executables need to be reachable
 
 tools\uasm_x64\uasm64.exe
 tools\open-watcom-2_0-c-win-x64\binnt64\wlink.exe
+[tools\masm\9\ml.exe]

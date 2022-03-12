@@ -40,9 +40,12 @@ my reduced loader
 | ae.asm            | reversed and reassemble-able source code of ALPHA_E.COM                                                |
 | build.bat         | builds ae.asm with UASM64/WLink and checks if resulting ae_org.com is binary identical to ALPHA_E.COM  |
 | tools_howto.txt   | how to get the needed build tools (UASM, WLink) - very easy to install                                 |
-| ae_org.com        | ae.asm build as-is - is binary identical to ALPHA_E.com (checked by build.bat)                         |
-| ae.com            | ae.asm build with DIRECT_START, direct start of the game, no menu, most code NOPed out                 |
+| ae_org_m.com      | ae.asm build with MASM V9 as-is - is binary identical to ALPHA_E.com (checked by build.bat)            |
+| ae_org_u.com      | ae.asm build with UASM64 2.52 as-is - is binary identical to ALPHA_E.com (checked by build.bat)        |
+| ae_org_w.com      | ae.asm build with recent WASM as-is - is binary identical to ALPHA_E.com (checked by build.bat)        |
+| ae.com            | ae.asm build with DIRECT_START/CLEANUP, direct start of the game, no menu, most code NOPed out with defines |
 | loader.asm        | like ae.asm but all dead code removed (just the loader code)                                           |
+| loader.com        | based on physical source reduced ae.asm with only game loading code                                                       |
 | build_loader.bat  | builds the loader.asm                                                                                  |
 
  **tools_dir** variable in build.bat needs to be set to suits your environment
@@ -58,6 +61,7 @@ my reduced loader
  - analysed the config.tat and HIGHSCOR.QB fully
  - documented the video-card detection, menu and config.tat reading code
  - created a reduced/cleanup version that gets rid of the video card detection and menu (parts NOPed out, unused data/code removed) which directly starts the game
+ - binary indentical output test with MASM, UASM, WASM
  
  # TODOs
  - game-starting analyse is in the very beginning: so far: an exe gets created from parts of progs1.cc in ram and executed 
