@@ -1737,19 +1737,11 @@ START_GAME_FEATURE_FLAG_STUFF_sub_21 proc near ; CODE XREF: START_GAME_sub_22+3
     cmp si, 0
     jz loc_206
     cmp si, 1
-    jz loc_203
+    jz loc_205
     cmp si, 2
     jz loc_205
     ; or 3
     jmp loc_205
-
-loc_203:				; CODE XREF: START_GAME_FEATURE_FLAG_STUFF_sub_21+17j
-          ; DATA XREF: seg000:154Co
-    cmp ax, cx
-    ja  short loc_204
-    stc
-    retn
-; ---------------------------------------------------------------------------
 
 loc_205:				; CODE XREF: START_GAME_FEATURE_FLAG_STUFF_sub_21+17j
           ; DATA XREF: seg000:154Eo ...
