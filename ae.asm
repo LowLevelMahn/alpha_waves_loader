@@ -58,6 +58,60 @@ byte_14h	db ?			; XREF:	START_GAME_IS_GFX_SUPPORTED_sub_12+5r
 byte_15h	db ?
 word_16h	dw ?			; XREF:	START_GAME_FEATURE_FLAG_STUFF_sub_21r
 gfx_block_t	ends
+; ---------------------------------------------------------------------------
+CommandTail	struc ;	(sizeof=0x80)	; XREF:	sPSPr
+count		db ?
+buffer		db 127 dup(?)
+CommandTail	ends
+; ---------------------------------------------------------------------------
+; Program segment prefix from dosbox source
+sPSP		struc ;	(sizeof=0x100)
+exit_code		db 2 dup(?)		; XREF:	EXE_HEADER_sub_2+140o
+					; GAME_START_sub_6+13o
+next_seg	dw ?
+fill_1		db ?
+far_call	db ?
+cpm_entry	ptr16 <?>
+int_22		ptr16 <?>
+int_23		ptr16 <?>
+int_24		ptr16 <?>
+psp_parent	dw ?
+files		db 20 dup(?)
+environment	dw ?
+stack		dd ?
+max_files	dw ?
+file_table	ptr16 <?>
+prev_psp	ptr16 <?>
+interim_flag	db ?
+truename_flag	db ?
+nn_flags	dw ?
+version_dos	dw ?
+fill_2		db 14 dup(?)
+service		db 3 dup(?)
+fill_3		db 9 dup(?)
+fcb1		db 16 dup(?)
+fcb2		db 16 dup(?)
+fill_4		db 4 dup(?)
+cmdtail_or_dta	CommandTail <?>		; XREF:	GAME_START_sub_6+2Eo ;	or DTA
+sPSP		ends
+; ---------------------------------------------------------------------------
+; exe header from dosbox source
+EXE_Header	struc ;	(sizeof=0x1C)
+signature	dw ?			; XREF:	EXE_HEADER_sub_2:loc_560r
+extrabytes	dw ?
+pages		dw ?
+relocations	dw ?
+headersize	dw ?			; XREF:	EXE_HEADER_sub_2:loc_562r
+minmemory	dw ?
+maxmemory	dw ?
+initSS		dw ?			; XREF:	EXE_HEADER_sub_2+E7r
+initSP		dw ?			; XREF:	EXE_HEADER_sub_2+DFr
+checksum	dw ?
+initIP		dw ?			; XREF:	EXE_HEADER_sub_2+FBr
+initCS		dw ?			; XREF:	EXE_HEADER_sub_2+F1r
+reloctable	dw ?
+overlay		dw ?
+EXE_Header	ends
 
 
 ;
@@ -196,7 +250,7 @@ word_62		dw 0			; DATA XREF: EXE_HEADER_sub_2+17w
 					; EXE_HEADER_sub_2+9Ar	...
 word_63		dw 0			; DATA XREF: EXE_HEADER_sub_2+1Cw
 					; EXE_HEADER_sub_2+95r	...
-dta_seg		dw 0			; DATA XREF: EXE_HEADER_sub_2+2Dr
+new_psp_seg	dw 0			; DATA XREF: EXE_HEADER_sub_2+2Dr
 					; EXE_HEADER_sub_2+103r ...
 word_558	dw 0			; DATA XREF: EXE_HEADER_sub_2:loc_557w
 word_559	dw 0			; DATA XREF: EXE_HEADER_sub_2+12w
@@ -716,7 +770,7 @@ loc_557:				; CODE XREF: EXE_HEADER_sub_2+7j
 		mov	cs:exe_pointer.ofs, si
 		mov	cs:exe_pointer.segm, ds
     mov ah, 50h
-		mov	bx, cs:dta_seg
+		mov	bx, cs:new_psp_seg
     int 21h   ; DOS - 2+ internal - SET PSP SEGMENT
           ; BX = segment address of new PSP
     push  es
@@ -742,7 +796,7 @@ loc_557:				; CODE XREF: EXE_HEADER_sub_2+7j
 ; ---------------------------------------------------------------------------
 
 loc_560:				; CODE XREF: EXE_HEADER_sub_2+62j
-		cmp	word ptr [si], 'ZM' ; 'MZ' or 'ZM' exe header signature??
+		cmp	[si+EXE_Header.signature], 'ZM' ; 'MZ' or 'ZM' exe header signature??
     jz  short loc_562
     stc
     pop bx
@@ -750,7 +804,7 @@ loc_560:				; CODE XREF: EXE_HEADER_sub_2+62j
 ; ---------------------------------------------------------------------------
 
 loc_562:				; CODE XREF: EXE_HEADER_sub_2+6Bj
-		mov	bx, [si+8]	; exe Header size
+		mov	bx, [si+EXE_Header.headersize] ; exe Header size
     xor ax, ax
 		shl	bx, 1		; bx *=	2;
     rcl ax, 1
@@ -806,17 +860,17 @@ loc_564:				; CODE XREF: EXE_HEADER_sub_2+D8j
 
 loc_563:				; CODE XREF: EXE_HEADER_sub_2+C0j
 		les	si, dword ptr cs:pointer3.ofs
-    mov ax, es:[si+10h]
+		mov	ax, es:[si+EXE_Header.initSP]
     mov cs:word_68, ax
-    mov ax, es:[si+0Eh]
+		mov	ax, es:[si+EXE_Header.initSS]
     add ax, bp
     mov cs:word_69, ax
-    mov ax, es:[si+16h]
+		mov	ax, es:[si+EXE_Header.initCS]
     add ax, bp
 		mov	cs:maybe_game_code_ptr.segm, ax
-    mov ax, es:[si+14h]
+		mov	ax, es:[si+EXE_Header.initIP]
 		mov	cs:maybe_game_code_ptr.ofs, ax
-		mov	es, cs:dta_seg
+		mov	es, cs:new_psp_seg
     cld
     mov di, es
     mov ax, cs:word_68
@@ -835,7 +889,7 @@ loc_563:				; CODE XREF: EXE_HEADER_sub_2+C0j
 
 loc_561:				; CODE XREF: EXE_HEADER_sub_2+64j
     cli
-		mov	ax, cs:dta_seg
+		mov	ax, cs:new_psp_seg
     mov es, ax
     mov ds, ax
     mov ss, ax
@@ -843,7 +897,7 @@ loc_561:				; CODE XREF: EXE_HEADER_sub_2+64j
     xor bx, bx
     push  bx
     push  ax
-    mov ax, 100h
+		mov	ax, size sPSP	; maybe	PSP size
     push  ax
     mov ax, bx
     mov cx, bx
@@ -1439,20 +1493,20 @@ GAME_START_sub_6 proc near		; CODE XREF: GAME_START_sub_7+25p
     mov al, cs:byte_55
     test  al, 20h
     jnz short loc_592
-		mov	cs:far_ptr3.ofs, 100h
+		mov	cs:far_ptr3.ofs, size sPSP
 		mov	dx, cs:maybe_exe_buffer.segm
 		add	cs:maybe_exe_buffer.segm, 16
-		mov	cs:dta_seg, dx
+		mov	cs:new_psp_seg,	dx
     mov ah, 26h
     int 21h   ; DOS - CREATE PSP
           ; DX = segment number at which to set up PSP
-		mov	dx, 128		; dta_offs
-		mov	ds, cs:dta_seg
+		mov	dx, sPSP.cmdtail_or_dta	; dta_offs
+		mov	ds, cs:new_psp_seg
     mov ah, 1Ah
     int 21h   ; DOS - SET DISK TRANSFER AREA ADDRESS
           ; DS:DX -> disk transfer buffer
-    mov word ptr ds:0Ch, cs
-		mov	word ptr ds:0Ah, offset	loc_600	; TODO:	could be only a	overwrite buffer - or the real code that resists there
+		mov	word ptr ds:sPSP.int_22.segm, cs
+		mov	word ptr ds:sPSP.int_22, offset	loc_600	; TODO:	could be only a	overwrite buffer - or the real code that resists there
     clc
     pop bx
     retn
