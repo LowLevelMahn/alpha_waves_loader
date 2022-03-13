@@ -1853,10 +1853,10 @@ ENDIF
 					; and 0x20=0b00100000
 					; and 0x07=0b00000111
 IF 0          
-		call	START_GAME_sub_22
+		call	GAME_START_sub_7
 ELSE
     push bx
-    call c_START_GAME_sub_22
+    call c_GAME_START_sub_7
     add sp,1*2
 ENDIF    
 		jb	short some_loading_msg_some_PPI_action_and_back_to_main_menu
@@ -1891,10 +1891,10 @@ ENDIF
 		cmp	al, 1		; BLOCK	2?
 		jnz	short after_game_run
 IF 0          
-		call	START_GAME_sub_22 ; !!!!! starts the game (after some iterations) - multipe sub_22 calls before
+		call	GAME_START_sub_7 ; !!!!! starts the game (after some iterations) - multipe sub_22 calls before
 ELSE
     push bx
-    call c_START_GAME_sub_22
+    call c_GAME_START_sub_7
     add sp,1*2
 ENDIF    
 		jb	short some_loading_msg_some_PPI_action_and_back_to_main_menu
@@ -1911,10 +1911,10 @@ after_game_run:				; CODE XREF: start_0+313j start_0+31Dj
 		cmp	cs:subprogram_exit_code, 0FFh ;	game subprocess	return code?
 		jnz	short all_parts_available
 IF 0
-		call	START_GAME_sub_22
+		call	GAME_START_sub_7
 ELSE
     push bx
-    call  c_START_GAME_sub_22
+    call  c_GAME_START_sub_7
     add sp,1*2
 ENDIF    
 		jb	short back_to_menu
@@ -1923,10 +1923,10 @@ ENDIF
 		cmp	al, 2		; BLOCK	3?
 		jnz	short cancel_game_start
 IF 0
-		call	START_GAME_sub_22
+		call	GAME_START_sub_7
 ELSE
     push bx
-    call  c_START_GAME_sub_22
+    call  c_GAME_START_sub_7
     add sp,1*2
 ENDIF 
 		jb	short cancel_game_start
@@ -1980,10 +1980,10 @@ the_start:
 					; ----
 		jz	short is_useable_block
 IF 0
-		call	START_GAME_sub_22
+		call	GAME_START_sub_7
 ELSE
     push bx
-    call  c_START_GAME_sub_22
+    call  c_GAME_START_sub_7
     add sp,1*2
 ENDIF 
 		jb	short cancel_game_start
@@ -2000,40 +2000,6 @@ is_end_block:				; CODE XREF: START_GAME_sub_11+4j
     stc
     retn
 START_GAME_sub_11    endp
-
-c_START_GAME_sub_22	proc near
-  
-  ; the interface
-  block_ = word ptr 4 
-
-  push bp
-  mov bp,sp
-  
-  PREPARE_BEFORE_CALL
- 
-  ; set register "parameter"
-  mov bx,[bp+block_]
-  
-  call START_GAME_sub_22
-
-  CLEANUP_AFTER_CALL
-
-  pop bp  
-  
-  retn
-c_START_GAME_sub_22	endp  
-
-START_GAME_sub_22 proc near		; CODE XREF: start_0+305p start_0+31Fp ...
-IF 0
-		call	GAME_START_sub_7 ; starts the game code
-					; gets also called several times
-ELSE
-    push bx
-    call  c_GAME_START_sub_7
-    add sp,1*2
-ENDIF          
-    retn
-START_GAME_sub_22 endp
 
 interrupt_0x24	proc far		; DATA XREF: set_interrupt_vectors_0x97_and_0x24+12o
     mov al, 3 ; dosbox is always DOS 5
