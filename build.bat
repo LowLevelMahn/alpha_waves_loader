@@ -48,15 +48,16 @@ if %ERRORLEVEL% NEQ 0 goto error
 :: WASM
 :: ==================================================
 
-::TODO: make binary compatible
-wasm.exe -wx -dBINARY_EQUAL ae.asm
-if %ERRORLEVEL% NEQ 0 goto error
+::!!! TODO: make binary compatible !!!
 
-%wlink_exe% name ae_org_w.com format dos com file ae.obj
-if %ERRORLEVEL% NEQ 0 goto error
-
-fc /B %org_dir%\ALPHA_E.COM ae_org_w.COM
-if %ERRORLEVEL% NEQ 0 goto error
+::wasm.exe -wx -dBINARY_EQUAL ae.asm
+::if %ERRORLEVEL% NEQ 0 goto error
+::
+::%wlink_exe% name ae_org_w.com format dos com file ae.obj
+::if %ERRORLEVEL% NEQ 0 goto error
+::
+::fc /B %org_dir%\ALPHA_E.COM ae_org_w.COM
+::if %ERRORLEVEL% NEQ 0 goto error
 
 :: ==================================================
 :: with reduced code down to just start the game and exit, binary equality not needed here

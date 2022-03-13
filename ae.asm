@@ -693,8 +693,8 @@ ENDIF
 ; =============== S U B R O U T I N E =======================================
 
 
-; void __usercall GAME_START_sub_1(__int16 unknown_@<si>)
-GAME_START_sub_1 proc near		; CODE XREF: EXE_HEADER_sub_2+8Ep
+; void __usercall offset_overflow_safe_block_copy(__int16 dest_seg_@<es>, __int16 dest_ofs_@<di>, __int16 src_seg_@<ds>, __int16 src_ofs_@<si>,	__int16	lo_size_@<cx>, __int16 hi_size_@<bx>)
+offset_overflow_safe_block_copy	proc near ; CODE XREF: EXE_HEADER_sub_2+8Ep
 					; EXE_HEADER_sub_2+B2p
     push  ds
     push  es
@@ -704,7 +704,7 @@ GAME_START_sub_1 proc near		; CODE XREF: EXE_HEADER_sub_2+8Ep
     push  cx
     cld
 
-loc_556:				; CODE XREF: GAME_START_sub_1+47j
+loc_556:				; CODE XREF: offset_overflow_safe_block_copy+47j
     mov ax, si
     shr ax, 1
     shr ax, 1
@@ -731,7 +731,7 @@ loc_556:				; CODE XREF: GAME_START_sub_1+47j
     xor bx, bx
     xor cx, cx
 
-loc_555:				; CODE XREF: GAME_START_sub_1+35j
+loc_555:				; CODE XREF: offset_overflow_safe_block_copy+35j
     push  cx
     mov cx, ax
     rep movsb
@@ -746,12 +746,13 @@ loc_555:				; CODE XREF: GAME_START_sub_1+35j
     pop es
     pop ds
     retn
-GAME_START_sub_1 endp
+offset_overflow_safe_block_copy	endp
 
 
 ; =============== S U B R O U T I N E =======================================
 
 
+; __int16 __usercall __far EXE_HEADER_sub_2<ax>(__int16	unknown1_@<ax>,	__int16	unknown2_@<dx>,	__int16	unknown3_@<cx>,	__int16	unknown4_@<bx>,	__int16	unknown5_@<ds>,	__int16	unknown6_@<si>)
 EXE_HEADER_sub_2 proc far		; CODE XREF: GAME_START_sub_7+9Bp
     push  bx
     test  cs:byte_55, 0C0h
@@ -782,9 +783,9 @@ loc_557:				; CODE XREF: EXE_HEADER_sub_2+7j
 		lds	ax, dword ptr cs:saved_int1_ptr.ofs
     mov es:4, ax
     mov word ptr es:6, ds
-    pop ds
+		pop	ds		; src_seg_@
     pop ax
-    pop es
+		pop	es		; dest_seg_@
     assume es:nothing
     cld
 		mov	cs:pointer3.ofs, di
@@ -823,25 +824,21 @@ loc_562:				; CODE XREF: EXE_HEADER_sub_2+6Bj
 					; uint32_t result = header_paragraphs *	16;
 					; ax ==	(result	>> 16));
 					; bx ==	(result	& 0xFFFF));
-		les	di, dword ptr cs:pointer3.ofs
-    mov cx, bx
-    mov bx, ax
-		call	GAME_START_sub_1
+		les	di, dword ptr cs:pointer3.ofs ;	dest_ofs_@
+		mov	cx, bx		; lo_size_@
+		mov	bx, ax		; hi_size_@
+		call	offset_overflow_safe_block_copy
     mov dx, bx
-    mov si, cx    ; unknown_@
+		mov	si, cx		; src_ofs_@
 		mov	bx, cs:some_game_pointer_seg
     mov cx, cs:word_62
-    sub cx, si
-IFDEF WASM_BINARY_EQUAL
-  db 1Bh,0DAh
-ELSE
-  sbb bx, dx
-ENDIF    
+		sub	cx, si		; lo_size_@
+		sbb	bx, dx		; hi_size_@
     
     mov cs:some_game_pointer_seg, bx
     mov cs:word_62, cx
-		les	di, dword ptr cs:exe_pointer.ofs
-		call	GAME_START_sub_1
+		les	di, dword ptr cs:exe_pointer.ofs ; dest_ofs_@
+		call	offset_overflow_safe_block_copy
     mov bp, es
 		les	bx, dword ptr cs:pointer3.ofs
     mov cx, es:[bx+6]
@@ -920,11 +917,12 @@ EXE_HEADER_sub_2 endp
 ; =============== S U B R O U T I N E =======================================
 
 
+; __int16 __usercall GAME_START_sub_3<ax>(__int16 maybe_dest_seg_@<es>,	__int16	maybe_dest_ofs1_@<di>, __int16 maybe_src_seg_@<ds>, __int16 maybe_src_ofs_@<si>)
 GAME_START_sub_3 proc near		; CODE XREF: GAME_START_sub_3+101j
           ; read_some_file_sub_4+1EDp
     push  es
     push  di
-    mov cx, 80h
+		mov	cx, 128
     mov ax, ds
     mov es, ax
     assume es:seg000
@@ -1015,10 +1013,10 @@ loc_565:				; CODE XREF: GAME_START_sub_3+82j
     mov di, 101h
 		add	cs:another_pointer2.ofs, cx
     rep movsb
-    pop di
-    pop es
+		pop	di		; maybe_dest_ofs1_@
+		pop	es		; maybe_dest_seg_@
     assume es:nothing
-    pop ds
+		pop	ds		; maybe_src_seg_@
     xor ch, ch
     mov cl, cs:byte_57
     xor ah, ah
@@ -1026,7 +1024,7 @@ loc_565:				; CODE XREF: GAME_START_sub_3+82j
 
 loc_567:				; CODE XREF: GAME_START_sub_3+EBj
     mov al, [bx+200h]
-    mov si, ax
+		mov	si, ax		; maybe_src_ofs_@
     mov dl, [si+301h]
     mov [bx+402h], dl
     mov [si+301h], bl
@@ -1141,6 +1139,7 @@ GAME_START_sub_3 endp ;	sp-analysis failed
 ; =============== S U B R O U T I N E =======================================
 
 
+; __int16 __usercall read_some_file_sub_4<ax>(gfx_block_t *block_@<bx>)
 read_some_file_sub_4 proc near		; CODE XREF: GAME_START_sub_7+2Ap
     mov ax, cs
     mov ds, ax
@@ -1372,13 +1371,13 @@ loc_585:        ; CODE XREF: read_some_file_sub_4+187j
           ; BX = file handle
     test  cs:byte_55, 18h
     jz  short loc_587
-		les	di, dword ptr cs:maybe_exe_buffer.ofs
+		les	di, dword ptr cs:maybe_exe_buffer.ofs ;	maybe_dest_ofs1_@
     push  es
     xor ax, ax
     mov es, ax
     assume es:nothing
     mov es:4, di
-    pop es
+		pop	es		; maybe_dest_seg_@
     assume es:nothing
 		mov	cs:another_far_ptr.ofs,	di
 		mov	cs:another_far_ptr.segm, es
@@ -1396,12 +1395,12 @@ loc_585:        ; CODE XREF: read_some_file_sub_4+187j
     shr cx, 1
     rcr si, 1
     shr cx, 1
-    rcr si, 1
+		rcr	si, 1		; maybe_src_ofs_@
     mov ax, es
     add ax, si
 		mov	cs:maybe_exe_buffer.segm, ax
     inc ax
-    mov ds, ax
+		mov	ds, ax		; maybe_src_seg_@
     and bx, 0Fh
 		mov	cs:maybe_exe_buffer.ofs, bx
     cld
@@ -1513,7 +1512,7 @@ GAME_START_sub_6 proc near		; CODE XREF: GAME_START_sub_7+25p
     int 21h   ; DOS - SET DISK TRANSFER AREA ADDRESS
           ; DS:DX -> disk transfer buffer
 		mov	word ptr ds:sPSP.int_22.segm, cs
-		mov	word ptr ds:sPSP.int_22, offset	loc_600	; TODO:	could be only a	overwrite buffer - or the real code that resists there
+		mov	word ptr ds:sPSP.int_22, offset	subprogram_exit	; int22	exit target
     clc
     pop bx
     retn
@@ -1560,6 +1559,7 @@ GAME_START_sub_6 endp
 ; =============== S U B R O U T I N E =======================================
 
 
+; __int16 __usercall GAME_START_sub_7<ax>(gfx_block_t *block_@<bx>)
 GAME_START_sub_7 proc near		; CODE XREF: START_GAME_sub_22:loc_655p
     push  bx
     push  bx
@@ -1577,7 +1577,7 @@ GAME_START_sub_7 proc near		; CODE XREF: START_GAME_sub_22:loc_655p
 		mov	cs:maybe_exe_buffer.segm, ax
 		mov	cs:somway_exe_buffer_seg, ax
 		mov	cs:maybe_exe_buffer.ofs, 0
-    pop bx
+		pop	bx		; block_@
 		mov	al, cs:[bx+gfx_block_t.byte_13h]
     mov cs:byte_55, al
 		call	GAME_START_sub_6
@@ -1611,37 +1611,37 @@ loc_596:				; CODE XREF: GAME_START_sub_7+2Dj
     add ax, si
     mov es, ax
     xor di, di
-		lds	cx, dword ptr cs:some_game_ptr.ofs
-    mov bx, ds
+		lds	cx, dword ptr cs:some_game_ptr.ofs ; unknown3_@
+		mov	bx, ds		; unknown4_@
 		mov	ax, cs:somway_exe_buffer_seg
     
 IFDEF BINARY_EQUAL
     db 05h,10h,00h
 ELSE    
-    add  ax, 10h
+    		add	ax, 16		; seg +	16 == 16*16 bytes = 256(100h) bytes move - PSP size?
 ENDIF    
     
-    mov ds, ax
-    xor si, si
-    mov dx, cs
+		mov	ds, ax		; unknown5_@
+		xor	si, si		; unknown6_@
+		mov	dx, cs		; unknown2_@
 		mov	cs:someway_cs_registe_value1, dx
 		mov	cs:someway_cs_registe_value2, dx
 		mov	cs:someway_cs_registe_value3, dx
 		mov	cs:someway_cs_registe_value4, dx
-		lea	ax, someway_cs_registe_value1
+		lea	ax, someway_cs_registe_value1 ;	unknown1_@
 		mov	cs:some_register_sp_value, sp
 		mov	cs:some_register_ss_value, ss
 		call	near ptr EXE_HEADER_sub_2 ; !!!!calls the game code
-    jnb short loc_600
+		jnb	short subprogram_exit
     stc
     pop bx
     retn
 ; ---------------------------------------------------------------------------
 
 IFDEF __WASM__
-loc_600:				; CODE XREF: GAME_START_sub_7+9Ej
+subprogram_exit:			; CODE XREF: GAME_START_sub_7+9Ej
 ELSE
-loc_600::
+subprogram_exit::			; CODE XREF: GAME_START_sub_7+9Ej
 ENDIF
 					; DATA XREF: GAME_START_sub_6+3Eo
     cli
