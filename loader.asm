@@ -380,7 +380,7 @@ offset_overflow_safe_block_copy	endp
 ; =============== S U B R O U T I N E =======================================
 
 
-; __int16 __usercall __far EXE_HEADER_sub_2<ax>(__int16	unknown1_@<ax>,	__int16	unknown2_@<dx>,	__int16	unknown3_@<cx>,	__int16	unknown4_@<bx>,	__int16	unknown5_@<ds>,	__int16	unknown6_@<si>)
+; __int16 __usercall __far EXE_HEADER_sub_2<ax>(__int16	unknown1_@<ax>,	__int16	unknown2_@<dx>,	__int16	unknown3_@<cx>,	__int16	unknown4_@<bx>,	__int16	unknown5_@<ds>,	__int16	unknown6_@<si>,	__int16	unknown6_@<es>,	__int16	unknown7_@<di>)
 EXE_HEADER_sub_2 proc far		; CODE XREF: GAME_START_sub_7+9Bp
     push  bx
     test  cs:byte_55, 0C0h
