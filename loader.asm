@@ -1246,9 +1246,32 @@ GAME_START_sub_6 endp
 
 ; =============== S U B R O U T I N E =======================================
     
+c_GAME_START_sub_7	proc near
+  
+  ; the interface
+  block_ = word ptr 4 
+
+  push bp
+  mov bp,sp
+  
+  PREPARE_BEFORE_CALL
+ 
+  ; set register "parameter"
+  mov bx,[bp+block_]
+  
+  call GAME_START_sub_7
+
+  CLEANUP_AFTER_CALL
+
+  pop bp  
+  
+  retn
+c_GAME_START_sub_7	endp    
+    
 ; __int16 __usercall GAME_START_sub_7<ax>(gfx_block_t *block_@<bx>)
 GAME_START_sub_7 proc near		; CODE XREF: START_GAME_sub_22:loc_655p
     push  bx
+    
     push  bx
     mov ah, 48h
     mov bx, 0FFFFh
@@ -1264,7 +1287,8 @@ GAME_START_sub_7 proc near		; CODE XREF: START_GAME_sub_22:loc_655p
 		mov	cs:maybe_exe_buffer.segm, ax
 		mov	cs:somway_exe_buffer_seg, ax
 		mov	cs:maybe_exe_buffer.ofs, 0
-		pop	bx		; block_@
+    pop	bx		; block_@
+    
 		mov	al, cs:[bx+gfx_block_t.byte_13h]
     mov cs:byte_55, al
 IF 0    
@@ -1789,7 +1813,13 @@ ENDIF
 					;     0x91=0b10010001
 					; and 0x20=0b00100000
 					; and 0x07=0b00000111
+IF 0          
 		call	START_GAME_sub_22
+ELSE
+    push bx
+    call c_START_GAME_sub_22
+    add sp,1*2
+ENDIF    
 		jb	short some_loading_msg_some_PPI_action_and_back_to_main_menu
 		add	bx, size gfx_block_t
     jmp short loc_173
@@ -1821,7 +1851,13 @@ ENDIF
     and al, 7
 		cmp	al, 1		; BLOCK	2?
 		jnz	short after_game_run
+IF 0          
 		call	START_GAME_sub_22 ; !!!!! starts the game (after some iterations) - multipe sub_22 calls before
+ELSE
+    push bx
+    call c_START_GAME_sub_22
+    add sp,1*2
+ENDIF    
 		jb	short some_loading_msg_some_PPI_action_and_back_to_main_menu
 		add	bx, size gfx_block_t ; next gfx-block
 		jmp	short before_and_after_game_run
@@ -1836,10 +1872,10 @@ after_game_run:				; CODE XREF: start_0+313j start_0+31Dj
 		cmp	cs:subprogram_exit_code, 0FFh ;	game subprocess	return code?
 		jnz	short all_parts_available
 IF 0
-		call	START_GAME_sub_11
+		call	START_GAME_sub_22
 ELSE
     push bx
-    call  c_START_GAME_sub_11
+    call  c_START_GAME_sub_22
     add sp,1*2
 ENDIF    
 		jb	short back_to_menu
@@ -1912,6 +1948,7 @@ c_START_GAME_sub_11	proc near
 c_START_GAME_sub_11	endp
 
 START_GAME_sub_11 proc near		; CODE XREF: start_0:loc_173p
+the_start:
 					; start_0:before_and_after_game_runp ...
 		cmp	cs:[bx+gfx_block_t.filename], 0FFh ; GFX-Block[GFX][0] == 0xFF? last block
 		jz	short is_end_block ; starting with 0xFF
@@ -1923,10 +1960,16 @@ START_GAME_sub_11 proc near		; CODE XREF: start_0:loc_173p
 					;
 					; ----
 		jz	short is_useable_block
+IF 0
 		call	START_GAME_sub_22
+ELSE
+    push bx
+    call  c_START_GAME_sub_22
+    add sp,1*2
+ENDIF 
 		jb	short cancel_game_start
 		add	bx, size gfx_block_t ; sizeof(GFX-Block) == 18h
-		jmp	short START_GAME_sub_11
+		jmp	short the_start
 ; ---------------------------------------------------------------------------
 
 is_useable_block:			; CODE XREF: START_GAME_sub_11+Bj
@@ -1939,9 +1982,37 @@ is_end_block:				; CODE XREF: START_GAME_sub_11+4j
     retn
 START_GAME_sub_11    endp
 
+c_START_GAME_sub_22	proc near
+  
+  ; the interface
+  block_ = word ptr 4 
+
+  push bp
+  mov bp,sp
+  
+  PREPARE_BEFORE_CALL
+ 
+  ; set register "parameter"
+  mov bx,[bp+block_]
+  
+  call START_GAME_sub_22
+
+  CLEANUP_AFTER_CALL
+
+  pop bp  
+  
+  retn
+c_START_GAME_sub_22	endp  
+
 START_GAME_sub_22 proc near		; CODE XREF: start_0+305p start_0+31Fp ...
+IF 0
 		call	GAME_START_sub_7 ; starts the game code
 					; gets also called several times
+ELSE
+    push bx
+    call  c_GAME_START_sub_7
+    add sp,1*2
+ENDIF          
     retn
 START_GAME_sub_22 endp
 
