@@ -265,7 +265,8 @@ PREPARE_BEFORE_CALL macro
   ; "invalidate" all registers - is there still some hidden-in-code register in use by the called function?
   mov ax,-1
   mov es,ax
-  mov ds,ax
+  push cs
+  pop ds
   mov bx,ax
   mov cx,ax
   mov dx,ax
@@ -567,7 +568,6 @@ EXE_HEADER_sub_2 endp
 
 
 ; =============== S U B R O U T I N E =======================================
-
 
 ; __int16 __usercall GAME_START_sub_3<ax>(__int16 maybe_dest_seg_@<es>,	__int16	maybe_dest_ofs1_@<di>, __int16 maybe_src_seg_@<ds>, __int16 maybe_src_ofs_@<si>)
 GAME_START_sub_3 proc near		; CODE XREF: GAME_START_sub_3+101j
@@ -1907,40 +1907,14 @@ c_START_GAME_sub_11	proc near
   push bp
   mov bp,sp
   
-  ; save all
-  push ds
-  push es
-  push ax
-  push bx
-  push cx
-  push dx
-  push si
-  push di
-  
-  ; "invalidate" all registers - is there still some hidden-in-code register in use by the called function?
-  mov ax,-1
-  mov es,ax
-  mov ds,ax
-  mov bx,ax
-  mov cx,ax
-  mov dx,ax
-  mov di,ax
-  mov si,ax
+  PREPARE_BEFORE_CALL
  
   ; set register "parameter"
   mov bx,[bp+block_]
   
   call START_GAME_sub_11
 
-  ; restore all
-  pop di
-  pop si
-  pop dx
-  pop cx
-  pop bx
-  pop ax
-  pop es
-  pop ds
+  CLEANUP_AFTER_CALL
 
   pop bp  
   
