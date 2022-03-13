@@ -1922,7 +1922,13 @@ ENDIF
     and al, 7
 		cmp	al, 2		; BLOCK	3?
 		jnz	short cancel_game_start
+IF 0
 		call	START_GAME_sub_22
+ELSE
+    push bx
+    call  c_START_GAME_sub_22
+    add sp,1*2
+ENDIF 
 		jb	short cancel_game_start
     add bx, size gfx_block_t
     jmp short loc_173
