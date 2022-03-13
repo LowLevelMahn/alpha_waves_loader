@@ -455,9 +455,7 @@ loc_562:				; CODE XREF: EXE_HEADER_sub_2+6Bj
 		les	di, dword ptr cs:pointer3.ofs ;	dest_ofs_@
 		mov	cx, bx		; lo_size_@
 		mov	bx, ax		; hi_size_@
-IF 0          
-		call offset_overflow_safe_block_copy
-ELSE
+
     push bx
     push cx
     push si
@@ -466,7 +464,7 @@ ELSE
     push es
     call c_offset_overflow_safe_block_copy
     add sp,6*2
-ENDIF    
+    
     mov dx, bx
 		mov	si, cx		; src_ofs_@
 		mov	bx, cs:some_game_pointer_seg
@@ -476,9 +474,7 @@ ENDIF
     mov cs:some_game_pointer_seg, bx
     mov cs:word_62, cx
 		les	di, dword ptr cs:exe_pointer.ofs ; dest_ofs_@
-IF 0          
-		call offset_overflow_safe_block_copy
-ELSE    
+   
     push bx
     push cx
     push si
@@ -487,7 +483,7 @@ ELSE
     push es
     call c_offset_overflow_safe_block_copy
     add sp,6*2
-ENDIF    
+    
     mov bp, es
 		les	bx, dword ptr cs:pointer3.ofs
     mov cx, es:[bx+6]
@@ -1080,16 +1076,14 @@ loc_585:        ; CODE XREF: read_some_file_sub_4+187j
     and bx, 0Fh
 		mov	cs:maybe_exe_buffer.ofs, bx
     cld
-IF 0          
-		call GAME_START_sub_3
-ELSE    
+   
     push si
     push ds
     push di
     push es
     call c_GAME_START_sub_3
     add sp,4*2
-ENDIF  
+  
     clc
     retn
 ; ---------------------------------------------------------------------------
@@ -1330,19 +1324,15 @@ GAME_START_sub_7 proc near		; CODE XREF: START_GAME_sub_22:loc_655p
     
 		mov	al, cs:[bx+gfx_block_t.byte_13h]
     mov cs:byte_55, al
-IF 0    
-		call GAME_START_sub_6
-ELSE
+
     call c_GAME_START_sub_6
-ENDIF    
+    
     jb  short loc_595
-IF 0
-    call  read_some_file_sub_4
-ELSE
+
     push bx
     call  c_read_some_file_sub_4
     add sp,1*2
-ENDIF    
+    
     jnb short loc_596
 
 loc_595:				; CODE XREF: GAME_START_sub_7+28j
@@ -1405,11 +1395,9 @@ ENDIF
     mov ah, 4Dh
     int 21h   ; DOS - 2+ - GET EXIT CODE OF SUBPROGRAM (WAIT)
 		mov	cs:subprogram_exit_code, al
-IF 0    
-		call	GAME_START_sub_5
-ELSE
+
     call c_GAME_START_sub_5
-ENDIF    
+    
     pop bx
     retn
 GAME_START_sub_7 endp ;	sp-analysis failed
@@ -1816,13 +1804,10 @@ start_game:       ; CODE XREF: start_0+82j
 		add	bx, offset config_tat_buffer
 
 loc_173:        ; CODE XREF: start_0+30Dj start_0+34Ej
-IF 0
-		call	START_GAME_sub_11 ; ------------
-ELSE
     push bx
     call  c_START_GAME_sub_11
     add sp,1*2
-ENDIF    
+   
 					;
 					; very strange construct with START_GAME_sub_11
 					; (calling START_GAME_sub_22 itself) and
@@ -1852,13 +1837,11 @@ ENDIF
 					;     0x91=0b10010001
 					; and 0x20=0b00100000
 					; and 0x07=0b00000111
-IF 0          
-		call	GAME_START_sub_7
-ELSE
+
     push bx
     call c_GAME_START_sub_7
     add sp,1*2
-ENDIF    
+    
 		jb	short some_loading_msg_some_PPI_action_and_back_to_main_menu
 		add	bx, size gfx_block_t
     jmp short loc_173
@@ -1877,26 +1860,20 @@ all_parts_available:			; CODE XREF: start_0+303j start_0+335j
 					; -----------------
 
 before_and_after_game_run:		; CODE XREF: start_0+327j
-IF 0
-		call	START_GAME_sub_11 ; come through before	game start and after game ends
-ELSE
     push bx
     call  c_START_GAME_sub_11
     add sp,1*2
-ENDIF    
     
 		jb	short after_game_run
 		mov	al, cs:[bx+gfx_block_t.byte_13h]
     and al, 7
 		cmp	al, 1		; BLOCK	2?
 		jnz	short after_game_run
-IF 0          
-		call	GAME_START_sub_7 ; !!!!! starts the game (after some iterations) - multipe sub_22 calls before
-ELSE
+
     push bx
     call c_GAME_START_sub_7
     add sp,1*2
-ENDIF    
+    
 		jb	short some_loading_msg_some_PPI_action_and_back_to_main_menu
 		add	bx, size gfx_block_t ; next gfx-block
 		jmp	short before_and_after_game_run
@@ -1910,25 +1887,21 @@ after_game_run:				; CODE XREF: start_0+313j start_0+31Dj
     assume es:nothing
 		cmp	cs:subprogram_exit_code, 0FFh ;	game subprocess	return code?
 		jnz	short all_parts_available
-IF 0
-		call	GAME_START_sub_7
-ELSE
+
     push bx
     call  c_GAME_START_sub_7
     add sp,1*2
-ENDIF    
+    
 		jb	short back_to_menu
     mov al, cs:[bx+13h]
     and al, 7
 		cmp	al, 2		; BLOCK	3?
 		jnz	short cancel_game_start
-IF 0
-		call	GAME_START_sub_7
-ELSE
+
     push bx
     call  c_GAME_START_sub_7
     add sp,1*2
-ENDIF 
+
 		jb	short cancel_game_start
     add bx, size gfx_block_t
     jmp short loc_173
@@ -1979,13 +1952,11 @@ the_start:
 					;
 					; ----
 		jz	short is_useable_block
-IF 0
-		call	GAME_START_sub_7
-ELSE
+
     push bx
     call  c_GAME_START_sub_7
     add sp,1*2
-ENDIF 
+
 		jb	short cancel_game_start
 		add	bx, size gfx_block_t ; sizeof(GFX-Block) == 18h
 		jmp	short the_start
