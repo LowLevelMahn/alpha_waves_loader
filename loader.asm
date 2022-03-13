@@ -379,6 +379,42 @@ offset_overflow_safe_block_copy	endp
 
 ; =============== S U B R O U T I N E =======================================
 
+; uint32_t long_mul_with_16(uint32_t value_);
+long_mul_with_16 proc near
+
+  ;
+  ; ==> bx *= 16
+  ; ==> ax contains the hi word
+  ;
+  ; results in a 32bit numbers in	ax:bx
+  ;
+  ; uint32_t result = header_paragraphs *	16;
+  ; ax ==	(result	>> 16));
+  ; bx ==	(result	& 0xFFFF));  
+
+  ; the interface
+  lo_ = word ptr 4
+  hi_ = word ptr 6
+
+  push bp
+  mov bp,sp
+
+  mov bx,[bp+lo_]  
+  mov ax,[bp+hi_]  
+
+  shl	bx, 1
+  rcl ax, 1
+	shl	bx, 1
+  rcl ax, 1
+	shl	bx, 1
+  rcl ax, 1
+	shl	bx, 1
+	rcl	ax, 1
+  
+  pop bp
+  
+  retn
+long_mul_with_16 endp
 
 ; __int16 __usercall __far EXE_HEADER_sub_2<ax>(__int16	unknown1_@<ax>,	__int16	unknown2_@<dx>,	__int16	unknown3_@<cx>,	__int16	unknown4_@<bx>,	__int16	unknown5_@<ds>,	__int16	unknown6_@<si>,	__int16	unknown6_@<es>,	__int16	unknown7_@<di>)
 EXE_HEADER_sub_2 proc far		; CODE XREF: GAME_START_sub_7+9Bp
@@ -433,31 +469,22 @@ loc_560:				; CODE XREF: EXE_HEADER_sub_2+62j
 ; ---------------------------------------------------------------------------
 
 loc_562:				; CODE XREF: EXE_HEADER_sub_2+6Bj
-		mov	bx, [si+EXE_Header.headersize] ; exe Header size
-    xor ax, ax
-		shl	bx, 1		; bx *=	2;
-    rcl ax, 1
-		shl	bx, 1		; bx *=	2;
-    rcl ax, 1
-		shl	bx, 1		; bx *=	2;
-    rcl ax, 1
-		shl	bx, 1		; bx *=	2;
-		rcl	ax, 1		;
-					;
-					; ==> bx *= 16
-					; ==> ax contains the hi word
-					;
-					; results in a 32bit numbers in	ax:bx
-					;
-					; uint32_t result = header_paragraphs *	16;
-					; ax ==	(result	>> 16));
-					; bx ==	(result	& 0xFFFF));
+    ;----
+    push 0 ; hi
+    push [si+EXE_Header.headersize] ; lo
+    call long_mul_with_16
+    add sp,2*2
+    ; ax:bx
+    ;   lo=bx
+    ;   hi=ax
+    ;----
+
 		les	di, dword ptr cs:pointer3.ofs ;	dest_ofs_@
 		mov	cx, bx		; lo_size_@
 		mov	bx, ax		; hi_size_@
 
-    push bx
-    push cx
+    push bx ; hi
+    push cx ; low
     push si
     push ds
     push di
@@ -475,8 +502,8 @@ loc_562:				; CODE XREF: EXE_HEADER_sub_2+6Bj
     mov cs:word_62, cx
 		les	di, dword ptr cs:exe_pointer.ofs ; dest_ofs_@
    
-    push bx
-    push cx
+    push bx ; hi
+    push cx ; lo
     push si
     push ds
     push di
@@ -974,6 +1001,8 @@ loc_582:        ; CODE XREF: read_some_file_sub_4+ADj
     add si, 10h
     adc di, 0
     mov cx, si
+    
+    ; long_div_with_16
     shr di, 1
     rcr si, 1
     shr di, 1
@@ -982,6 +1011,7 @@ loc_582:        ; CODE XREF: read_some_file_sub_4+ADj
     rcr si, 1
     shr di, 1
     rcr si, 1
+    
     mov ax, ds
     add ax, si
     mov ds, ax
@@ -1060,6 +1090,8 @@ loc_585:        ; CODE XREF: read_some_file_sub_4+187j
     add si, di
     adc cx, 0
     mov bx, si
+    
+    ; long_div_with_16
     shr cx, 1
     rcr si, 1
     shr cx, 1
@@ -1068,6 +1100,7 @@ loc_585:        ; CODE XREF: read_some_file_sub_4+187j
     rcr si, 1
     shr cx, 1
 		rcr	si, 1		; maybe_src_ofs_@
+    
     mov ax, es
     add ax, si
 		mov	cs:maybe_exe_buffer.segm, ax
@@ -1141,6 +1174,8 @@ GAME_START_sub_5 proc near		; CODE XREF: GAME_START_sub_7+B7p
 loc_590:				; CODE XREF: GAME_START_sub_5+41j
     mov ax, [si]
     mov bx, [si+2]
+    
+    ; long_div_with_16
     shr bx, 1
     rcr ax, 1
     shr bx, 1
@@ -1149,6 +1184,7 @@ loc_590:				; CODE XREF: GAME_START_sub_5+41j
     rcr ax, 1
     shr bx, 1
     rcr ax, 1
+    
     add ax, bp
     mov [si+2], ax
     and word ptr [si], 0Fh
@@ -1161,6 +1197,8 @@ loc_589:				; CODE XREF: GAME_START_sub_5+Bj
     jnz short loc_591
 		les	bx, dword ptr cs:far_ptr3.ofs
     mov ax, es
+    
+    ; long_div_with_16
     shr ax, 1
     rcr bx, 1
     shr ax, 1
@@ -1169,6 +1207,7 @@ loc_589:				; CODE XREF: GAME_START_sub_5+Bj
     rcr bx, 1
     shr ax, 1
     rcr bx, 1
+    
     inc bx
 		mov	es, cs:somway_exe_buffer_seg
     mov ah, 4Ah
@@ -1349,6 +1388,8 @@ loc_596:				; CODE XREF: GAME_START_sub_7+2Dj
 		les	si, dword ptr cs:far_ptr3.ofs
     mov di, es
 		mov	ax, cs:somway_exe_buffer_seg
+    
+    ; long_div_with_16
     shr di, 1
     rcr si, 1
     shr di, 1
@@ -1357,6 +1398,7 @@ loc_596:				; CODE XREF: GAME_START_sub_7+2Dj
     rcr si, 1
     shr di, 1
     rcr si, 1
+    
     inc si
     add ax, si
     mov es, ax
