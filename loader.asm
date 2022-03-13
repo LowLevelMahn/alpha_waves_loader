@@ -248,6 +248,74 @@ progs_cc1_filename db 'PROGS.CC1',0
     
 ; =============== S U B R O U T I N E =======================================
 
+; Macro howto
+; https://www.phatcode.net/res/223/files/html/Chapter_8/CH08-7.html
+
+PREPARE_BEFORE_CALL macro
+  ; save all
+  push ds
+  push es
+  push ax
+  push bx
+  push cx
+  push dx
+  push si
+  push di
+  
+  ; "invalidate" all registers - is there still some hidden-in-code register in use by the called function?
+  mov ax,-1
+  mov es,ax
+  mov ds,ax
+  mov bx,ax
+  mov cx,ax
+  mov dx,ax
+  mov di,ax
+  mov si,ax
+endm
+
+CLEANUP_AFTER_CALL macro
+  ; restore all
+  pop di
+  pop si
+  pop dx
+  pop cx
+  pop bx
+  pop ax
+  pop es
+  pop ds
+endm
+
+c_offset_overflow_safe_block_copy	proc near
+  
+  ; the interface
+  dest_seg_ = word ptr 4
+  dest_ofs_ = word ptr 6
+  src_seg_ = word ptr 8
+  src_ofs_ = word ptr 0Ah
+  size_lo_ = word ptr 0Ch
+  size_hi_ = word ptr 0Eh
+
+  push bp
+  mov bp,sp
+
+  PREPARE_BEFORE_CALL
+ 
+  ; set register "parameter"
+  mov es,[bp+dest_seg_]
+  mov di,[bp+dest_ofs_]
+  mov ds,[bp+src_seg_]
+  mov si,[bp+src_ofs_]
+  mov cx,[bp+size_lo_]
+  mov bx,[bp+size_hi_]
+  
+  call offset_overflow_safe_block_copy
+  
+  CLEANUP_AFTER_CALL
+
+  pop bp  
+  
+  retn
+c_offset_overflow_safe_block_copy	endp
 
 ; void __usercall offset_overflow_safe_block_copy(__int16 dest_seg_@<es>, __int16 dest_ofs_@<di>, __int16 src_seg_@<ds>, __int16 src_ofs_@<si>,	__int16	lo_size_@<cx>, __int16 hi_size_@<bx>)
 offset_overflow_safe_block_copy	proc near ; CODE XREF: EXE_HEADER_sub_2+8Ep
@@ -258,6 +326,7 @@ offset_overflow_safe_block_copy	proc near ; CODE XREF: EXE_HEADER_sub_2+8Ep
     push  di
     push  bx
     push  cx
+
     cld
 
 loc_556:				; CODE XREF: offset_overflow_safe_block_copy+47j
@@ -295,12 +364,14 @@ loc_555:				; CODE XREF: offset_overflow_safe_block_copy+35j
     mov ax, cx
     or  ax, bx
     jnz short loc_556
+    
     pop cx
     pop bx
     pop di
     pop si
     pop es
     pop ds
+    
     retn
 offset_overflow_safe_block_copy	endp
 
@@ -383,7 +454,18 @@ loc_562:				; CODE XREF: EXE_HEADER_sub_2+6Bj
 		les	di, dword ptr cs:pointer3.ofs ;	dest_ofs_@
 		mov	cx, bx		; lo_size_@
 		mov	bx, ax		; hi_size_@
-		call	offset_overflow_safe_block_copy
+IF 0          
+		call offset_overflow_safe_block_copy
+ELSE
+    push bx
+    push cx
+    push si
+    push ds
+    push di
+    push es
+    call c_offset_overflow_safe_block_copy
+    add sp,6*2
+ENDIF    
     mov dx, bx
 		mov	si, cx		; src_ofs_@
 		mov	bx, cs:some_game_pointer_seg
@@ -393,7 +475,18 @@ loc_562:				; CODE XREF: EXE_HEADER_sub_2+6Bj
     mov cs:some_game_pointer_seg, bx
     mov cs:word_62, cx
 		les	di, dword ptr cs:exe_pointer.ofs ; dest_ofs_@
-		call	offset_overflow_safe_block_copy
+IF 0          
+		call offset_overflow_safe_block_copy
+ELSE    
+    push bx
+    push cx
+    push si
+    push ds
+    push di
+    push es
+    call c_offset_overflow_safe_block_copy
+    add sp,6*2
+ENDIF    
     mov bp, es
 		les	bx, dword ptr cs:pointer3.ofs
     mov cx, es:[bx+6]
@@ -705,6 +798,27 @@ GAME_START_sub_3 endp ;	sp-analysis failed
 
 ; =============== S U B R O U T I N E =======================================
 
+c_read_some_file_sub_4	proc near
+  
+  ; the interface
+  block_ = word ptr 4 
+
+  push bp
+  mov bp,sp
+  
+  PREPARE_BEFORE_CALL
+ 
+  ; set register "parameter"
+  mov bx,[bp+block_]
+  
+  call read_some_file_sub_4
+
+  CLEANUP_AFTER_CALL
+
+  pop bp  
+  
+  retn
+c_read_some_file_sub_4	endp
 
 ; __int16 __usercall read_some_file_sub_4<ax>(gfx_block_t *block_@<bx>)
 read_some_file_sub_4 proc near		; CODE XREF: GAME_START_sub_7+2Ap
@@ -952,6 +1066,27 @@ read_some_file_sub_4 endp
 
 ; =============== S U B R O U T I N E =======================================
 
+c_GAME_START_sub_5	proc near
+  
+  ; the interface
+  ; NONE
+
+  push bp
+  mov bp,sp
+  
+  PREPARE_BEFORE_CALL
+ 
+  ; set register "parameter"
+  ; NONE
+  
+  call GAME_START_sub_5
+
+  CLEANUP_AFTER_CALL
+
+  pop bp  
+  
+  retn
+c_GAME_START_sub_5	endp
 
 GAME_START_sub_5 proc near		; CODE XREF: GAME_START_sub_7+B7p
     push  bx
@@ -1022,6 +1157,27 @@ GAME_START_sub_5 endp
 
 ; =============== S U B R O U T I N E =======================================
 
+c_GAME_START_sub_6	proc near
+  
+  ; the interface
+  ; NONE
+
+  push bp
+  mov bp,sp
+  
+  PREPARE_BEFORE_CALL
+ 
+  ; set register "parameter"
+  ; NONE
+  
+  call GAME_START_sub_6
+
+  CLEANUP_AFTER_CALL
+
+  pop bp  
+  
+  retn
+c_GAME_START_sub_6	endp
 
 GAME_START_sub_6 proc near		; CODE XREF: GAME_START_sub_7+25p
     push  bx
@@ -1089,8 +1245,7 @@ GAME_START_sub_6 endp
 
 
 ; =============== S U B R O U T I N E =======================================
-
-
+    
 ; __int16 __usercall GAME_START_sub_7<ax>(gfx_block_t *block_@<bx>)
 GAME_START_sub_7 proc near		; CODE XREF: START_GAME_sub_22:loc_655p
     push  bx
@@ -1112,9 +1267,19 @@ GAME_START_sub_7 proc near		; CODE XREF: START_GAME_sub_22:loc_655p
 		pop	bx		; block_@
 		mov	al, cs:[bx+gfx_block_t.byte_13h]
     mov cs:byte_55, al
-		call	GAME_START_sub_6
+IF 0    
+		call GAME_START_sub_6
+ELSE
+    call c_GAME_START_sub_6
+ENDIF    
     jb  short loc_595
+IF 0
     call  read_some_file_sub_4
+ELSE
+    push bx
+    call  c_read_some_file_sub_4
+    add sp,1*2
+ENDIF    
     jnb short loc_596
 
 loc_595:				; CODE XREF: GAME_START_sub_7+28j
@@ -1177,7 +1342,11 @@ ENDIF
     mov ah, 4Dh
     int 21h   ; DOS - 2+ - GET EXIT CODE OF SUBPROGRAM (WAIT)
 		mov	cs:subprogram_exit_code, al
+IF 0    
 		call	GAME_START_sub_5
+ELSE
+    call c_GAME_START_sub_5
+ENDIF    
     pop bx
     retn
 GAME_START_sub_7 endp ;	sp-analysis failed
@@ -1584,7 +1753,13 @@ start_game:       ; CODE XREF: start_0+82j
 		add	bx, offset config_tat_buffer
 
 loc_173:        ; CODE XREF: start_0+30Dj start_0+34Ej
+IF 0
 		call	START_GAME_sub_11 ; ------------
+ELSE
+    push bx
+    call  c_START_GAME_sub_11
+    add sp,1*2
+ENDIF    
 					;
 					; very strange construct with START_GAME_sub_11
 					; (calling START_GAME_sub_22 itself) and
@@ -1633,7 +1808,14 @@ all_parts_available:			; CODE XREF: start_0+303j start_0+335j
 					; -----------------
 
 before_and_after_game_run:		; CODE XREF: start_0+327j
+IF 0
 		call	START_GAME_sub_11 ; come through before	game start and after game ends
+ELSE
+    push bx
+    call  c_START_GAME_sub_11
+    add sp,1*2
+ENDIF    
+    
 		jb	short after_game_run
 		mov	al, cs:[bx+gfx_block_t.byte_13h]
     and al, 7
@@ -1653,7 +1835,13 @@ after_game_run:				; CODE XREF: start_0+313j start_0+31Dj
     assume es:nothing
 		cmp	cs:subprogram_exit_code, 0FFh ;	game subprocess	return code?
 		jnz	short all_parts_available
+IF 0
 		call	START_GAME_sub_11
+ELSE
+    push bx
+    call  c_START_GAME_sub_11
+    add sp,1*2
+ENDIF    
 		jb	short back_to_menu
     mov al, cs:[bx+13h]
     and al, 7
@@ -1675,6 +1863,53 @@ back_to_menu:				; CODE XREF: start_0+33Aj
 
 ; =============== S U B R O U T I N E =======================================
 
+c_START_GAME_sub_11	proc near
+  
+  ; the interface
+  block_ = word ptr 4 
+
+  push bp
+  mov bp,sp
+  
+  ; save all
+  push ds
+  push es
+  push ax
+  push bx
+  push cx
+  push dx
+  push si
+  push di
+  
+  ; "invalidate" all registers - is there still some hidden-in-code register in use by the called function?
+  mov ax,-1
+  mov es,ax
+  mov ds,ax
+  mov bx,ax
+  mov cx,ax
+  mov dx,ax
+  mov di,ax
+  mov si,ax
+ 
+  ; set register "parameter"
+  mov bx,[bp+block_]
+  
+  call START_GAME_sub_11
+
+  ; restore all
+  pop di
+  pop si
+  pop dx
+  pop cx
+  pop bx
+  pop ax
+  pop es
+  pop ds
+
+  pop bp  
+  
+  retn
+c_START_GAME_sub_11	endp
 
 START_GAME_sub_11 proc near		; CODE XREF: start_0:loc_173p
 					; start_0:before_and_after_game_runp ...
