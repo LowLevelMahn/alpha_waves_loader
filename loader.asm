@@ -570,6 +570,36 @@ EXE_HEADER_sub_2 endp
 ; =============== S U B R O U T I N E =======================================
 
 ; __int16 __usercall GAME_START_sub_3<ax>(__int16 maybe_dest_seg_@<es>,	__int16	maybe_dest_ofs1_@<di>, __int16 maybe_src_seg_@<ds>, __int16 maybe_src_ofs_@<si>)
+
+c_GAME_START_sub_3	proc near
+  
+  ; the interface
+  es_seg_ = word ptr 4
+  di_ofs_ = word ptr 6
+  ds_seg_ = word ptr 8
+  si_ofs_ = word ptr 0Ah
+
+  push bp
+  mov bp,sp
+
+  PREPARE_BEFORE_CALL
+ 
+  ; set register "parameter"
+  mov es,[bp+es_seg_]
+  mov di,[bp+di_ofs_]
+  mov ds,[bp+ds_seg_]
+  mov si,[bp+si_ofs_]
+  
+  call GAME_START_sub_3
+  
+  CLEANUP_AFTER_CALL
+
+  pop bp  
+  
+  retn
+c_GAME_START_sub_3 endp
+
+; __int16 __usercall GAME_START_sub_3<ax>(__int16 maybe_dest_seg_@<es>,	__int16	maybe_dest_ofs1_@<di>, __int16 maybe_src_seg_@<ds>, __int16 maybe_src_ofs_@<si>)
 GAME_START_sub_3 proc near		; CODE XREF: GAME_START_sub_3+101j
           ; read_some_file_sub_4+1EDp
     
@@ -1050,7 +1080,16 @@ loc_585:        ; CODE XREF: read_some_file_sub_4+187j
     and bx, 0Fh
 		mov	cs:maybe_exe_buffer.ofs, bx
     cld
-		call	GAME_START_sub_3
+IF 0          
+		call GAME_START_sub_3
+ELSE    
+    push si
+    push ds
+    push di
+    push es
+    call c_GAME_START_sub_3
+    add sp,4*2
+ENDIF  
     clc
     retn
 ; ---------------------------------------------------------------------------
