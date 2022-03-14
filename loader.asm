@@ -247,6 +247,10 @@ subprogram_exit_code db	0		; DATA XREF: GAME_START_sub_7+B3w
 saved_video_mode db 0			; DATA XREF: start_0+89r
     
 progs_cc1_filename db 'PROGS.CC1',0   
+
+file_handle dw 0  
+file_bytes_read dw 0
+file_new_seek_pos dd 0
     
 ; =============== S U B R O U T I N E =======================================
 
@@ -447,6 +451,147 @@ long_div_with_16 proc near
   
   retn
 long_div_with_16 endp
+
+dos_file_open proc near
+  ; the interface
+  filename_ = word ptr 4 ; near offset to c-str
+  mode_ = word ptr 6
+  handle_ = word ptr 8 ; near offset to handle variable
+  
+  ; ax = result code 
+
+  push bp
+  mov bp,sp
+
+  push dx
+  push bx
+
+  mov ah,3Dh
+  mov al,byte ptr [bp+mode_]
+  mov dx,[bp+filename_]  
+  int 21h
+  jc exit ; ax = error code
+  
+  mov bx,[bp+handle_]
+  mov cs:[bx],ax
+  mov ax,0
+
+exit:
+  pop bx
+  pop dx
+  pop bp
+  
+  retn
+dos_file_open endp
+
+dos_file_read proc near
+  ; the interface
+  file_handle_ = word ptr 4 ; value not offset
+  byte_to_read_ = word ptr 6
+  buffer_seg_ = word ptr 8
+  buffer_ofs_ = word ptr 0Ah
+  bytes_read_ = word ptr 0Ch
+  
+  ; ax = result code 
+
+  push bp
+  mov bp,sp
+
+  push ds
+  push bx
+  push cx
+  push dx
+
+  mov ah,3Fh
+  mov bx,[bp+file_handle_]  
+  mov cx,[bp+byte_to_read_]
+  mov ds,[bp+buffer_seg_]
+  mov dx,[bp+buffer_ofs_]
+  int 21h
+  jc exit ; ax = error code
+  
+  mov bx,[bp+bytes_read_]
+  mov cs:[bx],ax
+  mov ax,0
+
+exit:
+  pop dx
+  pop cx
+  pop bx
+  pop ds
+  pop bp
+  
+  retn
+dos_file_read endp
+
+dos_file_lseek proc near
+  ; the interface
+  file_handle_ = word ptr 4 ; value not offset
+  mode_ = word ptr 6
+  offset_lo_ = word ptr 8
+  offset_hi_ = word ptr 0Ah
+  new_offset_ = word ptr 0Ch
+  
+  ; ax = result code 
+
+  push bp
+  mov bp,sp
+
+  push ds
+  push bx
+  push cx
+  push dx
+
+  mov ah,42h
+  mov al,byte ptr [bp+mode_]
+  mov bx,[bp+file_handle_]  
+  mov cx,[bp+offset_hi_]
+  mov dx,[bp+offset_lo_]
+  int 21h
+  jc exit ; ax = error code
+
+  mov bx,[bp+new_offset_]
+  mov cs:[bx+0],ax
+  mov cs:[bx+2],dx
+  mov ax,0
+
+exit:
+  pop dx
+  pop cx
+  pop bx
+  pop ds
+  pop bp
+  
+  retn
+dos_file_lseek endp
+
+
+dos_file_close proc near
+  ; the interface
+  file_handle_ = word ptr 4 ; value not offset
+  
+  ; ax = result code 
+
+  push bp
+  mov bp,sp
+
+  push dx
+  push bx
+
+  mov ah,3Eh
+  mov bx, [bp+file_handle_]
+  int 21h
+  jc exit ; ax = error code
+ 
+  mov ax,0
+
+exit:
+  pop bx
+  pop dx
+  pop bp
+  
+  retn
+dos_file_close endp
 
 ; __int16 __usercall __far EXE_HEADER_sub_2<ax>(__int16	unknown1_@<ax>,	__int16	unknown2_@<dx>,	__int16	unknown3_@<cx>,	__int16	unknown4_@<bx>,	__int16	unknown5_@<ds>,	__int16	unknown6_@<si>,	__int16	unknown6_@<es>,	__int16	unknown7_@<di>)
 EXE_HEADER_sub_2 proc far		; CODE XREF: GAME_START_sub_7+9Bp
@@ -961,11 +1106,27 @@ loc_579:        ; CODE XREF: read_some_file_sub_4+1Ej
     shl ax, 1
     mov dx, ax
     xor cx, cx
+
+IF 0
     mov al, 1
     mov ah, 42h
     int 21h   ; DOS - 2+ - MOVE FILE READ/WRITE POINTER (LSEEK)
           ; AL = method: offset from present location
     jb  short loc_136
+ELSE
+    push ax
+    
+    push offset file_new_seek_pos
+    push dx
+    push cx
+    push 1
+    push bx    
+    call dos_file_lseek
+    add sp,5*2
+    
+    pop ax
+ENDIF    
+    
 		lds	dx, dword ptr cs:maybe_exe_buffer.ofs
     mov ah, 3Fh
     mov cx, 4
@@ -1494,6 +1655,7 @@ IFNDEF LONG_DIV_MUL
     rcr si, 1
 ELSE
     ;----
+    ; si:di = si:di / 16 
     push ax 
     push dx
     
@@ -1748,7 +1910,9 @@ read_config_and_resize_memory proc near ; CODE XREF: start_0+22p
     push  ds
     mov ax, cs
     mov ds, ax
-		mov	dx, offset config_tat_filename ; "Config.tat"
+		
+IF 0    
+    mov	dx, offset config_tat_filename ; "Config.tat"
     mov ah, 3Dh
     mov al, 0
     int 21h   ; DOS - 2+ - OPEN DISK FILE WITH HANDLE
@@ -1756,6 +1920,19 @@ read_config_and_resize_memory proc near ; CODE XREF: start_0+22p
           ; AL = access mode
           ; 0 - read
 		jb	short loc_816
+ELSE
+    push offset file_handle 
+    push 0 ; read
+    push offset config_tat_filename
+    call dos_file_open
+    add sp,3*2
+    cmp ax,0
+    jnz loc_816
+    
+    mov ax,cs:file_handle
+ENDIF    
+    
+IF 0    
     mov bx, ax
 		mov	dx, offset config_tat_buffer ; overwrites many of the initialization routines (code)
           ; and some other temporary values
@@ -1766,6 +1943,18 @@ read_config_and_resize_memory proc near ; CODE XREF: start_0+22p
           ; BX = file handle, CX = number of bytes to read
           ; DS:DX -> buffer
 		jnb	short loc_817	; --> ax = 233h	= 563 bytes
+ELSE
+    push offset file_bytes_read
+    push offset config_tat_buffer
+    push ds
+    push 65535 ; read max bytes
+    push cs:file_handle
+    call dos_file_read
+    add sp,5*2
+    cmp ax,0
+    jnz loc_816
+    jmp loc_817
+ENDIF    
 
 loc_816:				; CODE XREF: read_config_and_resize_memory+Ej
     mov dx,offset error4
@@ -1778,8 +1967,19 @@ loc_816:				; CODE XREF: read_config_and_resize_memory+Ej
 ; ---------------------------------------------------------------------------
 
 loc_817:				; CODE XREF: read_config_and_resize_memory+1Cj
+IF 0
     mov ah, 3Eh
     int 21h   ; DOS - 2+ - CLOSE A FILE WITH HANDLE
+ELSE
+    push cs:file_handle
+    call dos_file_close
+    add sp,1*2
+    cmp ax,0
+    jnz loc_816
+    jmp get_offsets
+ENDIF     
+
+get_offsets:
           ; BX = file handle
           ;
           ; word_78 = offset config_tat_buffer + *(word*)&config_tat_buffer[0]
@@ -2252,9 +2452,11 @@ stack_space_end_unk_342 dw 0 ; DATA XREF: start_0+Ao start_0+31o
   error8 db '8','$'
   error5 db '5','$'
   error4 db '4','$'
-
+  
 ; here gets the config.tat content stored
 config_tat_buffer db 563 dup(0CCh)
+
+; END OF PROGRAM - memory reduce will remove data here
 
 seg000    ends
 
