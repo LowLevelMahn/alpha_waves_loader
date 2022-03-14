@@ -1,3 +1,5 @@
+LONG_DIV_MUL = 1
+
 ; ---------------------------------------------------------------------------
 
 ptr16		struc ;	(sizeof=0x4)	; XREF:	seg000:maybe_exe_bufferr
@@ -383,14 +385,14 @@ offset_overflow_safe_block_copy	endp
 long_mul_with_16 proc near
 
   ;
-  ; ==> bx *= 16
-  ; ==> ax contains the hi word
+  ; ==> ax *= 16
+  ; ==> dx contains the hi word
   ;
-  ; results in a 32bit numbers in	ax:bx
+  ; results in a 32bit numbers in	dx:ax
   ;
   ; uint32_t result = header_paragraphs *	16;
-  ; ax ==	(result	>> 16));
-  ; bx ==	(result	& 0xFFFF));  
+  ; dx ==	(result	>> 16));
+  ; ax ==	(result	& 0xFFFF));  
 
   ; the interface
   lo_ = word ptr 4
@@ -399,22 +401,52 @@ long_mul_with_16 proc near
   push bp
   mov bp,sp
 
-  mov bx,[bp+lo_]  
-  mov ax,[bp+hi_]  
+  mov ax,[bp+lo_]  
+  mov dx,[bp+hi_]  
 
-  shl	bx, 1
-  rcl ax, 1
-	shl	bx, 1
-  rcl ax, 1
-	shl	bx, 1
-  rcl ax, 1
-	shl	bx, 1
-	rcl	ax, 1
+  shl	ax, 1
+  rcl dx, 1
+	shl	ax, 1
+  rcl dx, 1
+	shl	ax, 1
+  rcl dx, 1
+	shl	ax, 1
+	rcl	dx, 1
+
+  ; result: dx:ax
   
   pop bp
   
   retn
 long_mul_with_16 endp
+
+; uint32_t long_div_with_16(uint32_t value_);
+long_div_with_16 proc near
+  ; the interface
+  lo_ = word ptr 4
+  hi_ = word ptr 6
+
+  push bp
+  mov bp,sp
+
+  mov ax,[bp+lo_]  
+  mov dx,[bp+hi_]  
+
+  shr dx, 1
+  rcr ax, 1
+  shr dx, 1
+  rcr ax, 1
+  shr dx, 1
+  rcr ax, 1
+  shr dx, 1
+  rcr ax, 1
+
+  ; result: dx:ax
+  
+  pop bp
+  
+  retn
+long_div_with_16 endp
 
 ; __int16 __usercall __far EXE_HEADER_sub_2<ax>(__int16	unknown1_@<ax>,	__int16	unknown2_@<dx>,	__int16	unknown3_@<cx>,	__int16	unknown4_@<bx>,	__int16	unknown5_@<ds>,	__int16	unknown6_@<si>,	__int16	unknown6_@<es>,	__int16	unknown7_@<di>)
 EXE_HEADER_sub_2 proc far		; CODE XREF: GAME_START_sub_7+9Bp
@@ -470,19 +502,18 @@ loc_560:				; CODE XREF: EXE_HEADER_sub_2+62j
 
 loc_562:				; CODE XREF: EXE_HEADER_sub_2+6Bj
     ;----
-    push 0 ; hi
-    push [si+EXE_Header.headersize] ; lo
+    push dx
+    push 0 ; = hi
+    push [si+EXE_Header.headersize] ; = lo
     call long_mul_with_16
     add sp,2*2
-    ; ax:bx
-    ;   lo=bx
-    ;   hi=ax
+    ; dx:ax
+    mov cx,ax ; = lo
+    mov bx,dx ; = hi
+    pop dx
     ;----
 
 		les	di, dword ptr cs:pointer3.ofs ;	dest_ofs_@
-		mov	cx, bx		; lo_size_@
-		mov	bx, ax		; hi_size_@
-
     push bx ; hi
     push cx ; low
     push si
@@ -1002,7 +1033,7 @@ loc_582:        ; CODE XREF: read_some_file_sub_4+ADj
     adc di, 0
     mov cx, si
     
-    ; long_div_with_16
+IFNDEF LONG_DIV_MUL
     shr di, 1
     rcr si, 1
     shr di, 1
@@ -1011,6 +1042,23 @@ loc_582:        ; CODE XREF: read_some_file_sub_4+ADj
     rcr si, 1
     shr di, 1
     rcr si, 1
+ELSE
+    ;----
+    push ax 
+    push dx
+    
+    push di ; = hi
+    push si ; = lo
+    call long_mul_with_16
+    add sp,2*2
+    ; dx:ax
+    mov si,ax ; = lo
+    mov di,dx ; = hi
+    
+    pop dx
+    pop ax
+    ;----
+ENDIF    
     
     mov ax, ds
     add ax, si
@@ -1091,7 +1139,7 @@ loc_585:        ; CODE XREF: read_some_file_sub_4+187j
     adc cx, 0
     mov bx, si
     
-    ; long_div_with_16
+IFNDEF LONG_DIV_MUL
     shr cx, 1
     rcr si, 1
     shr cx, 1
@@ -1100,6 +1148,23 @@ loc_585:        ; CODE XREF: read_some_file_sub_4+187j
     rcr si, 1
     shr cx, 1
 		rcr	si, 1		; maybe_src_ofs_@
+ELSE
+    ;----
+    push ax
+    push dx
+    
+    push cx ; = hi
+    push si ; = lo
+    call long_div_with_16
+    add sp,2*2
+    ; dx:ax
+    mov cx,dx ; = hi
+    mov si,ax ; = lo
+    
+    pop dx
+    pop ax  
+    ;----
+ENDIF      
     
     mov ax, es
     add ax, si
@@ -1175,7 +1240,7 @@ loc_590:				; CODE XREF: GAME_START_sub_5+41j
     mov ax, [si]
     mov bx, [si+2]
     
-    ; long_div_with_16
+IFNDEF LONG_DIV_MUL
     shr bx, 1
     rcr ax, 1
     shr bx, 1
@@ -1184,6 +1249,20 @@ loc_590:				; CODE XREF: GAME_START_sub_5+41j
     rcr ax, 1
     shr bx, 1
     rcr ax, 1
+ELSE
+    ;----
+    push dx
+    
+    push bx ; = hi
+    push ax ; = lo
+    call long_div_with_16
+    add sp,2*2
+    ; dx:ax
+    mov bx,dx ; = hi
+    
+    pop dx
+    ;----
+ENDIF     
     
     add ax, bp
     mov [si+2], ax
@@ -1198,7 +1277,7 @@ loc_589:				; CODE XREF: GAME_START_sub_5+Bj
 		les	bx, dword ptr cs:far_ptr3.ofs
     mov ax, es
     
-    ; long_div_with_16
+IFNDEF LONG_DIV_MUL
     shr ax, 1
     rcr bx, 1
     shr ax, 1
@@ -1207,6 +1286,21 @@ loc_589:				; CODE XREF: GAME_START_sub_5+Bj
     rcr bx, 1
     shr ax, 1
     rcr bx, 1
+ELSE
+    ;----
+    push dx
+    
+    push ax ; = hi
+    push bx ; = lo
+    call long_div_with_16
+    add sp,2*2
+    ; dx:ax
+    mov bx,ax ; = lo
+    mov ax,dx ; = hi
+    
+    pop dx
+    ;----
+ENDIF    
     
     inc bx
 		mov	es, cs:somway_exe_buffer_seg
@@ -1388,16 +1482,33 @@ loc_596:				; CODE XREF: GAME_START_sub_7+2Dj
 		les	si, dword ptr cs:far_ptr3.ofs
     mov di, es
 		mov	ax, cs:somway_exe_buffer_seg
+
+IFNDEF LONG_DIV_MUL
+    shr di, 1
+    rcr si, 1
+    shr di, 1
+    rcr si, 1
+    shr di, 1
+    rcr si, 1
+    shr di, 1
+    rcr si, 1
+ELSE
+    ;----
+    push ax 
+    push dx
     
-    ; long_div_with_16
-    shr di, 1
-    rcr si, 1
-    shr di, 1
-    rcr si, 1
-    shr di, 1
-    rcr si, 1
-    shr di, 1
-    rcr si, 1
+    push di ; = hi
+    push si ; = lo
+    call long_div_with_16
+    add sp,2*2
+    ; dx:ax
+    mov si,ax ; = lo
+    mov di,dx ; = hi
+    
+    pop dx
+    pop ax
+    ;----
+ENDIF  
     
     inc si
     add ax, si
