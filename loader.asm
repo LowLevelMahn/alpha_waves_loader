@@ -337,6 +337,7 @@ offset_overflow_safe_block_copy	proc near ; CODE XREF: EXE_HEADER_sub_2+8Ep
     cld
 
 loc_556:				; CODE XREF: offset_overflow_safe_block_copy+47j
+    ; normalize ptr
     mov ax, si
     shr ax, 1
     shr ax, 1
@@ -346,6 +347,8 @@ loc_556:				; CODE XREF: offset_overflow_safe_block_copy+47j
     add dx, ax
     mov ds, dx
     and si, 0Fh
+    
+    ; normalize ptr
     mov ax, di
     shr ax, 1
     shr ax, 1
@@ -355,6 +358,7 @@ loc_556:				; CODE XREF: offset_overflow_safe_block_copy+47j
     add dx, ax
     mov es, dx
     and di, 0Fh
+    
 		mov	ax, 512
     sub cx, ax
     sbb bx, 0
@@ -389,12 +393,12 @@ offset_overflow_safe_block_copy	endp
 long_mul_with_16 proc near
 
   ;
-  ; ==> ax *= 16
+  ; ==> ax contains the lo word
   ; ==> dx contains the hi word
   ;
   ; results in a 32bit numbers in	dx:ax
   ;
-  ; uint32_t result = header_paragraphs *	16;
+  ; uint32_t result = value *	16;
   ; dx ==	(result	>> 16));
   ; ax ==	(result	& 0xFFFF));  
 
@@ -537,7 +541,6 @@ dos_file_lseek proc near
   push bp
   mov bp,sp
 
-  push ds
   push bx
   push cx
   push dx
@@ -559,7 +562,7 @@ exit:
   pop dx
   pop cx
   pop bx
-  pop ds
+
   pop bp
   
   retn
@@ -592,6 +595,31 @@ exit:
   
   retn
 dos_file_close endp
+
+; normalize_ptr proc near
+;   ; the interface
+;   seg_ = word ptr 4
+;   ofs_ = word ptr 6
+;   
+;   push bp
+;   mov bp,sp
+; 
+;   mov ax,[bp+ofs_]
+;   push ax
+;   mov dx,[bp+seg_]
+; 
+;   shr ax, 1
+;   shr ax, 1
+;   shr ax, 1
+;   shr ax, 1
+;   add dx, ax
+;   pop ax
+;   and ax, 0Fh
+;   
+;   ;dx:ax -> seg:ofs
+;   
+;   retn
+; normalize_ptr endp
 
 ; __int16 __usercall __far EXE_HEADER_sub_2<ax>(__int16	unknown1_@<ax>,	__int16	unknown2_@<dx>,	__int16	unknown3_@<cx>,	__int16	unknown4_@<bx>,	__int16	unknown5_@<ds>,	__int16	unknown6_@<si>,	__int16	unknown6_@<es>,	__int16	unknown7_@<di>)
 EXE_HEADER_sub_2 proc far		; CODE XREF: GAME_START_sub_7+9Bp
@@ -798,19 +826,21 @@ c_GAME_START_sub_3	proc near
   retn
 c_GAME_START_sub_3 endp
 
+; Info: does not call other functions
 ; __int16 __usercall GAME_START_sub_3<ax>(__int16 maybe_dest_seg_@<es>,	__int16	maybe_dest_ofs1_@<di>, __int16 maybe_src_seg_@<ds>, __int16 maybe_src_ofs_@<si>)
 GAME_START_sub_3 proc near		; CODE XREF: GAME_START_sub_3+101j
           ; read_some_file_sub_4+1EDp
-    
+sub_3_begin:    
     push  es
     push  di
-		mov	cx, 128
+      mov	cx, 128
       mov ax, ds
       mov es, ax
       assume es:seg000
       mov	di, 301h	; its not in seg000!!!
       xor ax, ax
       rep stosw
+      ;mem_set(ds:301h, 0, 128*2=512);
     pop di
     pop es
     assume es:nothing
@@ -819,10 +849,11 @@ GAME_START_sub_3 proc near		; CODE XREF: GAME_START_sub_3+101j
       xor ax, ax
       mov es, ax
       assume es:nothing
-      sub di, es:4
+      sub di, es:(1*sizeof ptr16)+ptr16.ofs ; interrupt[1].ofs
     pop es
     assume es:nothing
     
+    ; normalize ptr
     mov ax, di
     shr ax, 1
     shr ax, 1
@@ -837,7 +868,7 @@ GAME_START_sub_3 proc near		; CODE XREF: GAME_START_sub_3+101j
       xor ax, ax
       mov es, ax
       assume es:nothing
-      add di, es:4
+      add di, es:(1*sizeof ptr16)+ptr16.ofs ; interrupt[1].ofs
     pop es
     assume es:nothing
 
@@ -852,6 +883,8 @@ GAME_START_sub_3 proc near		; CODE XREF: GAME_START_sub_3+101j
       mov es, ax
       assume es:seg000
       lds	si, dword ptr cs:another_pointer2.ofs
+      
+      ; normalize ptr
       mov ax, si
       shr ax, 1
       shr ax, 1
@@ -861,6 +894,12 @@ GAME_START_sub_3 proc near		; CODE XREF: GAME_START_sub_3+101j
       add ax, dx
       mov ds, ax
       and si, 0Fh
+      
+      ; INFO: 
+      ; https://www.javatpoint.com/near-far-and-huge-pointers-in-c
+      ; The huge pointer can be incremented without suffering with segment work round. __huge
+      ; char huge * far *p; 
+      
       mov	cs:another_pointer2.ofs, si
       mov	cs:another_pointer2.segm, ds
       add	cs:another_pointer2.ofs, cx
@@ -931,7 +970,7 @@ loc_124:				; CODE XREF: GAME_START_sub_3+123j
 loc_577:				; CODE XREF: GAME_START_sub_3+192j
     cmp cs:byte_569, 0
     jz  short locret_570
-		jmp	GAME_START_sub_3
+		jmp	sub_3_begin
 ; ---------------------------------------------------------------------------
 
 locret_570:				; CODE XREF: GAME_START_sub_3+FFj
@@ -1107,13 +1146,14 @@ loc_579:        ; CODE XREF: read_some_file_sub_4+1Ej
     mov dx, ax
     xor cx, cx
 
-IF 0
+IF 1
     mov al, 1
     mov ah, 42h
     int 21h   ; DOS - 2+ - MOVE FILE READ/WRITE POINTER (LSEEK)
           ; AL = method: offset from present location
     jb  short loc_136
 ELSE
+    ; TODO BUG crashes!!!
     push ax
     
     push offset file_new_seek_pos
@@ -1220,7 +1260,7 @@ ELSE
     pop ax
     ;----
 ENDIF    
-    
+    ; some sort of normalize ptr at end
     mov ax, ds
     add ax, si
     mov ds, ax
@@ -1238,6 +1278,7 @@ loc_580:        ; CODE XREF: read_some_file_sub_4+33j
 		lds	dx, dword ptr cs:another_far_ptr.ofs
 
 loc_586:        ; CODE XREF: read_some_file_sub_4+18Dj
+    ; normalize ptr
     mov cx, dx
     shr cx, 1
     shr cx, 1
@@ -1247,6 +1288,7 @@ loc_586:        ; CODE XREF: read_some_file_sub_4+18Dj
     add ax, cx
     mov ds, ax
     and dx, 0Fh
+    
 		mov	ax, 48000
     sub si, ax
     sbb di, 0
@@ -1534,6 +1576,8 @@ GAME_START_sub_6 proc near		; CODE XREF: GAME_START_sub_7+25p
 ; ---------------------------------------------------------------------------
 
 loc_592:				; CODE XREF: GAME_START_sub_6+11j
+;jmp just_exit
+
     xor ax, ax
     mov ds, ax
     assume ds:nothing
@@ -1911,7 +1955,7 @@ read_config_and_resize_memory proc near ; CODE XREF: start_0+22p
     mov ax, cs
     mov ds, ax
 		
-IF 0    
+IF 1    
     mov	dx, offset config_tat_filename ; "Config.tat"
     mov ah, 3Dh
     mov al, 0
@@ -1932,7 +1976,7 @@ ELSE
     mov ax,cs:file_handle
 ENDIF    
     
-IF 0    
+IF 1    
     mov bx, ax
 		mov	dx, offset config_tat_buffer ; overwrites many of the initialization routines (code)
           ; and some other temporary values
@@ -1967,7 +2011,7 @@ loc_816:				; CODE XREF: read_config_and_resize_memory+Ej
 ; ---------------------------------------------------------------------------
 
 loc_817:				; CODE XREF: read_config_and_resize_memory+1Cj
-IF 0
+IF 1
     mov ah, 3Eh
     int 21h   ; DOS - 2+ - CLOSE A FILE WITH HANDLE
 ELSE
@@ -2340,15 +2384,19 @@ set_interrupt_vectors_0x97_and_0x24 proc near ;	CODE XREF: START_GAME_sub_22p
 		or	dx, 1		; dx = (offset interrupt_0x97 +	2) | 1;	<== dx = 11B5
 					;
 					; dx |=	1 means	make it	odd if not already
-    mov ax, 2597h ; al = interrupt 0x97
+          
+    mov ah, 25h ; set interrupt
+    mov al, 97h ; interrupt 0x97
     int 21h   ; DOS - SET INTERRUPT VECTOR
           ; AL = interrupt number
           ; DS:DX = new vector to be used for specified interrupt
+          
     mov al, 24h   ; interrupt 0x24
 		mov	dx, offset interrupt_0x24
     int 21h   ; DOS - SET INTERRUPT VECTOR
           ; AL = interrupt number
           ; DS:DX = new vector to be used for specified interrupt
+          
     retn
 set_interrupt_vectors_0x97_and_0x24 endp
 
