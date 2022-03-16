@@ -1,4 +1,4 @@
-; LONG_DIV_MUL = 1 ; does not work for cga/hercules...
+LONG_DIV_MUL = 1
 
 ; ---------------------------------------------------------------------------
 
@@ -1250,7 +1250,7 @@ ELSE
     
     push di ; = hi
     push si ; = lo
-    call long_mul_with_16
+    call long_div_with_16
     add sp,2*2
     ; dx:ax
     mov si,ax ; = lo
@@ -1548,14 +1548,27 @@ c_GAME_START_sub_6	proc near
   retn
 c_GAME_START_sub_6	endp
 
+SEEM_NOT_IN_USE_1 = 1 ; test with all variants
+
 GAME_START_sub_6 proc near		; CODE XREF: GAME_START_sub_7+25p
     push  bx
     xor ax, ax
 		mov	cs:far_ptr3.ofs, ax
 		mov	cs:far_ptr3.segm, ax
+
     mov al, cs:byte_55
     test  al, 20h
+IFDEF SEEM_NOT_IN_USE_1    
+    jz next
+    mov dx,offset error9
+    mov ah,09h
+    int 21h
+    jmp just_exit
+next:    
+ELSE
     jnz short loc_592
+ENDIF    
+
 		mov	cs:far_ptr3.ofs, size sPSP
 		mov	dx, cs:maybe_exe_buffer.segm
 		add	cs:maybe_exe_buffer.segm, 16
@@ -1573,11 +1586,11 @@ GAME_START_sub_6 proc near		; CODE XREF: GAME_START_sub_7+25p
     clc
     pop bx
     retn
+    
+IFNDEF SEEM_NOT_IN_USE_1     
 ; ---------------------------------------------------------------------------
 
 loc_592:				; CODE XREF: GAME_START_sub_6+11j
-;jmp just_exit
-
     xor ax, ax
     mov ds, ax
     assume ds:nothing
@@ -1588,7 +1601,7 @@ loc_592:				; CODE XREF: GAME_START_sub_6+11j
     
     ;====
     
-		mov	cx, lengthof maybe_10_ptr ; item count not bytes ; WASM sets 1Eh, UASM/MASM 0Ah
+		mov	cx, lengthof maybe_10_ptr ; item count not bytes
     mov ax, cs
     mov ds, ax
     assume ds:seg000
@@ -1612,6 +1625,7 @@ loc_593:				; CODE XREF: GAME_START_sub_6+66j
     clc
     pop bx
     retn
+ENDIF    
 GAME_START_sub_6 endp
 
 
@@ -2496,6 +2510,7 @@ stack_space_end_unk_342 dw 0 ; DATA XREF: start_0+Ao start_0+31o
             db '  for VGA',0dh,0ah,0dh,0ah
             db '$'
             
+  error9 db '9','$'
   error6 db '6','$'
   error8 db '8','$'
   error5 db '5','$'
