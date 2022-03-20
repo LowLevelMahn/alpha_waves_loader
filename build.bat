@@ -63,7 +63,8 @@ if %ERRORLEVEL% NEQ 0 goto error
 :: with reduced code down to just start the game and exit, binary equality not needed here
 :: ==================================================
 
-%uasm_exe% -DDIRECT_START -DCLEANUP ae.asm 
+::%uasm_exe% -DDIRECT_START -DCLEANUP ae.asm 
+%uasm_exe% -DREMOVE_DEAD_CODE ae.asm 
 if %ERRORLEVEL% NEQ 0 goto error
 
 %wlink_exe% name ae.com format dos com file ae.obj

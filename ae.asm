@@ -1498,7 +1498,14 @@ GAME_START_sub_6 proc near		; CODE XREF: GAME_START_sub_7+25p
 		mov	cs:far_ptr3.segm, ax
     mov al, cs:byte_55
     test  al, 20h
+    
+IFDEF REMOVE_DEAD_CODE
+    ; we never get here    
+    jnz just_exit
+ELSE    
     jnz short loc_592
+ENDIF    
+    
 		mov	cs:far_ptr3.ofs, size sPSP
 		mov	dx, cs:maybe_exe_buffer.segm
 		add	cs:maybe_exe_buffer.segm, 16
