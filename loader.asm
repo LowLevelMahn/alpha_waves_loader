@@ -1596,7 +1596,7 @@ ENDIF
     pop bx
     retn
     
-IFNDEF SEEM_NOT_IN_USE_1     
+IFNDEF REMOVE_DEAD_CODE     
 ; ---------------------------------------------------------------------------
 
 loc_592:				; CODE XREF: GAME_START_sub_6+11j
