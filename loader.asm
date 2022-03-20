@@ -161,12 +161,16 @@ byte_55		db 0			; DATA XREF: EXE_HEADER_sub_2+1r
           ;   0x18 = 0b00011000
           ;   0x10 = 0b00010000  
         
+public C byte_57
 byte_57		db 0			; DATA XREF: GAME_START_sub_3+42o
 					; GAME_START_sub_3+7Cr	...
+public C byte_569
 byte_569	db 0			; DATA XREF: GAME_START_sub_3:loc_577r
+public C word_60
 word_60		dw 0			; DATA XREF: GAME_START_sub_3+76r
 					; GAME_START_sub_3+EDr	...
     db 4 dup(0)
+public C another_pointer2
 another_pointer2 ptr16 <0>		; DATA XREF: GAME_START_sub_3+49r
 					; GAME_START_sub_3+61w	...
 word_62		dw 0			; DATA XREF: EXE_HEADER_sub_2+17w
@@ -826,6 +830,7 @@ c_GAME_START_sub_3	proc near
   retn
 c_GAME_START_sub_3 endp
 
+extern C cc_GAME_START_sub_3:near
 ; Info: does not call other functions
 ; __int16 __usercall GAME_START_sub_3<ax>(__int16 maybe_dest_seg_@<es>,	__int16	maybe_dest_ofs1_@<di>, __int16 maybe_src_seg_@<ds>, __int16 maybe_src_ofs_@<si>)
 GAME_START_sub_3 proc near		; CODE XREF: GAME_START_sub_3+101j
@@ -1382,7 +1387,11 @@ ENDIF
     push ds
     push di
     push es
+IF 0
     call c_GAME_START_sub_3
+ELSE
+    call cc_GAME_START_sub_3
+ENDIF    
     add sp,4*2
   
     clc
@@ -1548,7 +1557,7 @@ c_GAME_START_sub_6	proc near
   retn
 c_GAME_START_sub_6	endp
 
-SEEM_NOT_IN_USE_1 = 1 ; test with all variants
+REMOVE_DEAD_CODE = 1 ; test with all variants
 
 GAME_START_sub_6 proc near		; CODE XREF: GAME_START_sub_7+25p
     push  bx
@@ -1558,7 +1567,7 @@ GAME_START_sub_6 proc near		; CODE XREF: GAME_START_sub_7+25p
 
     mov al, cs:byte_55
     test  al, 20h
-IFDEF SEEM_NOT_IN_USE_1    
+IFDEF REMOVE_DEAD_CODE    
     jz next
     mov dx,offset error9
     mov ah,09h
