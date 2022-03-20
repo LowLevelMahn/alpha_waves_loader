@@ -2059,7 +2059,7 @@ get_offsets:
     ;===================== reduce com program memory usage to minimum
 
     ; calc paragraphs for complete program
-		mov	bx,offset config_tat_buffer + size config_tat_buffer
+		mov	bx,offset program_end
     shr bx, 1   ; shr bx,4 => bx / 16
     shr bx, 1
     shr bx, 1
@@ -2494,6 +2494,19 @@ ok:
     retn
 SIMPLE_INIT_routine endp    
 
+IF 1
+
+extern error9:byte
+extern stack_space_end_unk_342:byte
+extern config_tat_buffer:byte
+extern error4:byte
+extern error5:byte
+extern gfx_mode:word
+extern cmd_error:byte
+extern program_end:byte
+
+ELSE
+    ; --> from loader_data.asm
     db 1DEh dup(0BBh)    ; also stack space !!!
 stack_space_end_unk_342 dw 0 ; DATA XREF: start_0+Ao start_0+31o
 
@@ -2520,6 +2533,9 @@ stack_space_end_unk_342 dw 0 ; DATA XREF: start_0+Ao start_0+31o
 config_tat_buffer db 563 dup(0CCh)
 
 ; END OF PROGRAM - memory reduce will remove data here
+program_end:
+
+ENDIF
 
 seg000    ends
 
