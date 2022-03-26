@@ -23,12 +23,15 @@ set wlink_exe=%watcom_bin%\wlink.exe
 :: ==================================================
 
 %ml_exe% /c /omf /DBINARY_EQUAL ae.asm
+echo %ERRORLEVEL%
 if %ERRORLEVEL% NEQ 0 goto error
 
 %wlink_exe% name ae_org_m.com format dos com file ae.obj
+echo %ERRORLEVEL%
 if %ERRORLEVEL% NEQ 0 goto error
 
 fc /B %org_dir%\ALPHA_E.COM ae_org_m.COM
+echo %ERRORLEVEL%
 if %ERRORLEVEL% NEQ 0 goto error
 
 :: ==================================================
@@ -36,12 +39,15 @@ if %ERRORLEVEL% NEQ 0 goto error
 :: ==================================================
 
 %uasm_exe% -WX -DBINARY_EQUAL ae.asm
+echo %ERRORLEVEL%
 if %ERRORLEVEL% NEQ 0 goto error
 
 %wlink_exe% name ae_org_u.com format dos com file ae.obj
+echo %ERRORLEVEL%
 if %ERRORLEVEL% NEQ 0 goto error
 
 fc /B %org_dir%\ALPHA_E.COM ae_org_u.COM
+echo %ERRORLEVEL%
 if %ERRORLEVEL% NEQ 0 goto error
 
 :: ==================================================
@@ -51,28 +57,35 @@ if %ERRORLEVEL% NEQ 0 goto error
 ::!!! TODO: make binary compatible !!!
 
 ::wasm.exe -wx -dBINARY_EQUAL ae.asm
+::echo %ERRORLEVEL%
 ::if %ERRORLEVEL% NEQ 0 goto error
 ::
 ::%wlink_exe% name ae_org_w.com format dos com file ae.obj
+::echo %ERRORLEVEL%
 ::if %ERRORLEVEL% NEQ 0 goto error
 ::
 ::fc /B %org_dir%\ALPHA_E.COM ae_org_w.COM
+::echo %ERRORLEVEL%
 ::if %ERRORLEVEL% NEQ 0 goto error
 
 :: ==================================================
 :: with reduced code down to just start the game and exit, binary equality not needed here
 :: ==================================================
 
-::%uasm_exe% -DDIRECT_START -DCLEANUP ae.asm 
-%uasm_exe% -DREMOVE_DEAD_CODE ae.asm 
+%uasm_exe% -DDIRECT_START -DCLEANUP ae.asm 
+::%uasm_exe% -DREMOVE_DEAD_CODE ae.asm 
+echo %ERRORLEVEL%
 if %ERRORLEVEL% NEQ 0 goto error
 
 %wlink_exe% name ae.com format dos com file ae.obj
+echo %ERRORLEVEL%
 if %ERRORLEVEL% NEQ 0 goto error
 
 copy ae.com %org_dir%
+echo %ERRORLEVEL%
 if %ERRORLEVEL% NEQ 0 goto error
 
+pause
 exit /b 0
 
 :error

@@ -66,7 +66,7 @@ CommandTail	ends
 ; ---------------------------------------------------------------------------
 ; Program segment prefix from dosbox source
 sPSP		struc ;	(sizeof=0x100)
-exit_code		db 2 dup(?)		; XREF:	EXE_HEADER_sub_2+140o
+exit_instructions db 2 dup(?)		; XREF:	EXE_HEADER_sub_2+140o
 					; GAME_START_sub_6+13o
 next_seg	dw ?
 fill_1		db ?
@@ -176,12 +176,19 @@ ENDIF
 
 someway_cs_registe_value1 dw 0		; DATA XREF: GAME_START_sub_7+79w
 					; GAME_START_sub_7+8Do
+IFNDEF CLEANUP ; ???          
     db 80h, 0
+ENDIF    
 someway_cs_registe_value2 dw 0		; DATA XREF: GAME_START_sub_7+7Ew
+IFNDEF CLEANUP ; ???
     db 5Ch, 0
+ENDIF    
 someway_cs_registe_value3 dw 0		; DATA XREF: GAME_START_sub_7+83w
+IFNDEF CLEANUP ; ???
     db 6Ch, 0
+ENDIF    
 someway_cs_registe_value4 dw 0		; DATA XREF: GAME_START_sub_7+88w
+; __int16 maybe_exe_buffer
 maybe_exe_buffer ptr16 <0>		; DATA XREF: read_some_file_sub_4+20r
           ; read_some_file_sub_4+3Er ...
 					;
@@ -196,6 +203,7 @@ maybe_exe_buffer ptr16 <0>		; DATA XREF: read_some_file_sub_4+20r
 					;
 					;
 					; --------------
+; __int16 some_game_ptr
 some_game_ptr	ptr16 <0>		; DATA XREF: read_some_file_sub_4+D7w
           ; read_some_file_sub_4+1B5r ...
 word_44   dw 0      ; DATA XREF: read_some_file_sub_4+25w
@@ -263,6 +271,7 @@ exe_cs_ip_ptr	ptr16 <0>		; DATA XREF: EXE_HEADER_sub_2+FFw
 ; __int16 exe_pointer
 exe_pointer	ptr16 <0>		; DATA XREF: EXE_HEADER_sub_2+21w
 					; EXE_HEADER_sub_2+57r	...
+; __int16 pointer3
 pointer3	ptr16 <0>		; DATA XREF: EXE_HEADER_sub_2+4Dw
 					; EXE_HEADER_sub_2+85r	...
 start_psp dw 0      ; DATA XREF: start_0+11w start_0+8Fr
@@ -790,7 +799,7 @@ loc_557:				; CODE XREF: EXE_HEADER_sub_2+7j
     cld
 		mov	cs:pointer3.ofs, di
 		mov	cs:pointer3.segm, es
-		lds	si, dword ptr cs:exe_pointer.ofs ; unknown_@   .ofs seems wrong???
+		lds	si, dword ptr cs:exe_pointer.ofs ; unknown_@
     test  cs:byte_55, 40h
     jz  short loc_560
     jmp loc_561
@@ -799,7 +808,7 @@ loc_557:				; CODE XREF: EXE_HEADER_sub_2+7j
 loc_560:				; CODE XREF: EXE_HEADER_sub_2+62j
 		cmp	[si+EXE_Header.signature], 'ZM' ; 'MZ' or 'ZM' exe header signature??
     jz  short loc_562
-    stc
+		stc			; no exe header	found
     pop bx
 		retn			; near ret from	far proc - manually fixed stack?
 ; ---------------------------------------------------------------------------
@@ -822,8 +831,8 @@ loc_562:				; CODE XREF: EXE_HEADER_sub_2+6Bj
 					; results in a 32bit numbers in	ax:bx
 					;
 					; uint32_t result = header_paragraphs *	16;
-					; ax ==	(result	>> 16));
-					; bx ==	(result	& 0xFFFF));
+					; ax ==	(result	>> 16)); HI
+					; bx ==	(result	& 0xFFFF)); LO
 		les	di, dword ptr cs:pointer3.ofs ;	dest_ofs_@
 		mov	cx, bx		; lo_size_@
 		mov	bx, ax		; hi_size_@
@@ -840,20 +849,20 @@ loc_562:				; CODE XREF: EXE_HEADER_sub_2+6Bj
 		les	di, dword ptr cs:exe_pointer.ofs ; dest_ofs_@
 		call	offset_overflow_safe_block_copy
     mov bp, es
-		les	bx, dword ptr cs:pointer3.ofs
-    mov cx, es:[bx+6]
+		les	bx, dword ptr cs:pointer3.ofs ;	in-ram EXE needs to be finished	at this	point
+		mov	cx, es:[bx+EXE_Header.relocations]
     jcxz  short loc_563
-    mov di, es:[bx+18h]
+		mov	di, es:[bx+EXE_Header.reloctable]
     add di, bx
 
-loc_564:				; CODE XREF: EXE_HEADER_sub_2+D8j
-    mov si, es:[di]
-    mov ax, es:[di+2]
+do_relocate:				; CODE XREF: EXE_HEADER_sub_2+D8j
+		mov	si, es:[di+ptr16.ofs]
+		mov	ax, es:[di+ptr16.segm]
     add ax, bp
     mov ds, ax
     add [si], bp
     add di, 4
-    loop  loc_564
+		loop	do_relocate
 
 loc_563:				; CODE XREF: EXE_HEADER_sub_2+C0j
 		les	si, dword ptr cs:pointer3.ofs
@@ -1616,8 +1625,8 @@ loc_596:				; CODE XREF: GAME_START_sub_7+2Dj
     rcr si, 1
     inc si
     add ax, si
-    mov es, ax
-    xor di, di
+		mov	es, ax		; unknown6_@
+		xor	di, di		; unknown7_@
 		lds	cx, dword ptr cs:some_game_ptr.ofs ; unknown3_@
 		mov	bx, ds		; unknown4_@
 		mov	ax, cs:somway_exe_buffer_seg
@@ -2477,7 +2486,7 @@ before_and_after_game_run:		; CODE XREF: start_0+327j
 
 after_game_run:				; CODE XREF: start_0+313j start_0+31Dj
     pop ax
-    xchg  ax, bx
+		xchg	ax, bx		; block_@
     xor cx, cx
     mov es, cx
     assume es:nothing
