@@ -62,8 +62,12 @@ my reduced loader
  - documented the video-card detection, menu and config.tat reading code
  - created a reduced/cleanup version that gets rid of the video card detection and menu (parts NOPed out, unused data/code removed) which directly starts the game
  - binary indentical output test with MASM, UASM, WASM
- 
+ - extracted the pure VGA game exe (Turbo C 2.x) from the loading process
+ - extracted the adlib TSR com program from the loading process
+ - minimal loader for the adlib com TSR + game exe + setting of interrupts to configure the game
+
  # TODOs
  - game-starting analyse is in the very beginning: so far: an exe gets created from parts of progs1.cc in ram and executed 
  - rewrite the loader in C and write a tool that directly creates a full game exe that can be directly started (i know i can just memdump, but thats not my goal)
  - maybe reverse AlphaWaves itself - its a Turbo C 2.x exe
+ 
