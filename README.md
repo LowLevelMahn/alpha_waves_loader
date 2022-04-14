@@ -20,9 +20,9 @@ Loader menu | Game intro
 | CONFIG.TAT	 |  8b3de28f7feebc33e70b36c64061ab1f | gfx/game code offsets | 100%     |
 | GRAPHS.CC1	 |  91d542578b974910ad30db6297bc8c0a | graphics data         | 5%       |
 | HIGHSCOR.QB	 |  6fd61f2a03225192b7ac5a1dce5c96ea | highscores            | 100%     |
-| MUSIC_A.CC1	 |  ab4eb457f274d7b28b6985662a1dc3b6 | music                 | 0%       |
-| MUSIC_B.CC1	 |  cd968b9d80712830e1c2fa1cba170900 | music                 | 0%       |
-| MUSIC_T.CC1	 |  8827fbc74d9053ff6363387a99be2f16 | music                 | 0%       |
+| MUSIC_A.CC1	 |  ab4eb457f274d7b28b6985662a1dc3b6 | adlib music           | 0%       |
+| MUSIC_B.CC1	 |  cd968b9d80712830e1c2fa1cba170900 | buzer pc music        | 0%       |
+| MUSIC_T.CC1	 |  8827fbc74d9053ff6363387a99be2f16 | tandy music           | 0%       |
 | PROGS.CC1	   |  d529022d120dcd7bafedde05acd467c7 | gfx/game code         | 1%       |
 | TATOU.BAT	   |  4a748577227640cbfd26874fe08c6d7c | simple starter        | ignored  |
 | TESTFKEY.COM |	964a23b53713cfc666fbc081a72bf77b | ?                     | ignored  |
@@ -64,7 +64,7 @@ my reduced loader
  - binary indentical output test with MASM, UASM, WASM
  - extracted the pure VGA game exe (Turbo C 2.x) from the loading process
  - extracted the adlib TSR com program from the loading process
- - minimal loader for the adlib com TSR + game exe + setting of interrupts to configure the game
+ - minimal loader for the adlib com TSR + game exe + setting of interrupts to configure the game (only GRAPHS.CC1, HIGHSCOR.QB, MUSIC_A.CC1, TEXTES.CC1 needed)
 
  # TODOs
  - game-starting analyse is in the very beginning: so far: an exe gets created from parts of progs1.cc in ram and executed 
