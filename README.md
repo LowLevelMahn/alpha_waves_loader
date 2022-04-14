@@ -63,7 +63,7 @@ my reduced loader
  - created a reduced/cleanup version that gets rid of the video card detection and menu (parts NOPed out, unused data/code removed) which directly starts the game
  - binary indentical output test with MASM, UASM, WASM
  - extracted the pure VGA game exe (Turbo C 2.x) from the loading process
- - extracted the adlib TSR com program from the loading process
+ - extracted the adlib TSR com program from the loading process (pre-loaded for adlib sound)
  - minimal loader for the adlib com TSR + game exe + setting of interrupts to configure the game (only GRAPHS.CC1, HIGHSCOR.QB, MUSIC_A.CC1, TEXTES.CC1 needed)
 
  # TODOs
