@@ -40,13 +40,9 @@ my reduced loader
 | ae.asm            | reversed and reassemble-able source code of ALPHA_E.COM                                                |
 | build.bat         | builds ae.asm with UASM64/WLink and checks if resulting ae_org.com is binary identical to ALPHA_E.COM  |
 | tools_howto.txt   | how to get the needed build tools (UASM, WLink) - very easy to install                                 |
-| ae_org_m.com      | ae.asm build with MASM V9 as-is - is binary identical to ALPHA_E.com (checked by build.bat)            |
-| ae_org_u.com      | ae.asm build with UASM64 2.52 as-is - is binary identical to ALPHA_E.com (checked by build.bat)        |
-| ae_org_w.com      | ae.asm build with recent WASM as-is - is binary identical to ALPHA_E.com (checked by build.bat)        |
-| ae.com            | ae.asm build with DIRECT_START/CLEANUP, direct start of the game, no menu, most code NOPed out with defines |
-| loader.asm        | like ae.asm but all dead code removed (just the loader code)                                           |
-| loader.com        | based on physical source reduced ae.asm with only game loading code                                                       |
-| build_loader.bat  | builds the loader.asm                                                                                  |
+| exeload.asm       | small loader runs the extracted game exe and sound com TSR + set needed interrupts                     |
+| build_exeload.bat | batch builder for the small loader                                                                     |
+| tools_howto.txt   | how to get the needed build tools (UASM, WLink) - very easy to install                                 |
 
  **tools_dir** variable in build.bat needs to be set to suits your environment
  
