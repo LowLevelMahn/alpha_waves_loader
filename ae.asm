@@ -43,8 +43,10 @@ EMPTY = 0AAh
 
 ptr16		struc ;	(sizeof=0x4)	; XREF:	seg000:maybe_exe_bufferr
 					; seg000:some_game_ptrr ...
-ofs		dw ?
-segm		dw ?
+ofs		dw ?			; XREF:	EXE_HEADER_sub_2:do_relocater
+					; GAME_START_sub_6+13w	...
+segm		dw ?			; XREF:	EXE_HEADER_sub_2+CBr
+					; GAME_START_sub_6+63r	...
 ptr16   ends
 
 ; ---------------------------------------------------------------------------
@@ -100,7 +102,7 @@ EXE_Header	struc ;	(sizeof=0x1C)
 signature	dw ?			; XREF:	EXE_HEADER_sub_2:loc_560r
 extrabytes	dw ?
 pages		dw ?
-relocations	dw ?
+relocations	dw ?			; XREF:	EXE_HEADER_sub_2+BCr
 headersize	dw ?			; XREF:	EXE_HEADER_sub_2:loc_562r
 minmemory	dw ?
 maxmemory	dw ?
@@ -109,7 +111,7 @@ initSP		dw ?			; XREF:	EXE_HEADER_sub_2+DFr
 checksum	dw ?
 initIP		dw ?			; XREF:	EXE_HEADER_sub_2+FBr
 initCS		dw ?			; XREF:	EXE_HEADER_sub_2+F1r
-reloctable	dw ?
+reloctable	dw ?			; XREF:	EXE_HEADER_sub_2+C2r
 overlay		dw ?
 EXE_Header	ends
 
@@ -271,8 +273,8 @@ exe_cs_ip_ptr	ptr16 <0>		; DATA XREF: EXE_HEADER_sub_2+FFw
 ; __int16 exe_pointer
 exe_pointer	ptr16 <0>		; DATA XREF: EXE_HEADER_sub_2+21w
 					; EXE_HEADER_sub_2+57r	...
-; __int16 pointer3
-pointer3	ptr16 <0>		; DATA XREF: EXE_HEADER_sub_2+4Dw
+; __int16 exe_header_pointer
+exe_header_pointer ptr16 <0>		; DATA XREF: EXE_HEADER_sub_2+4Dw
 					; EXE_HEADER_sub_2+85r	...
 start_psp dw 0      ; DATA XREF: start_0+11w start_0+8Fr
 saved_int1_ptr	ptr16 <0>		; DATA XREF: EXE_HEADER_sub_2+3Br
@@ -789,7 +791,7 @@ loc_557:				; CODE XREF: EXE_HEADER_sub_2+7j
     xor ax, ax
     mov es, ax
     assume es:nothing
-		lds	ax, dword ptr cs:saved_int1_ptr.ofs
+		lds	ax, dword ptr cs:saved_int1_ptr.ofs ; restore interrupt	1 vector
     mov es:4, ax
     mov word ptr es:6, ds
 		pop	ds		; src_seg_@
@@ -797,8 +799,8 @@ loc_557:				; CODE XREF: EXE_HEADER_sub_2+7j
 		pop	es		; dest_seg_@
     assume es:nothing
     cld
-		mov	cs:pointer3.ofs, di
-		mov	cs:pointer3.segm, es
+		mov	cs:exe_header_pointer.ofs, di
+		mov	cs:exe_header_pointer.segm, es
 		lds	si, dword ptr cs:exe_pointer.ofs ; unknown_@
     test  cs:byte_55, 40h
     jz  short loc_560
@@ -833,7 +835,7 @@ loc_562:				; CODE XREF: EXE_HEADER_sub_2+6Bj
 					; uint32_t result = header_paragraphs *	16;
 					; ax ==	(result	>> 16)); HI
 					; bx ==	(result	& 0xFFFF)); LO
-		les	di, dword ptr cs:pointer3.ofs ;	dest_ofs_@
+		les	di, dword ptr cs:exe_header_pointer.ofs	; dest_ofs_@
 		mov	cx, bx		; lo_size_@
 		mov	bx, ax		; hi_size_@
 		call	offset_overflow_safe_block_copy
@@ -846,10 +848,10 @@ loc_562:				; CODE XREF: EXE_HEADER_sub_2+6Bj
     
     mov cs:some_game_pointer_seg, bx
     mov cs:word_62, cx
-		les	di, dword ptr cs:exe_pointer.ofs ; dest_ofs_@
+		les	di, dword ptr cs:exe_pointer.ofs ; dest_ofs_@ -> here is the full exe image
 		call	offset_overflow_safe_block_copy
-    mov bp, es
-		les	bx, dword ptr cs:pointer3.ofs ;	in-ram EXE needs to be finished	at this	point
+		mov	bp, es		; bp = es = load segment = exe_pointer.segm
+		les	bx, dword ptr cs:exe_header_pointer.ofs	; relocate exe segments	starts here
 		mov	cx, es:[bx+EXE_Header.relocations]
     jcxz  short loc_563
 		mov	di, es:[bx+EXE_Header.reloctable]
@@ -860,12 +862,12 @@ do_relocate:				; CODE XREF: EXE_HEADER_sub_2+D8j
 		mov	ax, es:[di+ptr16.segm]
     add ax, bp
     mov ds, ax
-    add [si], bp
+		add	[si], bp	; bp = load_segment
     add di, 4
 		loop	do_relocate
 
 loc_563:				; CODE XREF: EXE_HEADER_sub_2+C0j
-		les	si, dword ptr cs:pointer3.ofs
+		les	si, dword ptr cs:exe_header_pointer.ofs
 		mov	ax, es:[si+EXE_Header.initSP]
 		mov	cs:register_sp_value, ax
 		mov	ax, es:[si+EXE_Header.initSS]
@@ -908,10 +910,12 @@ loc_561:				; CODE XREF: EXE_HEADER_sub_2+64j
     mov ss, ax
     mov sp, 0FFFFh
     xor bx, bx
-    push  bx
-    push  ax
+		push	bx		; push 0
+		push	ax		; push CS value	for retf-jmp
+					;
+					; <-- ax:100h --> ADLIB.COM TSR	(size unknown)
 		mov	ax, size sPSP	; maybe	PSP size
-    push  ax
+		push	ax		; push IP value	for retf-jmp
     mov ax, bx
     mov cx, bx
     mov dx, bx
@@ -919,9 +923,19 @@ loc_561:				; CODE XREF: EXE_HEADER_sub_2+64j
     mov si, bx
     mov di, bx
     sti
-    retf
-EXE_HEADER_sub_2 endp
-
+		retf			; <-----------
+EXE_HEADER_sub_2 endp			;
+					; we go	into the game code here
+					; initalizing the F0 interrupt
+					;
+					; jump directly	to the start of	vga_ae.exe (0:100)
+					; first	instruction is a jmp
+					;
+					; https://wiki.osdev.org/Far_Call_Trick
+					;
+					;
+					;
+					; --------
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -3303,6 +3317,7 @@ START_GAME_FEATURE_FLAG_STUFF_sub_21 endp
 ; =============== S U B R O U T I N E =======================================
 
 
+; __int16 __usercall START_GAME_sub_22<ax>(gfx_block_t *block_@<bx>)
 START_GAME_sub_22 proc near		; CODE XREF: start_0+305p start_0+31Fp ...
 		call	set_interrupt_vectors_0x97_and_0x24 ; -------
 					;
