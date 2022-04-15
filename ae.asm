@@ -913,7 +913,17 @@ loc_561:				; CODE XREF: EXE_HEADER_sub_2+64j
 		push	bx		; push 0
 		push	ax		; push CS value	for retf-jmp
 					;
-					; <-- ax:100h --> ADLIB.COM TSR	(size unknown)
+					; installes the	sound TSRs to Interrupt-0xF0
+					; i think only one is active at	a time
+					;
+					; 3 retf-jumps are triggered
+					;
+					; <-- ax:100h
+					; 1. Adlib 'IFGM ADLIB'
+					; 2. Tandy 'IFGM TANDY PSG'
+					; 3. ADLIB 'IFGM BUZER PC'
+					;
+					; then starts the game with the	jump above
 		mov	ax, size sPSP	; maybe	PSP size
 		push	ax		; push IP value	for retf-jmp
     mov ax, bx
@@ -923,17 +933,9 @@ loc_561:				; CODE XREF: EXE_HEADER_sub_2+64j
     mov si, bx
     mov di, bx
     sti
-		retf			; <-----------
+		retf			; <----------- RETF-JUMP!!!!
 EXE_HEADER_sub_2 endp			;
-					; we go	into the game code here
-					; initalizing the F0 interrupt
-					;
-					; jump directly	to the start of	vga_ae.exe (0:100)
-					; first	instruction is a jmp
-					;
 					; https://wiki.osdev.org/Far_Call_Trick
-					;
-					;
 					;
 					; --------
 
