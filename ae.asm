@@ -190,18 +190,21 @@ IFNDEF CLEANUP ; ???
     db 6Ch, 0
 ENDIF    
 someway_cs_registe_value4 dw 0		; DATA XREF: GAME_START_sub_7+88w
-; __int16 maybe_exe_buffer
-maybe_exe_buffer ptr16 <0>		; DATA XREF: read_some_file_sub_4+20r
+; __int16 executeable_buffer
+executeable_buffer ptr16 <0>		; DATA XREF: read_some_file_sub_4+20r
           ; read_some_file_sub_4+3Er ...
 					;
 					;
 					;
 					; --------------
 					;
-					; the_overwrite_buffer_begin
-					; [config.tat]
-					; [maybe_exe_buffer]
 					;
+					; for 4	executables (in	this order)
+					;
+					; 1. adlib tsr
+					; 2. tandy tsr
+					; 3. pc	buz tsr
+					; 4. game
 					;
 					;
 					; --------------
@@ -262,6 +265,17 @@ some_game_pointer_seg dw 0		; DATA XREF: EXE_HEADER_sub_2+1Cw
 					; EXE_HEADER_sub_2+95r	...
 new_psp_seg	dw 0			; DATA XREF: EXE_HEADER_sub_2+2Dr
 					; EXE_HEADER_sub_2+103r ...
+					; ----
+					;
+					; 4x set with int 21h/ah=26h
+					;
+					; 1. adlib tsr
+					; 2. tandy tsr
+					; 3. pc	buz tsr
+					; 4. game
+					;
+					;
+					; ----
 word_558	dw 0			; DATA XREF: EXE_HEADER_sub_2:loc_557w
 some_register_cs_value dw 0		; DATA XREF: EXE_HEADER_sub_2+12w
 register_sp_value dw 0			; DATA XREF: EXE_HEADER_sub_2+E3w
@@ -935,6 +949,16 @@ loc_561:				; CODE XREF: EXE_HEADER_sub_2+64j
     sti
 		retf			; <----------- RETF-JUMP!!!!
 EXE_HEADER_sub_2 endp			;
+					; returns using	old-school-interrupt 22h
+					;
+					; target setted	in:
+					;
+					; GAME_START_sub_6, seg000:0E0A
+					;   mov	word ptr ds:sPSP.int_22.segm, cs
+					;   mov	word ptr ds:sPSP.int_22, offset	subprogram_exit
+					;
+					; back into subprogram_exit:
+					;
 					; https://wiki.osdev.org/Far_Call_Trick
 					;
 					; --------
@@ -1190,7 +1214,7 @@ loc_578:        ; CODE XREF: read_some_file_sub_4+Cj
     mov cl, cs:byte_55
     test  cl, 18h
     jnz short loc_579
-		lds	cx, dword ptr cs:maybe_exe_buffer.ofs
+		lds	cx, dword ptr cs:executeable_buffer.ofs
     mov cs:word_44, 0FFFFh
     mov cs:word_45, 0FFFFh
     jmp loc_580
@@ -1200,7 +1224,7 @@ loc_579:        ; CODE XREF: read_some_file_sub_4+1Ej
     test  cl, 10h
     jz  short loc_581
     mov cx, 2
-		lds	dx, dword ptr cs:maybe_exe_buffer.ofs
+		lds	dx, dword ptr cs:executeable_buffer.ofs
     int 21h   ; DOS - 2+ - READ FROM FILE WITH HANDLE
           ; BX = file handle, CX = number of bytes to read
           ; DS:DX -> buffer
@@ -1231,7 +1255,7 @@ ENDIF
     int 21h   ; DOS - 2+ - MOVE FILE READ/WRITE POINTER (LSEEK)
           ; AL = method: offset from present location
     jb  short loc_136
-		lds	dx, dword ptr cs:maybe_exe_buffer.ofs
+		lds	dx, dword ptr cs:executeable_buffer.ofs
     mov ah, 3Fh
     mov cx, 4
     int 21h   ; DOS - 2+ - READ FROM FILE WITH HANDLE
@@ -1271,7 +1295,7 @@ ENDIF
     jb  short loc_139
 
 loc_581:        ; CODE XREF: read_some_file_sub_4+39j
-		lds	dx, dword ptr cs:maybe_exe_buffer.ofs
+		lds	dx, dword ptr cs:executeable_buffer.ofs
     mov ah, 3Fh
     mov cx, 8
     int 21h   ; DOS - 2+ - READ FROM FILE WITH HANDLE
@@ -1294,7 +1318,7 @@ loc_139:        ; CODE XREF: read_some_file_sub_4+9Aj
 ; ---------------------------------------------------------------------------
 
 loc_582:        ; CODE XREF: read_some_file_sub_4+ADj
-		lds	bp, dword ptr cs:maybe_exe_buffer.ofs
+		lds	bp, dword ptr cs:executeable_buffer.ofs
     mov ax, ds:[bp+0]
     mov cx, ds:[bp+2]
 IFDEF WASM_BINARY_EQUAL
@@ -1319,7 +1343,7 @@ ENDIF
 		mov	cs:some_game_ptr.segm, ax
     mov si, cx
     mov di, ax
-		lds	cx, dword ptr cs:maybe_exe_buffer.ofs
+		lds	cx, dword ptr cs:executeable_buffer.ofs
     add si, cx
     adc di, 0
     sub si, cs:word_44
@@ -1396,7 +1420,7 @@ loc_585:        ; CODE XREF: read_some_file_sub_4+187j
           ; BX = file handle
     test  cs:byte_55, 18h
     jz  short loc_587
-		les	di, dword ptr cs:maybe_exe_buffer.ofs ;	maybe_dest_ofs1_@
+		les	di, dword ptr cs:executeable_buffer.ofs	; maybe_dest_ofs1_@
     push  es
     xor ax, ax
     mov es, ax
@@ -1423,11 +1447,11 @@ loc_585:        ; CODE XREF: read_some_file_sub_4+187j
 		rcr	si, 1		; maybe_src_ofs_@
     mov ax, es
     add ax, si
-		mov	cs:maybe_exe_buffer.segm, ax
+		mov	cs:executeable_buffer.segm, ax
     inc ax
 		mov	ds, ax		; maybe_src_seg_@
     and bx, 0Fh
-		mov	cs:maybe_exe_buffer.ofs, bx
+		mov	cs:executeable_buffer.ofs, bx
     cld
 		call	GAME_START_sub_3
     clc
@@ -1532,8 +1556,8 @@ ELSE
 ENDIF    
     
 		mov	cs:far_ptr3.ofs, size sPSP
-		mov	dx, cs:maybe_exe_buffer.segm
-		add	cs:maybe_exe_buffer.segm, 16
+		mov	dx, cs:executeable_buffer.segm
+		add	cs:executeable_buffer.segm, 16 ; 16 paragraphs = 16*16 bytes = 256(100h) PSP-size
 		mov	cs:new_psp_seg,	dx
     mov ah, 26h
     int 21h   ; DOS - CREATE PSP
@@ -1579,7 +1603,7 @@ loc_594:				; CODE XREF: GAME_START_sub_6+6Bj
 ; ---------------------------------------------------------------------------
 
 loc_593:				; CODE XREF: GAME_START_sub_6+66j
-		mov	ax, cs:maybe_exe_buffer.segm
+		mov	ax, cs:executeable_buffer.segm
 		mov	[si+ptr16.segm], ax
 		mov	[si+ptr16.ofs],	0
     clc
@@ -1606,9 +1630,9 @@ GAME_START_sub_7 proc near		; CODE XREF: START_GAME_sub_22:loc_655p
     int 21h   ; DOS - 2+ - ALLOCATE MEMORY
           ; BX = number of 16-byte paragraphs desired
 					; AX = segment of reserved block
-		mov	cs:maybe_exe_buffer.segm, ax
+		mov	cs:executeable_buffer.segm, ax
 		mov	cs:somway_exe_buffer_seg, ax
-		mov	cs:maybe_exe_buffer.ofs, 0
+		mov	cs:executeable_buffer.ofs, 0
 		pop	bx		; block_@
 		mov	al, cs:[bx+gfx_block_t.byte_13h]
     mov cs:byte_55, al
@@ -2186,8 +2210,8 @@ ENDIF
 loc_817:				; CODE XREF: read_config_and_resize_memory+1Cj
     mov cs:config_tat_size, ax
 		add	ax, offset config_tat_buffer
-		mov	cs:maybe_exe_buffer.ofs, ax ; targets the_overwrite_buffer_begin + filesize("config.tat")
-		mov	cs:maybe_exe_buffer.segm, cs ; segment
+		mov	cs:executeable_buffer.ofs, ax ;	targets	the_overwrite_buffer_begin + filesize("config.tat")
+		mov	cs:executeable_buffer.segm, cs ; segment
     mov ah, 3Eh
     int 21h   ; DOS - 2+ - CLOSE A FILE WITH HANDLE
           ; BX = file handle
@@ -2224,7 +2248,9 @@ loc_817:				; CODE XREF: read_config_and_resize_memory+1Cj
     mov ax, cs:[bx] ; 0x233
 		add	ax, offset config_tat_buffer
 		mov	cs:config_tat_content_end, ax
-		les	bx, dword ptr cs:maybe_exe_buffer.ofs ;	es=ds=cs, bx = 1BEBh = 19B8h+233h
+		les	bx, dword ptr cs:executeable_buffer.ofs	; es=ds=cs, bx = 1BEBh = 19B8h+233h
+					;
+					; this executable_buffer ptr is	only temporary used for	the calculation	here - no global relevance
     shr bx, 1   ; shr bx,4 => bx / 16
     shr bx, 1
     shr bx, 1
