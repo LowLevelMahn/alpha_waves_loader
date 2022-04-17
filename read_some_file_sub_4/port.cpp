@@ -230,7 +230,7 @@ void emu_read_some_file_sub_4(emu_t& e, const uint8_t byte_55_, emu_t::ptr16_t& 
 	uint16_t word_44{};
 	uint16_t word_45{};
 
-	// these are lo/hi int32 offsets (the pair looked liked pointers)
+	// these are not all ptr16 but more lo/hi int32 offsets (the pair looked liked pointers)
 	emu_t::ptr16_t some_game_ptr;
 	emu_t::ptr16_t another_far_ptr;
 	emu_t::ptr16_t another_pointer2;

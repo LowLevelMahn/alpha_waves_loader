@@ -407,7 +407,7 @@ void emu_t::intr_0x21()
 
 		long at = ftell(fi.fp);
 
-		printf("file_read size: %i, at: %i\n%s\n", count, at, hexdump(buffer, count, 5*16).c_str());
+		//printf("file_read size: %i, at: %i\n%s\n", count, at, hexdump(buffer, count, 5*16).c_str());
 
 		ax = static_cast<uint16_t>(read_bytes);
 
@@ -585,7 +585,7 @@ emu_t::ptr16_t emu_t::ptr16(size_t offset32_)
 {
 	size_t segment = offset32_ / 16;
 	size_t offset = offset32_ % 16;
-	return { static_cast<uint16_t>(offset), static_cast<uint16_t>(segment) };
+	return { static_cast<uint16_t>(segment),static_cast<uint16_t>(offset) };
 }
 
 emu_t::file_info_t& emu_t::get_file_info(int handle_)

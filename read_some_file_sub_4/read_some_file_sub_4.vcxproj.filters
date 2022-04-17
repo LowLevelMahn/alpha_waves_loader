@@ -29,13 +29,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="emu.hpp">
-      <Filter>Quelldateien</Filter>
-    </ClInclude>
     <ClInclude Include="types.hpp">
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="helper.hpp">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="emu.hpp">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

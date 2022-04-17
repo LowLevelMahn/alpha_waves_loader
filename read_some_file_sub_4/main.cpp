@@ -57,37 +57,40 @@ int main()
 		0x70, 0x72, 0x6F, 0x67, 0x73, 0x2E, 0x63, 0x63, 0x31, 0x00/*0x20*/, 0x20, 0x20,	0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x04, 0x91, 0x04, 0x00, 0x00, 0x00
 	};
 
-	const emu_t::ptr16_t block_begin_ptr16(0, 0x100D);
-	const size_t blocks_begin = emu_t::offset32(block_begin_ptr16);
-	const size_t blockes_end = blocks_begin + sizeof(blocks);
+	for (int b = 0; b < 4; ++b)
+	{
 
-	const emu_t::ptr16_t executable_buffer_begin_ptr16(0x2E9, 0);
-	const size_t executable_buffer_begin = emu_t::offset32(executable_buffer_begin_ptr16);
-	const size_t executable_buffer_size = 0x9D160;
-	const size_t executable_buffer_end = executable_buffer_begin + executable_buffer_size;
-	slice_t executable_buffer_slice{ e.memory(executable_buffer_begin), executable_buffer_size };
+		const emu_t::ptr16_t block_begin_ptr16(0, 0x100D);
+		const size_t blocks_begin = emu_t::offset32(block_begin_ptr16);
+		const size_t blockes_end = blocks_begin + sizeof(blocks);
 
-	::memcpy(e.memory(blocks_begin), blocks, sizeof(blocks));
-	e.cs = block_begin_ptr16.segment;
-	e.bx = block_begin_ptr16.offset + (3 * sizeof(gfx_block_t));
+		const emu_t::ptr16_t executable_buffer_begin_ptr16(0x2E9, 0);
+		const size_t executable_buffer_begin = emu_t::offset32(executable_buffer_begin_ptr16);
+		const size_t executable_buffer_size = 0x9D160;
+		const size_t executable_buffer_end = executable_buffer_begin + executable_buffer_size;
+		slice_t executable_buffer_slice{ e.memory(executable_buffer_begin), executable_buffer_size };
 
-	emu_t::ptr16_t executable_buffer_ptr16 = executable_buffer_begin_ptr16;
+		::memcpy(e.memory(blocks_begin), blocks, sizeof(blocks));
+		e.cs = block_begin_ptr16.segment;
+		e.bx = block_begin_ptr16.offset + (b * sizeof(gfx_block_t));
 
-	emu_GAME_START_sub_6(e, executable_buffer_ptr16);
+		emu_t::ptr16_t executable_buffer_ptr16 = executable_buffer_begin_ptr16;
 
-	printf("---\n%s\n", hexdump(e.memory(executable_buffer_begin), 300, 5 * 16).c_str());
+		emu_GAME_START_sub_6(e, executable_buffer_ptr16);
 
-	uint8_t byte_55 = e.memory<gfx_block_t>(e.cs, e.bx)->byte_13h;
+		//printf("---\n%s\n", hexdump(e.memory(executable_buffer_begin), 300, 5 * 16).c_str());
 
-	write_binary_file("d:/temp/out.1.set_psp_dta.bin", e.memory(executable_buffer_begin), executable_buffer_size);
+		uint8_t byte_55 = e.memory<gfx_block_t>(e.cs, e.bx)->byte_13h;
 
-	emu_read_some_file_sub_4(e, byte_55, executable_buffer_ptr16, executable_buffer_slice);
+		write_binary_file("d:/temp/out.1.set_psp_dta.bin", e.memory(executable_buffer_begin), executable_buffer_size);
 
-	printf("---\n%s\n", hexdump(e.memory().data(), e.memory().size(), 5 * 16).c_str());
+		emu_read_some_file_sub_4(e, byte_55, executable_buffer_ptr16, executable_buffer_slice);
 
-	write_binary_file("d:/temp/out.bin", e.memory().data(), e.memory().size());
+		//printf("---\n%s\n", hexdump(e.memory().data(), e.memory().size(), 5 * 16).c_str());
+		//write_binary_file("d:/temp/out.bin", e.memory().data(), e.memory().size());
 
-	int brk = 1;
+		int brk = 1;
+	}
 
 	return 0;
 }
