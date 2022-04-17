@@ -43,6 +43,7 @@ my reduced loader
 | exeload.asm       | small loader runs the extracted game exe and sound com TSR + set needed interrupts                     |
 | build_exeload.bat | batch builder for the small loader                                                                     |
 | tools_howto.txt   | how to get the needed build tools (UASM, WLink) - very easy to install                                 |
+| ./read_some_file_sub_4   | C++ port of the game data loading routines                                |
 
  **tools_dir** variable in build.bat needs to be set to suits your environment
  
