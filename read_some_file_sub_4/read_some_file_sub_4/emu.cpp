@@ -1,4 +1,5 @@
 #include "emu.hpp"
+#include "helper.hpp"
 
 #define USE_INLINE_ASM() (true)
 
@@ -23,16 +24,6 @@ namespace
 	inline uint8_t& high_ref(uint16_t& value_) noexcept
 	{
 		return as_ptr(value_)[1];
-	}
-
-	inline uint16_t lo(uint32_t value_)
-	{
-		return value_ & 0xFFFF;
-	}
-
-	inline uint16_t hi(uint32_t value_)
-	{
-		return value_ >> 16;
 	}
 
 	uint16_t get_flags_value(const emu_t::flags_t& flags_)
@@ -378,43 +369,6 @@ void emu_t::inc(uint16_t& op_)
 void emu_t::dec(uint16_t& op_)
 {
 	ASM_OP16_1_RES(dec, op_)
-}
-
-namespace
-{
-	static std::string hexdump(const void* const ptr, int buflen, int width) {
-		std::string dump;
-		unsigned char* buf = (unsigned char*)ptr;
-		for (int i = 0; i < buflen; i += width)
-		{
-			char buffer[100]{};
-			sprintf_s(buffer, "%06X: ", i);
-			dump += buffer;
-			for (int j = 0; j < 16; j++)
-			{
-				if (i + j < buflen)
-				{
-					sprintf_s(buffer, "%02X ", buf[i + j]);
-					dump += buffer;
-				}
-				else
-				{
-					dump += "   ";
-				}
-			}
-			dump += " ";
-			for (int j = 0; j < width; j++)
-			{
-				if (i + j < buflen)
-				{
-					sprintf_s(buffer, "%c", isprint(buf[i + j]) ? buf[i + j] : '.');
-					dump += buffer;
-				}
-			}
-			dump += "\n";
-		}
-		return dump;
-	}
 }
 
 void emu_t::intr_0x21()
