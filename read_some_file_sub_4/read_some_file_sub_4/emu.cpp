@@ -445,10 +445,18 @@ void emu_t::intr_0x21()
 	break;
 	case 0x3E:// file_close
 	{
-		auto fi = get_file_info(bx);
+		int file_handle = bx;
 
-		int res = fclose(fi.fp);
+		auto fi_it = m_open_files.find(file_handle);
+		assert(fi_it != m_open_files.end());
+
+		int res = fclose(fi_it->second.fp);
 		assert(res == 0);
+
+		fi_it->second = {};
+
+		m_open_files.erase(fi_it);
+		m_free_file_handles.push(file_handle);
 
 		clc();
 	}
