@@ -8,10 +8,13 @@
 #include <cassert>
 #include <string>
 
-void emu_read_some_file_sub_4( emu_t& e,
-                               const uint8_t byte_55_,
-                               emu_t::ptr16_t& executable_buffer_,
-                               const slice_t& executable_buffer_slice_ );
+namespace original
+{
+    void emu_read_some_file_sub_4( emu_t& e,
+                                   const uint8_t byte_55_,
+                                   emu_t::ptr16_t& executable_buffer_,
+                                   const slice_t& executable_buffer_slice_ );
+}
 
 void emu_GAME_START_sub_6( emu_t& e, emu_t::ptr16_t& executable_buffer_ )
 {
@@ -39,10 +42,12 @@ void emu_GAME_START_sub_6( emu_t& e, emu_t::ptr16_t& executable_buffer_ )
     executable_buffer_.segment += 16; //
 }
 
+// TODO:
+// 1. unit-test frame for original and port
+// 2. port to pure C/C++
+
 int main()
 {
-    emu_t e;
-
     // VGA blocks from config.tat
     const uint8_t blocks[] = { 0x70, 0x72, 0x6F, 0x67, 0x73, 0x2E, 0x63, 0x63, 0x31, 0x00 /*0x20*/, 0x20, 0x20,
                                0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x02, 0x50, 0x04, 0x00,          0x00, 0x00,
@@ -55,6 +60,10 @@ int main()
 
     for( int b = 0; b < 4; ++b )
     {
+        emu_t e;
+
+        std::fill( e.memory().begin(), e.memory().end(), 0x00 );
+
         const emu_t::ptr16_t block_begin_ptr16( 0, 0x100D );
         const size_t blocks_begin = emu_t::offset32( block_begin_ptr16 );
         const size_t blockes_end = blocks_begin + sizeof( blocks );
@@ -73,17 +82,16 @@ int main()
 
         emu_GAME_START_sub_6( e, executable_buffer_ptr16 );
 
-        //printf("---\n%s\n", hexdump(e.memory(executable_buffer_begin), 300, 5 * 16).c_str());
+        {
+            const uint8_t byte_55 = e.memory<gfx_block_t>( e.cs, e.bx )->byte_13h;
 
-        uint8_t byte_55 = e.memory<gfx_block_t>( e.cs, e.bx )->byte_13h;
+            write_binary_file( "d:/temp/out.1.set_psp_dta.bin", e.memory( executable_buffer_begin ),
+                               executable_buffer_size );
 
-        write_binary_file( "d:/temp/out.1.set_psp_dta.bin", e.memory( executable_buffer_begin ),
-                           executable_buffer_size );
+            original::emu_read_some_file_sub_4( e, byte_55, executable_buffer_ptr16, executable_buffer_slice );
 
-        emu_read_some_file_sub_4( e, byte_55, executable_buffer_ptr16, executable_buffer_slice );
-
-        //printf("---\n%s\n", hexdump(e.memory().data(), e.memory().size(), 5 * 16).c_str());
-        //write_binary_file("d:/temp/out.bin", e.memory().data(), e.memory().size());
+            // result after PSP
+        }
 
         int brk = 1;
     }
