@@ -459,15 +459,11 @@ loc_585:
 	executable_buffer_.offset = e.bx;
 	e.cld();
 
-	write_binary_file("d:/temp/out.before_game_sub_3_call.BIN", executable_buffer_slice_.data, executable_buffer_slice_.size);
-
-	// identical to dosbox memdump (bis auf ein paar bytes ganz weit unten im dump - da liegen noch irgendwelche alten daten)
+	//write_binary_file("d:/temp/out.before_game_sub_3_call.BIN", executable_buffer_slice_.data, executable_buffer_slice_.size);
 
 	emu_GAME_START_sub_3(e, another_pointer2, executable_buffer_slice_);
 
-	// total unterschiedlich
-
-	write_binary_file("d:/temp/out.after_game_sub_3_call.BIN", executable_buffer_slice_.data, executable_buffer_slice_.size);
+	//write_binary_file("d:/temp/out.after_game_sub_3_call.BIN", executable_buffer_slice_.data, executable_buffer_slice_.size);
 
 	e.clc();
 	return;
