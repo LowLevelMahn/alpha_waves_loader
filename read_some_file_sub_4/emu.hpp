@@ -17,9 +17,7 @@ public:
     struct ptr16_t
     {
         ptr16_t() = default;
-        ptr16_t(uint16_t segment_, uint16_t offset_):
-            offset(offset_),
-            segment(segment_)
+        ptr16_t( uint16_t segment_, uint16_t offset_ ) : offset( offset_ ), segment( segment_ )
         {
         }
 
@@ -30,8 +28,8 @@ public:
 
 public:
     // operations
-    void push(uint16_t value_);
-    void pop(uint16_t& value_);
+    void push( uint16_t value_ );
+    void pop( uint16_t& value_ );
 
     bool loop();
 
@@ -45,37 +43,37 @@ public:
     void rep_stosw();
     void rep_movsb();
 
-    void add(uint8_t& op1_, uint8_t op2_);
-    void sub(uint8_t& op1_, uint8_t op2_);
+    void add( uint8_t& op1_, uint8_t op2_ );
+    void sub( uint8_t& op1_, uint8_t op2_ );
 
-    void add(uint16_t& op1_, uint16_t op2_);
-    void and_w(uint16_t& op1_, uint16_t op2_);
-    void adc(uint16_t& op1_, uint16_t op2_);
-    void sub(uint16_t& op1_, uint16_t op2_);
-    void shr(uint16_t& op1_, uint8_t op2_);
-    void rcr(uint16_t& op1_, uint8_t op2_);
-    void shl(uint16_t& op1_, uint8_t op2_);
-    void sbb(uint16_t& op1_, uint16_t op2_);
-    void cmp(uint16_t op1_, uint16_t op2_);
-    void cmp(uint8_t op1_, uint8_t op2_);
+    void add( uint16_t& op1_, uint16_t op2_ );
+    void and_w( uint16_t& op1_, uint16_t op2_ );
+    void adc( uint16_t& op1_, uint16_t op2_ );
+    void sub( uint16_t& op1_, uint16_t op2_ );
+    void shr( uint16_t& op1_, uint8_t op2_ );
+    void rcr( uint16_t& op1_, uint8_t op2_ );
+    void shl( uint16_t& op1_, uint8_t op2_ );
+    void sbb( uint16_t& op1_, uint16_t op2_ );
+    void cmp( uint16_t op1_, uint16_t op2_ );
+    void cmp( uint8_t op1_, uint8_t op2_ );
 
-    void xchg(uint8_t& op1_, uint8_t& op2_);
-    void test(uint8_t op1_, uint8_t op2_);
-    void xor_b(uint8_t& op1_, uint8_t op2_);
+    void xchg( uint8_t& op1_, uint8_t& op2_ );
+    void test( uint8_t op1_, uint8_t op2_ );
+    void xor_b( uint8_t& op1_, uint8_t op2_ );
 
-    void or_w(uint16_t& op1_, uint16_t op2_);
-    void or_b(uint8_t& op1_, uint8_t op2_);
-    void xor_w(uint16_t& op1_, uint16_t op2_);
-    void inc(uint16_t& op_);
-    void dec(uint16_t& op_);
+    void or_w( uint16_t& op1_, uint16_t op2_ );
+    void or_b( uint8_t& op1_, uint8_t op2_ );
+    void xor_w( uint16_t& op1_, uint16_t op2_ );
+    void inc( uint16_t& op_ );
+    void dec( uint16_t& op_ );
 
     void intr_0x21();
 
-    void lds(uint16_t& ofs_, ptr16_t ptr_);
-    void lds(uint16_t& ofs_, uint32_t ptr_);
+    void lds( uint16_t& ofs_, ptr16_t ptr_ );
+    void lds( uint16_t& ofs_, uint32_t ptr_ );
 
-    void les(uint16_t& ofs_, ptr16_t ptr_);
-    void les(uint16_t& ofs_, uint32_t ptr_);
+    void les( uint16_t& ofs_, ptr16_t ptr_ );
+    void les( uint16_t& ofs_, uint32_t ptr_ );
 
     bool jz() const;
     bool jnz() const;
@@ -128,11 +126,11 @@ public:
         // reserved // 3
         bool adjust{}; // 4
         // reserved // 5
-        bool zero{}; // 6
-        bool sign{}; // 7
-        bool trap{}; // 8
-        bool intr{}; // 9
-        bool dir{}; // 10
+        bool zero{};  // 6
+        bool sign{};  // 7
+        bool trap{};  // 8
+        bool intr{};  // 9
+        bool dir{};   // 10
         bool oflow{}; // 11
         //+286
         //int iopl{}; //12-13
@@ -145,43 +143,53 @@ public:
 private:
     int dir_advance() const;
 
-    template<typename Type>
-    void stos(const Type& value_)
+    template <typename Type>
+    void stos( const Type& value_ )
     {
-        auto target = memory<Type>(es, di);
+        auto target = memory<Type>( es, di );
         *target = value_;
-        di += dir_advance() * sizeof(value_);
+        di += dir_advance() * sizeof( value_ );
     }
 
-    template<typename Type>
-    void lods(Type& value_)
+    template <typename Type>
+    void lods( Type& value_ )
     {
-        auto src = memory<Type>(ds, si);
+        auto src = memory<Type>( ds, si );
         value_ = *src;
-        si += dir_advance() * sizeof(value_);
+        si += dir_advance() * sizeof( value_ );
     }
 
-    void* ptr(size_t offset32_);
-    void* ptr(uint16_t segment_, uint16_t offset_);
+    void* ptr( size_t offset32_ );
+    void* ptr( uint16_t segment_, uint16_t offset_ );
 
 public:
-    void* memory(size_t offset32_);
-    static size_t offset32(uint16_t segment_, uint16_t offset_);
-    static size_t offset32(const ptr16_t& ptr_);
-    void* memory(uint16_t segment_, uint16_t offset_);
-    void* memory(const ptr16_t& ptr_);
-    static ptr16_t ptr16(size_t offset32_);
+    void* memory( size_t offset32_ );
+    static size_t offset32( uint16_t segment_, uint16_t offset_ );
+    static size_t offset32( const ptr16_t& ptr_ );
+    void* memory( uint16_t segment_, uint16_t offset_ );
+    void* memory( const ptr16_t& ptr_ );
+    static ptr16_t ptr16( size_t offset32_ );
 
-    template<typename Type>
-    Type* memory(size_t offset32_)
+    template <typename Type>
+    Type* memory( size_t offset32_ )
     {
-        return reinterpret_cast<Type*>(ptr(offset32_));
+        return reinterpret_cast<Type*>( ptr( offset32_ ) );
     }
 
-    template<typename Type>
-    Type* memory(uint16_t segment_, uint16_t offset_)
+    template <typename Type>
+    Type* memory( uint16_t segment_, uint16_t offset_ )
     {
-        return reinterpret_cast<Type*>(ptr(segment_, offset_));
+        return reinterpret_cast<Type*>( ptr( segment_, offset_ ) );
+    }
+
+    uint8_t* byte_ptr( uint16_t segment_, uint16_t offset_ )
+    {
+        return memory<uint8_t>( segment_, offset_ );
+    }
+
+    uint16_t* word_ptr( uint16_t segment_, uint16_t offset_ )
+    {
+        return memory<uint16_t>( segment_, offset_ );
     }
 
     std::vector<uint8_t>& memory()
@@ -211,5 +219,5 @@ private:
     std::map<int, file_info_t> m_open_files;
 
 private:
-    file_info_t& get_file_info(int handle_);
+    file_info_t& get_file_info( int handle_ );
 };
