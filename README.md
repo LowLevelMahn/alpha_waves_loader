@@ -43,6 +43,7 @@ my reduced loader
 | exeload.asm       | small loader runs the extracted game exe and sound com TSR + set needed interrupts                     |
 | build_exeload.bat | batch builder for the small loader                                                                     |
 | tools_howto.txt   | how to get the needed build tools (UASM, WLink) - very easy to install                                 |
+| ./read_some_file_sub_4   | C++ port of the game data loading routines                                |
 
  **tools_dir** variable in build.bat needs to be set to suits your environment
  
@@ -61,6 +62,7 @@ my reduced loader
  - extracted the pure VGA game exe (Turbo C 2.x) from the loading process
  - extracted the adlib TSR com program from the loading process (pre-loaded for adlib sound)
  - minimal loader for the adlib com TSR + game exe + setting of interrupts to configure the game (only GRAPHS.CC1, HIGHSCOR.QB, MUSIC_A.CC1, TEXTES.CC1 needed)
+ - added a ultra-simple x86 "emulator" (based on inline-asm) that allows me to port loader code nearly 1:1 to C++, result: the game executables are load and uncompress-able in 32bit :)
 
  # TODOs
  - game-starting analyse is in the very beginning: so far: an exe gets created from parts of progs1.cc in ram and executed 
