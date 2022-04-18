@@ -194,19 +194,13 @@ namespace cleanup
         // DS:DX->ASCIZ filename
         // AL = access mode
         //  0 - read
-        if( e.flags.carry )
-        {
-            assert( false );
-        }
+        assert( !e.flags.carry );
 
         e.si = e.bx;
         e.bx = e.ax;
         e.ah = 0x3F;
         e.cl = byte_55_;
-        if( ( e.cl & 0x18 ) == 0 )
-        {
-            assert( false );
-        }
+        assert( ( e.cl & 0x18 ) != 0 );
 
         if( ( e.cl & 0x10 ) != 0 )
         {
@@ -215,10 +209,7 @@ namespace cleanup
             e.intr_0x21(); // DOS - 2 + -READ FROM FILE WITH HANDLE
                            // BX = file handle, CX = number of bytes to read
                            // DS:DX->buffer
-            if( e.flags.carry || ( e.ax != 2 ) )
-            {
-                assert( false );
-            }
+            assert( !e.flags.carry || ( e.ax == 2 ) );
             e.di = e.dx;
             e.cx = *e.word_ptr( e.ds, e.di );
             e.xchg( e.cl, e.ch );
