@@ -95,19 +95,16 @@ namespace cleanup
             e.bx = e.ax;
             if( *e.byte_ptr( e.ds, e.bx + 0x301 ) != 0 )
             {
-                goto loc_571;
+                e.bl = *e.byte_ptr( e.ds, e.bx + 0x301 );
+                e.ax = 0;
+                e.push( e.ax );
+                goto loc_128;
             }
 
             *e.byte_ptr( e.es, e.di ) = e.al;
             ++e.di;
 
             goto loc_124;
-
-        loc_571:
-            e.bl = *e.byte_ptr( e.ds, e.bx + 0x301 );
-            e.ax = 0;
-            e.push( e.ax );
-            goto loc_128;
 
         loc_129:
             e.bp = e.ax;
@@ -160,6 +157,7 @@ namespace cleanup
                 e.ah = 0;
                 goto loc_129;
             }
+
             goto loc_124;
         }
 
