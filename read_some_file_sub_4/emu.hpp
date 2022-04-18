@@ -187,15 +187,39 @@ public:
         return memory<uint8_t>( segment_, offset_ );
     }
 
+    uint8_t* byte_ptr( const ptr16_t ptr_ )
+    {
+        return byte_ptr( ptr_.segment, ptr_.offset );
+    }
+
+    uint8_t* byte_ptr( size_t offset32_ )
+    {
+        return memory<uint8_t>( offset32_ );
+    }
+
     uint16_t* word_ptr( uint16_t segment_, uint16_t offset_ )
     {
         return memory<uint16_t>( segment_, offset_ );
+    }
+
+    uint16_t* word_ptr( const ptr16_t ptr_ )
+    {
+        return word_ptr( ptr_.segment, ptr_.offset );
+    }
+
+    uint16_t* word_ptr( size_t offset32_ )
+    {
+        return memory<uint16_t>( offset32_ );
     }
 
     std::vector<uint8_t>& memory()
     {
         return m_memory;
     }
+
+public:
+    void dos_current_dir( const std::string& current_dir_ );
+    const std::string& dos_current_dir() const;
 
 private:
     static constexpr size_t REG_COUNT = 4;
@@ -217,6 +241,8 @@ private:
         FILE* fp{};
     };
     std::map<int, file_info_t> m_open_files;
+
+    std::string m_dos_current_dir;
 
 private:
     file_info_t& get_file_info( int handle_ );

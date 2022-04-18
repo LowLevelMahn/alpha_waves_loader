@@ -4,7 +4,24 @@
 
 namespace port
 {
-    bool read_some_file_sub_4( gfx_block_t* block_, uint8_t* executable_buffer_ )
+    std::vector<uint8_t> extract_executable( const std::string& game_dir_,
+                                             config_tat_t::gfx_infos_t& gfx_infos_,
+                                             const size_t gfx_nr_,
+                                             const size_t exec_nr_ )
+    {
+        constexpr size_t executable_buffer_size = 0x9D160;
+        std::vector<uint8_t> executable_buffer( executable_buffer_size - 0x100 );
+
+        const std::string progs_cc1_filepath = game_dir_ + "\\progs.cc1";
+        std::vector<uint8_t> progs_cc1_content = read_binary_file( progs_cc1_filepath );
+
+        const auto& blocks = gfx_infos_[gfx_nr_];
+        const auto& block = blocks.executable_info[exec_nr_];
+
+        return executable_buffer;
+    }
+
+    bool read_some_file_sub_4( config_tat_t::executable_info_t* block_, uint8_t* executable_buffer_ )
     {
         uint16_t di = 0;
 
@@ -26,7 +43,7 @@ namespace port
         //// jnb short loc_578
 
         const std::string root = R"(F:\projects\fun\dos_games_rev\alpha_waves_dev\tests\alpha)";
-        const std::string filename = (const char*)block_->filename;
+        const std::string filename = reinterpret_cast<char*>( block_->filename.data() );
         const std::string filepath = root + "\\" + filename;
 
         //std::vector<uint8_t> content = read_file(filepath.c_str());

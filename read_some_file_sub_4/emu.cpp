@@ -374,8 +374,9 @@ void emu_t::intr_0x21()
             int free_handle = m_free_file_handles.top();
             m_free_file_handles.pop();
 
-            const std::string current_dir = R"(F:\projects\fun\dos_games_rev\alpha_waves_dev\tests\alpha)";
-            const std::string file_path = current_dir + "\\" + filename;
+            assert( !m_dos_current_dir.empty() );
+
+            const std::string file_path = m_dos_current_dir + "\\" + filename;
             FILE* fp = fopen( file_path.c_str(), "rb" );
             assert( fp );
             file_info_t fi{ file_path, fp };
@@ -580,6 +581,16 @@ emu_t::ptr16_t emu_t::ptr16( size_t offset32_ )
     size_t segment = offset32_ / 16;
     size_t offset = offset32_ % 16;
     return { static_cast<uint16_t>( segment ), static_cast<uint16_t>( offset ) };
+}
+
+void emu_t::dos_current_dir( const std::string& current_dir_ )
+{
+    m_dos_current_dir = current_dir_;
+}
+
+const std::string& emu_t::dos_current_dir() const
+{
+    return m_dos_current_dir;
 }
 
 emu_t::file_info_t& emu_t::get_file_info( int handle_ )

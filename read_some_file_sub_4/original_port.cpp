@@ -269,8 +269,10 @@ namespace original
 
     loc_136:
         assert( false );
+#if 0
         e.stc();
         return;
+#endif
 
     loc_578:
         e.si = e.bx;
@@ -282,10 +284,12 @@ namespace original
             goto loc_579;
 
         assert( false );
+#if 0
         e.lds( e.cx, executable_buffer_ );
         word_44 = 0xFFFF;
         word_45 = 0xFFFF;
         goto loc_580;
+#endif
 
     loc_579:
         e.test( e.cl, 0x10 );
@@ -306,7 +310,7 @@ namespace original
         e.cx = *e.word_ptr( e.ds, e.di );
         e.xchg( e.cl, e.ch );
         e.di = e.cx;
-        e.al = e.memory<gfx_block_t>( e.cs, e.si )->byte_12h;
+        e.al = e.memory<config_tat_t::executable_info_t>( e.cs, e.si )->byte_12h;
         e.xor_b( e.ah, e.ah );
         e.shl( e.ax, 1 );
         e.shl( e.ax, 1 );
@@ -364,8 +368,10 @@ namespace original
 
     loc_139:
         assert( false );
+#if 0
         e.stc();
         return;
+#endif
 
     loc_582:
         e.lds( e.bp, executable_buffer_ );
@@ -443,7 +449,10 @@ namespace original
         // DS:DX->buffer
         if( e.jnb() )
             goto loc_584;
+        assert( false );
+#if 0
         return;
+#endif
 
     loc_584:
         e.add( also_a_pointer.offset, e.ax );
@@ -509,11 +518,13 @@ namespace original
 
     loc_587:
         assert( false );
+#if 0
         e.lds( e.si, also_a_pointer.offset );
         some_game_ptr.offset = e.si;
         some_game_ptr.segment = e.ds;
         e.clc();
         return;
+#endif
     }
 
 } // namespace original
