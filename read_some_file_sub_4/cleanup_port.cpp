@@ -255,8 +255,7 @@ namespace cleanup
             e.xchg( e.cl, e.ch );
             e.dx = *e.word_ptr( e.ds, e.si + 2 );
             e.xchg( e.dl, e.dh );
-            e.shl( e.di, 1 );
-            e.shl( e.di, 1 );
+            e.shl( e.di, 2 );
             e.add( e.di, 2 );
             e.add( e.dx, e.di );
             e.adc( e.cx, 0 );

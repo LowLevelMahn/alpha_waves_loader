@@ -182,7 +182,7 @@ int main()
 #if 0
             char filename[100]{};
             sprintf( filename, "d:/temp/gfx_%u_block_%u.bin", gfx_nr, exec_nr );
-            write_binary_file( filename, executable.data(), executable.size() );
+            write_binary_file( filename, port_executable.data(), port_executable.size() );
 #endif
         }
     }
