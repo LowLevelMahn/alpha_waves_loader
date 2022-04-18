@@ -32,9 +32,14 @@ namespace cleanup
         assert( !e.flags.dir );
         ::memset( e.memory( e.ds, 0x301 ), 0, 128 * sizeof( uint16_t ) );
 
-        e.sub( e.di, *e.word_ptr( 0, 4 ) );
+        // interrutp[1].offset is used as a temporary???
+        //0:0: offset, segment interrupt 0
+        //0:4: offset, segment interrupt 1
+        //...
+        uint16_t intr1_ofs_value = *e.word_ptr( 0, 4 );
+        e.sub( e.di, intr1_ofs_value );
         normalize_ptr( e.es, e.di );
-        e.add( e.di, *e.word_ptr( 0, 4 ) );
+        e.add( e.di, intr1_ofs_value );
 
         normalize_ptr( another_pointer2 );
         assert( !e.flags.dir );
@@ -59,13 +64,13 @@ namespace cleanup
         ::memcpy( e.memory( e.ds, 0x101 ), e.memory( another_pointer2 ), byte_57[0] );
         another_pointer2.offset += byte_57[0];
 
-        for( size_t i = 0; i < byte_57[0]; ++i )
+        for( uint16_t i = 0; i < byte_57[0]; ++i )
         {
-            e.bx = i + 1;
-            e.ax = *e.byte_ptr( e.ds, i + 1 + 0x200 );
+            e.bx = i + 1; // e.bx is needed later
+            e.ax = *e.byte_ptr( e.ds, e.bx + 0x200 );
             e.si = e.ax;
             e.dl = *e.byte_ptr( e.ds, e.si + 0x301 );
-            *e.byte_ptr( e.ds, i + 1 + 0x402 ) = e.dl;
+            *e.byte_ptr( e.ds, e.bx + 0x402 ) = e.dl;
             *e.byte_ptr( e.ds, e.si + 0x301 ) = e.bl;
         }
 
@@ -152,7 +157,10 @@ namespace cleanup
     loc_574:
         e.ax = e.bp;
     loc_572:
-        e.stosb();
+        assert( !e.flags.dir );
+        *e.byte_ptr( e.es, e.di ) = e.al;
+        ++e.di;
+
         e.pop( e.ax );
         if( e.ax != 0 )
         {
