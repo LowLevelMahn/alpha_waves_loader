@@ -36,10 +36,11 @@ namespace cleanup
         //0:0: offset, segment interrupt 0
         //0:4: offset, segment interrupt 1
         //...
-        uint16_t intr1_ofs_value = *e.word_ptr( 0, 4 );
-        e.sub( e.di, intr1_ofs_value );
+        const uint16_t intr1_offset_value = *e.word_ptr( 0, 4 );
+        assert( intr1_offset_value == 0 ); // seems to be always 0
+        e.sub( e.di, intr1_offset_value );
         normalize_ptr( e.es, e.di );
-        e.add( e.di, intr1_ofs_value );
+        e.add( e.di, intr1_offset_value );
 
         normalize_ptr( another_pointer2 );
         assert( !e.flags.dir );
@@ -66,12 +67,11 @@ namespace cleanup
 
         for( uint16_t i = 0; i < byte_57[0]; ++i )
         {
-            e.bx = i + 1; // e.bx is needed later
-            e.ax = *e.byte_ptr( e.ds, e.bx + 0x200 );
-            e.si = e.ax;
-            uint8_t* at0x301 = e.byte_ptr( e.ds, e.si + 0x301 );
-            *e.byte_ptr( e.ds, e.bx + 0x402 ) = *at0x301;
-            *at0x301 = e.bl;
+            const uint8_t ofs = i + 1;
+            e.ax = *e.byte_ptr( e.ds, ofs + 0x200 );
+            uint8_t* at0x301 = e.byte_ptr( e.ds, e.ax + 0x301 );
+            *e.byte_ptr( e.ds, ofs + 0x402 ) = *at0x301;
+            *at0x301 = ofs;
         }
 
         e.dx = word_60;
@@ -167,6 +167,7 @@ namespace cleanup
             goto loc_576;
         }
         goto loc_124;
+
     loc_576:
         e.bl = e.ah;
         e.ah = 0;
@@ -199,7 +200,6 @@ namespace cleanup
         e.ax = e.cs;
         e.ds = e.ax;
         e.dx = e.bx; // bx = gfx-block start = offset filename
-        char* filename = e.memory<char>( e.ds, e.dx );
         e.ah = 0x3D;
         e.al = 0;
         e.intr_0x21();
@@ -207,116 +207,91 @@ namespace cleanup
         // DS:DX->ASCIZ filename
         // AL = access mode
         //  0 - read
-        if( e.jnb() )
-            goto loc_578;
+        if( e.flags.carry )
+        {
+            assert( false );
+        }
 
-    loc_136:
-        assert( false );
-#if 0
-		e.stc();
-		return;
-#endif
-
-    loc_578:
         e.si = e.bx;
         e.bx = e.ax;
         e.ah = 0x3F;
         e.cl = byte_55_;
-        e.test( e.cl, 0x18 );
-        if( e.jnz() )
-            goto loc_579;
+        if( ( e.cl & 0x18 ) == 0 )
+        {
+            assert( false );
+        }
 
-        assert( false );
-#if 0
-		e.lds(e.cx, executable_buffer_);
-		word_44 = 0xFFFF;
-		word_45 = 0xFFFF;
-		goto loc_580;
-#endif
+        if( ( e.cl & 0x10 ) != 0 )
+        {
+            e.cx = 2;
+            e.lds( e.dx, executable_buffer_ );
+            e.intr_0x21(); // DOS - 2 + -READ FROM FILE WITH HANDLE
+                           // BX = file handle, CX = number of bytes to read
+                           // DS:DX->buffer
+            if( e.flags.carry || ( e.ax != 2 ) )
+            {
+                assert( false );
+            }
+            e.di = e.dx;
+            e.cx = *e.word_ptr( e.ds, e.di );
+            e.xchg( e.cl, e.ch );
+            e.di = e.cx;
+            e.al = e.memory<config_tat_t::executable_info_t>( e.cs, e.si )->byte_12h;
+            e.ah = 0;
+            e.shl( e.ax, 2 );
+            e.dx = e.ax;
+            e.cx = 0;
+            e.al = 1;
+            e.ah = 0x42;
+            e.intr_0x21(); // DOS - 2 + -MOVE FILE READ / WRITE POINTER(LSEEK)
+                           // AL = method: offset from present location
+            if( e.flags.carry )
+            {
+                assert( false );
+            }
 
-    loc_579:
-        e.test( e.cl, 0x10 );
-        if( e.jz() )
-            goto loc_581;
-        e.cx = 2;
-        e.lds( e.dx, executable_buffer_ );
-        e.intr_0x21(); // DOS - 2 + -READ FROM FILE WITH HANDLE
-                       // BX = file handle, CX = number of bytes to read
-                       // DS:DX->buffer
-        if( e.jb() )
-            goto loc_136;
-        e.cmp( e.ax, 2 );
+            e.lds( e.dx, executable_buffer_ );
+            e.ah = 0x3F;
+            e.cx = 4;
+            e.intr_0x21(); // DOS - 2 + -READ FROM FILE WITH HANDLE
+                           // BX = file handle, CX = number of bytes to read
+                           // DS:DX->buffer
+            if( e.flags.carry || ( e.ax != 4 ) )
+            {
+                assert( false );
+            }
 
-        if( e.jnz() )
-            goto loc_136;
-        e.di = e.dx;
-        e.cx = *e.word_ptr( e.ds, e.di );
-        e.xchg( e.cl, e.ch );
-        e.di = e.cx;
-        e.al = e.memory<config_tat_t::executable_info_t>( e.cs, e.si )->byte_12h;
-        e.ah = 0;
-        e.shl( e.ax, 1 );
-        e.shl( e.ax, 1 );
-        e.dx = e.ax;
-        e.cx = 0;
-        e.al = 1;
-        e.ah = 0x42;
-        e.intr_0x21(); // DOS - 2 + -MOVE FILE READ / WRITE POINTER(LSEEK)
-                       // AL = method: offset from present location
-        if( e.jb() )
-            goto loc_136;
+            e.si = e.dx;
+            e.cx = *e.word_ptr( e.ds, e.si );
+            e.xchg( e.cl, e.ch );
+            e.dx = *e.word_ptr( e.ds, e.si + 2 );
+            e.xchg( e.dl, e.dh );
+            e.shl( e.di, 1 );
+            e.shl( e.di, 1 );
+            e.add( e.di, 2 );
+            e.add( e.dx, e.di );
+            e.adc( e.cx, 0 );
+            e.al = 0;
+            e.ah = 0x42;
+            e.intr_0x21(); // DOS - 2 + -MOVE FILE READ / WRITE POINTER(LSEEK)
+                           // AL = method: offset from beginning of file
+            if( e.flags.carry )
+            {
+                assert( false );
+            }
+        }
 
-        e.lds( e.dx, executable_buffer_ );
-        e.ah = 0x3F;
-        e.cx = 4;
-        e.intr_0x21(); // DOS - 2 + -READ FROM FILE WITH HANDLE
-                       // BX = file handle, CX = number of bytes to read
-                       // DS:DX->buffer
-        if( e.jb() )
-            goto loc_136;
-        e.cmp( e.ax, 4 );
-        if( e.jnz() )
-            goto loc_136;
-
-        e.si = e.dx;
-        e.cx = *e.word_ptr( e.ds, e.si );
-        e.xchg( e.cl, e.ch );
-        e.dx = *e.word_ptr( e.ds, e.si + 2 );
-        e.xchg( e.dl, e.dh );
-        e.shl( e.di, 1 );
-        e.shl( e.di, 1 );
-        e.add( e.di, 2 );
-        e.add( e.dx, e.di );
-        e.adc( e.cx, 0 );
-        e.al = 0;
-        e.ah = 0x42;
-        e.intr_0x21(); // DOS - 2 + -MOVE FILE READ / WRITE POINTER(LSEEK)
-                       // AL = method: offset from beginning of file
-        if( e.jb() )
-            goto loc_139;
-
-    loc_581:
         e.lds( e.dx, executable_buffer_ );
         e.ah = 0x3F;
         e.cx = 8;
         e.intr_0x21(); // DOS - 2 + -READ FROM FILE WITH HANDLE
                        // BX = file handle, CX = number of bytes to read
                        // DS:DX->buffer
-        if( e.jb() )
-            goto loc_139;
-        e.cmp( e.ax, 8 );
+        if( e.flags.carry || ( e.ax != 8 ) )
+        {
+            assert( false );
+        }
 
-        if( e.jz() )
-            goto loc_582;
-
-    loc_139:
-        assert( false );
-#if 0
-		e.stc();
-		return;
-#endif
-
-    loc_582:
         e.lds( e.bp, executable_buffer_ );
         e.ax = *e.word_ptr( e.ds, e.bp + 0 );
         e.cx = *e.word_ptr( e.ds, e.bp + 2 );
@@ -353,7 +328,6 @@ namespace cleanup
         e.ds = e.ax;
         e.and_w( e.cx, 0x0F );
 
-    loc_580:
         another_far_ptr.offset = e.cx;
         another_far_ptr.segment = e.ds;
         another_pointer2.offset = e.cx;
@@ -364,61 +338,57 @@ namespace cleanup
         also_a_pointer.segment = 0;
         e.lds( e.dx, another_far_ptr );
 
-    loc_586:
-        e.cx = e.dx;
-        e.shr( e.cx, 4 );
-        e.ax = e.ds;
-        e.add( e.ax, e.cx );
-        e.ds = e.ax;
-        e.and_w( e.dx, 0x0F );
-        e.ax = 48000;
-        e.sub( e.si, e.ax );
-        e.sbb( e.di, 0 );
-        if( e.jnb() )
-            goto loc_583;
-        e.add( e.si, e.ax );
-        e.ax = e.si;
-        e.si = 0;
-        e.di = 0;
+        do
+        {
+            e.cx = e.dx;
+            e.shr( e.cx, 4 );
+            e.ax = e.ds;
+            e.add( e.ax, e.cx );
+            e.ds = e.ax;
+            e.and_w( e.dx, 0x0F );
+            e.ax = 48000;
+            e.sub( e.si, e.ax );
+            e.sbb( e.di, 0 );
+            if( !e.jnb() )
+            {
+                e.add( e.si, e.ax );
+                e.ax = e.si;
+                e.si = 0;
+                e.di = 0;
+            }
 
-    loc_583:
-        e.cx = e.ax;
-        e.ah = 0x3F;
-        e.intr_0x21(); // DOS - 2 + -READ FROM FILE WITH HANDLE
-        // BX = file handle, CX = number of bytes to read
-        // DS:DX->buffer
-        if( e.jnb() )
-            goto loc_584;
-        assert( false );
-#if 0
-		return;
-#endif
+            e.cx = e.ax;
+            e.ah = 0x3F;
+            e.intr_0x21(); // DOS - 2 + -READ FROM FILE WITH HANDLE
+                           // BX = file handle, CX = number of bytes to read
+                           // DS:DX->buffer
+            if( e.flags.carry )
+            {
+                assert( false );
+            }
 
-    loc_584:
-        e.add( also_a_pointer.offset, e.ax );
-        e.adc( also_a_pointer.segment, 0 );
-        e.add( e.dx, e.ax );
-        e.cmp( e.ax, e.cx );
-        if( e.jnz() )
-            goto loc_585;
-        e.ax = e.si;
-        e.or_w( e.ax, e.di );
-        if( e.jnz() )
-            goto loc_586;
+            e.add( also_a_pointer.offset, e.ax );
+            e.adc( also_a_pointer.segment, 0 );
+            e.add( e.dx, e.ax );
+            if( e.ax != e.cx )
+            {
+                break;
+            }
+            e.ax = e.si;
+        } while( ( e.ax | e.di ) != 0 );
 
-    loc_585:
         e.ah = 0x3E;
         e.intr_0x21(); // DOS - 2 + -CLOSE A FILE WITH HANDLE
         // BX = file handle
-        e.test( byte_55_, 0x18 );
-        if( e.jz() )
-            goto loc_587;
+        if( ( byte_55_ & 0x18 ) == 0 )
+        {
+            assert( false );
+        }
         e.les( e.di, executable_buffer_ );
-        e.push( e.es );
-        e.ax = 0;
-        e.es = e.ax;
-        *e.word_ptr( e.es, 4 ) = e.di;
-        e.pop( e.es );
+
+        uint16_t* intr1_offset = e.word_ptr( 0, 4 );
+        *intr1_offset = e.di;
+
         another_far_ptr.offset = e.di;
         another_far_ptr.segment = e.es;
         e.lds( e.si, some_game_ptr );
@@ -460,16 +430,6 @@ namespace cleanup
 
         e.clc();
         return;
-
-    loc_587:
-        assert( false );
-#if 0
-		e.lds(e.si, also_a_pointer.offset);
-		some_game_ptr.offset = e.si;
-		some_game_ptr.segment = e.ds;
-		e.clc();
-		return;
-#endif
     }
 
 } // namespace cleanup
