@@ -50,130 +50,119 @@ namespace cleanup
         e.dx = word_60 + 1;
         if( byte_57[0] != 0 )
         {
-            goto loc_565;
-        }
-        goto loc_566;
+            assert( !e.flags.dir );
+            ::memcpy( e.memory( e.ds, 0x201 ), e.memory( another_pointer2 ), byte_57[0] );
+            another_pointer2.offset += byte_57[0];
 
-    loc_565:
-        assert( !e.flags.dir );
-        ::memcpy( e.memory( e.ds, 0x201 ), e.memory( another_pointer2 ), byte_57[0] );
-        another_pointer2.offset += byte_57[0];
+            ::memcpy( e.memory( e.ds, 1 ), e.memory( another_pointer2 ), byte_57[0] );
+            another_pointer2.offset += byte_57[0];
 
-        ::memcpy( e.memory( e.ds, 1 ), e.memory( another_pointer2 ), byte_57[0] );
-        another_pointer2.offset += byte_57[0];
+            ::memcpy( e.memory( e.ds, 0x101 ), e.memory( another_pointer2 ), byte_57[0] );
+            another_pointer2.offset += byte_57[0];
 
-        ::memcpy( e.memory( e.ds, 0x101 ), e.memory( another_pointer2 ), byte_57[0] );
-        another_pointer2.offset += byte_57[0];
+            for( uint16_t i = 0; i < byte_57[0]; ++i )
+            {
+                const uint8_t ofs = i + 1;
+                e.ax = *e.byte_ptr( e.ds, ofs + 0x200 );
+                uint8_t* at0x301 = e.byte_ptr( e.ds, e.ax + 0x301 );
+                *e.byte_ptr( e.ds, ofs + 0x402 ) = *at0x301;
+                *at0x301 = ofs;
+            }
 
-        for( uint16_t i = 0; i < byte_57[0]; ++i )
-        {
-            const uint8_t ofs = i + 1;
-            e.ax = *e.byte_ptr( e.ds, ofs + 0x200 );
-            uint8_t* at0x301 = e.byte_ptr( e.ds, e.ax + 0x301 );
-            *e.byte_ptr( e.ds, ofs + 0x402 ) = *at0x301;
-            *at0x301 = ofs;
-        }
+            e.dx = word_60;
+            ++e.dx;
 
-        e.dx = word_60;
-        ++e.dx;
+        loc_124:
+            --e.dx;
+            if( e.dx != 0 )
+            {
+                goto loc_568;
+            }
 
-    loc_124:
-        --e.dx;
-        if( e.dx != 0 )
-        {
-            goto loc_568;
-        }
+        loc_577:
+            if( byte_569 == 0 )
+            {
+                return;
+            }
+            goto start;
 
-    loc_577:
-        if( byte_569 == 0 )
-        {
-            goto locret_570;
-        }
-        goto start;
+        loc_568:
+            assert( !e.flags.dir );
 
-    locret_570:
-        return;
+            e.al = *e.byte_ptr( another_pointer2 );
+            ++another_pointer2.offset;
 
-    loc_568:
-        assert( !e.flags.dir );
+            e.bx = e.ax;
+            if( *e.byte_ptr( e.ds, e.bx + 0x301 ) != 0 )
+            {
+                goto loc_571;
+            }
 
-        e.al = *e.byte_ptr( another_pointer2 );
-        ++another_pointer2.offset;
+            *e.byte_ptr( e.es, e.di ) = e.al;
+            ++e.di;
 
-        e.bx = e.ax;
-        if( *e.byte_ptr( e.ds, e.bx + 0x301 ) != 0 )
-        {
-            goto loc_571;
-        }
+            goto loc_124;
 
-        *e.byte_ptr( e.es, e.di ) = e.al;
-        ++e.di;
-
-        goto loc_124;
-
-    loc_571:
-        e.bl = *e.byte_ptr( e.ds, e.bx + 0x301 );
-        e.ax = 0;
-        e.push( e.ax );
-        goto loc_128;
-
-    loc_129:
-        e.bp = e.ax;
-        uint8_t val0x301 = *e.byte_ptr( e.ds, e.bp + 0x301 );
-        if( val0x301 == 0 )
-        {
-            goto loc_572;
-        }
-        if( e.bl > val0x301 )
-        {
-            goto loc_573;
-        }
-        e.al = e.bl;
-        e.bl = val0x301;
-
-    loc_575:
-        e.bl = *e.byte_ptr( e.ds, e.bx + 0x402 );
-        if( e.bl == 0 )
-        {
-            goto loc_574;
-        }
-        if( e.bl < e.al )
-        {
+        loc_571:
+            e.bl = *e.byte_ptr( e.ds, e.bx + 0x301 );
+            e.ax = 0;
+            e.push( e.ax );
             goto loc_128;
+
+        loc_129:
+            e.bp = e.ax;
+            uint8_t val0x301 = *e.byte_ptr( e.ds, e.bp + 0x301 );
+            if( val0x301 == 0 )
+            {
+                goto loc_572;
+            }
+            if( e.bl > val0x301 )
+            {
+                goto loc_573;
+            }
+            e.al = e.bl;
+            e.bl = val0x301;
+
+        loc_575:
+            e.bl = *e.byte_ptr( e.ds, e.bx + 0x402 );
+            if( e.bl == 0 )
+            {
+                goto loc_574;
+            }
+            if( e.bl < e.al )
+            {
+                goto loc_128;
+            }
+            goto loc_575;
+
+        loc_573:
+            e.bl = *e.byte_ptr( e.ds, e.bp + 0x301 );
+
+        loc_128:
+            e.al = *e.byte_ptr( e.ds, e.bx + 0x100 );
+            e.ah = e.bl;
+            e.push( e.ax );
+            e.ah = 0;
+            e.al = *e.byte_ptr( e.ds, e.bx );
+            goto loc_129;
+
+        loc_574:
+            e.ax = e.bp;
+        loc_572:
+            assert( !e.flags.dir );
+            *e.byte_ptr( e.es, e.di ) = e.al;
+            ++e.di;
+
+            e.pop( e.ax );
+            if( e.ax != 0 )
+            {
+                e.bl = e.ah;
+                e.ah = 0;
+                goto loc_129;
+            }
+            goto loc_124;
         }
-        goto loc_575;
 
-    loc_573:
-        e.bl = *e.byte_ptr( e.ds, e.bp + 0x301 );
-
-    loc_128:
-        e.al = *e.byte_ptr( e.ds, e.bx + 0x100 );
-        e.ah = e.bl;
-        e.push( e.ax );
-        e.ah = 0;
-        e.al = *e.byte_ptr( e.ds, e.bx );
-        goto loc_129;
-
-    loc_574:
-        e.ax = e.bp;
-    loc_572:
-        assert( !e.flags.dir );
-        *e.byte_ptr( e.es, e.di ) = e.al;
-        ++e.di;
-
-        e.pop( e.ax );
-        if( e.ax != 0 )
-        {
-            goto loc_576;
-        }
-        goto loc_124;
-
-    loc_576:
-        e.bl = e.ah;
-        e.ah = 0;
-        goto loc_129;
-
-    loc_566:
         assert( !e.flags.dir );
         ::memcpy( e.memory( e.es, e.di ), e.memory( another_pointer2 ), word_60 );
         e.si += word_60;
