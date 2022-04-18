@@ -5,7 +5,7 @@
 
 struct slice_t
 {
-    void* data{};
+    uint8_t* data{};
     size_t size{};
 };
 

@@ -13,7 +13,8 @@ namespace original
     void emu_read_some_file_sub_4( emu_t& e,
                                    const uint8_t byte_55_,
                                    emu_t::ptr16_t& executable_buffer_,
-                                   const slice_t& executable_buffer_slice_ );
+                                   const slice_t& executable_buffer_slice_,
+                                   std::vector<uint8_t>& before_game_sub_3_ );
 }
 
 void emu_GAME_START_sub_6( emu_t& e, emu_t::ptr16_t& executable_buffer_ )
@@ -51,7 +52,8 @@ void emu_GAME_START_sub_6( emu_t& e, emu_t::ptr16_t& executable_buffer_ )
 std::vector<uint8_t> original_extract_executable( const std::string& current_dir_,
                                                   config_tat_t::gfx_infos_t& gfx_infos_,
                                                   const size_t gfx_nr_,
-                                                  const size_t exec_nr_ )
+                                                  const size_t exec_nr_,
+                                                  std::vector<uint8_t>& before_game_sub_3_ )
 {
     const auto& blocks = gfx_infos_[gfx_nr_];
 
@@ -69,7 +71,7 @@ std::vector<uint8_t> original_extract_executable( const std::string& current_dir
     const emu_t::ptr16_t executable_buffer_begin_ptr16( 0x2E9, 0 );
     const size_t executable_buffer_begin = emu_t::offset32( executable_buffer_begin_ptr16 );
     const size_t executable_buffer_end = executable_buffer_begin + executable_buffer_size;
-    slice_t executable_buffer_slice{ e.memory( executable_buffer_begin ), executable_buffer_size };
+    slice_t executable_buffer_slice{ e.byte_ptr( executable_buffer_begin ), executable_buffer_size };
 
     ::memcpy( e.memory( blocks_begin ), &blocks, sizeof( blocks ) );
     // 100% equal register content as in dosbox
@@ -82,7 +84,8 @@ std::vector<uint8_t> original_extract_executable( const std::string& current_dir
 
     const uint8_t byte_55 = e.memory<config_tat_t::executable_info_t>( e.cs, e.bx )->byte_13h;
 
-    original::emu_read_some_file_sub_4( e, byte_55, executable_buffer_ptr16, executable_buffer_slice );
+    original::emu_read_some_file_sub_4( e, byte_55, executable_buffer_ptr16, executable_buffer_slice,
+                                        before_game_sub_3_ );
 
     auto executable_begin = e.byte_ptr( executable_buffer_begin ) + 0x100;
     auto executable_end = executable_begin + ( executable_buffer_size - 0x100 );
@@ -94,7 +97,8 @@ namespace port
     std::vector<uint8_t> extract_executable( const std::string& game_dir_,
                                              config_tat_t::gfx_infos_t& gfx_infos_,
                                              const size_t gfx_nr_,
-                                             const size_t exec_nr_ );
+                                             const size_t exec_nr_,
+                                             std::vector<uint8_t>& before_game_sub_3_ );
 }
 
 int main()
@@ -129,11 +133,15 @@ int main()
 
         for( int exec_nr = 0; exec_nr < config_tat_t::gfx_info_t::EXECUTABLE_COUNT; ++exec_nr )
         {
-            std::vector<uint8_t> org_executable =
-                original_extract_executable( alpha_waves_filepath, config_tat->gfx_info, gfx_nr, exec_nr );
+            std::vector<uint8_t> before_game_sub_3;
+            std::vector<uint8_t> org_executable = original_extract_executable(
+                alpha_waves_filepath, config_tat->gfx_info, gfx_nr, exec_nr, before_game_sub_3 );
 
-            std::vector<uint8_t> port_executable =
-                port::extract_executable( alpha_waves_filepath, config_tat->gfx_info, gfx_nr, exec_nr );
+            std::vector<uint8_t> port_before_game_sub_3;
+            std::vector<uint8_t> port_executable = port::extract_executable( alpha_waves_filepath, config_tat->gfx_info,
+                                                                             gfx_nr, exec_nr, port_before_game_sub_3 );
+
+            assert( before_game_sub_3 == port_before_game_sub_3 );
 
             //assert( org_executable == port_executable );
 
@@ -147,8 +155,9 @@ int main()
 
     auto extract = [&alpha_waves_filepath]( config_tat_t::gfx_infos_t& gfx_infos_, gfx_type_t gfx_type_,
                                             exec_type_t exec_type_ ) {
+        std::vector<uint8_t> dummy;
         return original_extract_executable( alpha_waves_filepath, gfx_infos_, static_cast<size_t>( gfx_type_ ),
-                                            static_cast<size_t>( exec_type_ ) );
+                                            static_cast<size_t>( exec_type_ ), dummy );
     };
 
     // sound TSR are the same for all gfx types

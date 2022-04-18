@@ -7,7 +7,8 @@ namespace port
     std::vector<uint8_t> extract_executable( const std::string& game_dir_,
                                              config_tat_t::gfx_infos_t& gfx_infos_,
                                              const size_t gfx_nr_,
-                                             const size_t exec_nr_ )
+                                             const size_t exec_nr_,
+                                             std::vector<uint8_t>& before_game_sub_3_ )
     {
         constexpr size_t executable_buffer_size = 0x9D160;
         std::vector<uint8_t> executable_buffer( executable_buffer_size - 0x100 );
@@ -18,9 +19,109 @@ namespace port
         const auto& blocks = gfx_infos_[gfx_nr_];
         const auto& block = blocks.executable_info[exec_nr_];
 
+        {
+            uint16_t di = 0;
+
+            // offsets in executable_buffer_
+            int word_44_45 = 0;
+            int also_a_pointer = 0;
+            int some_game_ptr = 0;
+            int another_far_ptr = 0;
+
+            const std::string filename = reinterpret_cast<const char*>( block.filename.data() );
+            const std::string filepath = game_dir_ + "\\" + filename;
+
+            FILE* fp = fopen( filepath.c_str(), "rb" );
+            assert( fp );
+
+            if( ( block.byte_13h & 0x18 ) != 0 )
+                goto loc_579;
+
+            word_44_45 = -1;
+            goto loc_580;
+
+        loc_579:
+            if( ( block.byte_13h & 0x10 ) == 0 )
+                goto loc_581;
+
+            {
+                size_t read_bytes = fread( executable_buffer.data(), 1, 2, fp );
+                assert( read_bytes == 2 );
+                printf( "%s\n", hexdump( executable_buffer.data(), 2, 2 ).c_str() );
+            }
+
+            {
+                di = swap( *(uint16_t*)executable_buffer.data() );
+
+                const int next_pos = block.byte_12h * 4;
+
+                int res = fseek( fp, next_pos, SEEK_CUR );
+                assert( res == 0 );
+            }
+
+            {
+                size_t read_bytes = fread( executable_buffer.data(), 1, 4, fp );
+                assert( read_bytes == 4 );
+                printf( "%s\n", hexdump( executable_buffer.data(), 4, 4 ).c_str() );
+            }
+
+            {
+                const size_t ofs = swap( *(uint32_t*)executable_buffer.data() );
+
+                const int next_pos = ofs + ( ( di * 4 ) + 2 );
+
+                int res = fseek( fp, next_pos, SEEK_SET );
+                assert( res == 0 );
+            }
+
+        loc_581:
+        {
+            size_t read_bytes = fread( executable_buffer.data(), 1, 8, fp );
+            assert( read_bytes == 8 );
+            printf( "%s\n", hexdump( executable_buffer.data(), 8, 8 ).c_str() );
+            goto loc_582;
+        }
+
+        loc_582:
+        {
+            const auto vals32 = (uint32_t*)executable_buffer.data();
+
+            word_44_45 = swap( vals32[0] );
+            some_game_ptr = swap( vals32[1] );
+        }
+
+        loc_580:
+            also_a_pointer = 0;
+
+        loc_583:
+        {
+            const int ofs = some_game_ptr - word_44_45 + 16;
+            assert( ofs >= 0 );
+            uint8_t* buffer = executable_buffer.data() + ofs;
+
+            size_t read_bytes = fread( buffer, 1, word_44_45, fp );
+            assert( read_bytes == word_44_45 );
+            printf( "%s\n", hexdump( buffer, word_44_45, 5 * 16 ).c_str() );
+        }
+
+        loc_585:
+            int res = fclose( fp );
+            assert( res == 0 );
+
+            another_far_ptr = 0; // executable_buffer_ + 0;
+
+            uint8_t* x = executable_buffer.data() + some_game_ptr + 16;
+
+            before_game_sub_3_ = executable_buffer;
+
+            // cld
+            // call GAME_START_sub_3
+        }
+
         return executable_buffer;
     }
 
+#if 0
     bool read_some_file_sub_4( config_tat_t::executable_info_t* block_, uint8_t* executable_buffer_ )
     {
         uint16_t di = 0;
@@ -370,5 +471,6 @@ namespace port
         //// retn
         return true;
     }
+#endif
 
 } // namespace port
