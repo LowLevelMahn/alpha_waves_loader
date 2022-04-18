@@ -69,9 +69,9 @@ namespace cleanup
             e.bx = i + 1; // e.bx is needed later
             e.ax = *e.byte_ptr( e.ds, e.bx + 0x200 );
             e.si = e.ax;
-            e.dl = *e.byte_ptr( e.ds, e.si + 0x301 );
-            *e.byte_ptr( e.ds, e.bx + 0x402 ) = e.dl;
-            *e.byte_ptr( e.ds, e.si + 0x301 ) = e.bl;
+            uint8_t* at0x301 = e.byte_ptr( e.ds, e.si + 0x301 );
+            *e.byte_ptr( e.ds, e.bx + 0x402 ) = *at0x301;
+            *at0x301 = e.bl;
         }
 
         e.dx = word_60;
