@@ -314,7 +314,7 @@ namespace cleanup
             e.ax = 48000;
             e.sub( e.si, e.ax );
             e.sbb( e.di, 0 );
-            if( !e.jnb() )
+            if( e.flags.carry )
             {
                 e.add( e.si, e.ax );
                 e.ax = e.si;
@@ -332,10 +332,7 @@ namespace cleanup
             e.add( also_a_pointer.offset, e.ax );
             e.adc( also_a_pointer.segment, 0 );
             e.add( e.dx, e.ax );
-            if( e.ax != e.cx )
-            {
-                break;
-            }
+            assert( e.ax == e.cx );
             e.ax = e.si;
         } while( ( e.ax | e.di ) != 0 );
 
