@@ -232,10 +232,7 @@ namespace cleanup
             e.ah = 0x42;
             e.intr_0x21(); // DOS - 2 + -MOVE FILE READ / WRITE POINTER(LSEEK)
                            // AL = method: offset from present location
-            if( e.flags.carry )
-            {
-                assert( false );
-            }
+            assert( !e.flags.carry );
 
             e.lds( e.dx, executable_buffer_ );
             e.ah = 0x3F;
@@ -243,10 +240,7 @@ namespace cleanup
             e.intr_0x21(); // DOS - 2 + -READ FROM FILE WITH HANDLE
                            // BX = file handle, CX = number of bytes to read
                            // DS:DX->buffer
-            if( e.flags.carry || ( e.ax != 4 ) )
-            {
-                assert( false );
-            }
+            assert( !e.flags.carry && ( e.ax == 4 ) );
 
             e.si = e.dx;
             e.cx = *e.word_ptr( e.ds, e.si );
@@ -261,10 +255,7 @@ namespace cleanup
             e.ah = 0x42;
             e.intr_0x21(); // DOS - 2 + -MOVE FILE READ / WRITE POINTER(LSEEK)
                            // AL = method: offset from beginning of file
-            if( e.flags.carry )
-            {
-                assert( false );
-            }
+            assert( !e.flags.carry );
         }
 
         e.lds( e.dx, executable_buffer_ );
@@ -273,10 +264,7 @@ namespace cleanup
         e.intr_0x21(); // DOS - 2 + -READ FROM FILE WITH HANDLE
                        // BX = file handle, CX = number of bytes to read
                        // DS:DX->buffer
-        if( e.flags.carry || ( e.ax != 8 ) )
-        {
-            assert( false );
-        }
+        assert( !e.flags.carry && ( e.ax == 8 ) );
 
         e.lds( e.bp, executable_buffer_ );
         e.ax = *e.word_ptr( e.ds, e.bp + 0 );
@@ -348,10 +336,7 @@ namespace cleanup
             e.intr_0x21(); // DOS - 2 + -READ FROM FILE WITH HANDLE
                            // BX = file handle, CX = number of bytes to read
                            // DS:DX->buffer
-            if( e.flags.carry )
-            {
-                assert( false );
-            }
+            assert( !e.flags.carry );
 
             e.add( also_a_pointer.offset, e.ax );
             e.adc( also_a_pointer.segment, 0 );
@@ -365,11 +350,9 @@ namespace cleanup
 
         e.ah = 0x3E;
         e.intr_0x21(); // DOS - 2 + -CLOSE A FILE WITH HANDLE
-        // BX = file handle
-        if( ( byte_55_ & 0x18 ) == 0 )
-        {
-            assert( false );
-        }
+                       // BX = file handle
+        assert( ( byte_55_ & 0x18 ) != 0 );
+
         e.les( e.di, executable_buffer_ );
 
         uint16_t* intr1_offset = e.word_ptr( 0, 4 );
