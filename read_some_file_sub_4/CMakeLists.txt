@@ -18,6 +18,7 @@ add_executable(read_some_file_sub_4
   "types.hpp"
   "port.cpp"
   "original_port.cpp"
+  "cleanup_port.cpp"
   "main.cpp"
 )  
 

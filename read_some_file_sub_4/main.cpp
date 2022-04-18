@@ -17,6 +17,15 @@ namespace original
                                    std::vector<uint8_t>& before_game_sub_3_ );
 }
 
+namespace cleanup
+{
+    void emu_read_some_file_sub_4( emu_t& e,
+                                   const uint8_t byte_55_,
+                                   emu_t::ptr16_t& executable_buffer_,
+                                   const slice_t& executable_buffer_slice_,
+                                   std::vector<uint8_t>& before_game_sub_3_ );
+}
+
 void emu_GAME_START_sub_6( emu_t& e, emu_t::ptr16_t& executable_buffer_ )
 {
     uint8_t fake_PSP_DTA[] = {
@@ -49,11 +58,13 @@ void emu_GAME_START_sub_6( emu_t& e, emu_t::ptr16_t& executable_buffer_ )
 //   extract executables
 //   rewrite exeload.asm to 16bit C code
 
-std::vector<uint8_t> original_extract_executable( const std::string& current_dir_,
-                                                  config_tat_t::gfx_infos_t& gfx_infos_,
-                                                  const size_t gfx_nr_,
-                                                  const size_t exec_nr_,
-                                                  std::vector<uint8_t>& before_game_sub_3_ )
+template <typename Port>
+std::vector<uint8_t> extract_executable( const std::string& current_dir_,
+                                         config_tat_t::gfx_infos_t& gfx_infos_,
+                                         const size_t gfx_nr_,
+                                         const size_t exec_nr_,
+                                         std::vector<uint8_t>& before_game_sub_3_,
+                                         Port port )
 {
     const auto& blocks = gfx_infos_[gfx_nr_];
 
@@ -90,6 +101,26 @@ std::vector<uint8_t> original_extract_executable( const std::string& current_dir
     auto executable_begin = e.byte_ptr( executable_buffer_begin ) + 0x100;
     auto executable_end = executable_begin + ( executable_buffer_size - 0x100 );
     return { executable_begin, executable_end };
+}
+
+std::vector<uint8_t> original_extract_executable( const std::string& current_dir_,
+                                                  config_tat_t::gfx_infos_t& gfx_infos_,
+                                                  const size_t gfx_nr_,
+                                                  const size_t exec_nr_,
+                                                  std::vector<uint8_t>& before_game_sub_3_ )
+{
+    return extract_executable( current_dir_, gfx_infos_, gfx_nr_, exec_nr_, before_game_sub_3_,
+                               original::emu_read_some_file_sub_4 );
+}
+
+std::vector<uint8_t> cleanup_extract_executable( const std::string& current_dir_,
+                                                 config_tat_t::gfx_infos_t& gfx_infos_,
+                                                 const size_t gfx_nr_,
+                                                 const size_t exec_nr_,
+                                                 std::vector<uint8_t>& before_game_sub_3_ )
+{
+    return extract_executable( current_dir_, gfx_infos_, gfx_nr_, exec_nr_, before_game_sub_3_,
+                               cleanup::emu_read_some_file_sub_4 );
 }
 
 namespace port
@@ -137,13 +168,12 @@ int main()
             std::vector<uint8_t> org_executable = original_extract_executable(
                 alpha_waves_filepath, config_tat->gfx_info, gfx_nr, exec_nr, before_game_sub_3 );
 
-            std::vector<uint8_t> port_before_game_sub_3;
-            std::vector<uint8_t> port_executable = port::extract_executable( alpha_waves_filepath, config_tat->gfx_info,
-                                                                             gfx_nr, exec_nr, port_before_game_sub_3 );
+            std::vector<uint8_t> cleanup_before_game_sub_3;
+            std::vector<uint8_t> port_executable = cleanup_extract_executable(
+                alpha_waves_filepath, config_tat->gfx_info, gfx_nr, exec_nr, cleanup_before_game_sub_3 );
 
-            assert( before_game_sub_3 == port_before_game_sub_3 );
-
-            //assert( org_executable == port_executable );
+            assert( before_game_sub_3 == cleanup_before_game_sub_3 );
+            assert( org_executable == port_executable );
 
 #if 0
             char filename[100]{};
