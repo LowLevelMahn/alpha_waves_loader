@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <cassert>
 #include <string>
+#include <functional>
 
 namespace original
 {
@@ -58,13 +59,17 @@ void emu_GAME_START_sub_6( emu_t& e, emu_t::ptr16_t& executable_buffer_ )
 //   extract executables
 //   rewrite exeload.asm to 16bit C code
 
-template <typename Port>
+using Test_func_t = std::function<void( emu_t& e,
+                                        const uint8_t byte_55_,
+                                        emu_t::ptr16_t& executable_buffer_,
+                                        const slice_t& executable_buffer_slice_,
+                                        std::vector<uint8_t>& before_game_sub_3_ )>;
 std::vector<uint8_t> extract_executable( const std::string& current_dir_,
                                          config_tat_t::gfx_infos_t& gfx_infos_,
                                          const size_t gfx_nr_,
                                          const size_t exec_nr_,
                                          std::vector<uint8_t>& before_game_sub_3_,
-                                         Port port )
+                                         Test_func_t test_func_ )
 {
     const auto& blocks = gfx_infos_[gfx_nr_];
 
@@ -95,8 +100,7 @@ std::vector<uint8_t> extract_executable( const std::string& current_dir_,
 
     const uint8_t byte_55 = e.memory<config_tat_t::executable_info_t>( e.cs, e.bx )->byte_13h;
 
-    original::emu_read_some_file_sub_4( e, byte_55, executable_buffer_ptr16, executable_buffer_slice,
-                                        before_game_sub_3_ );
+    test_func_( e, byte_55, executable_buffer_ptr16, executable_buffer_slice, before_game_sub_3_ );
 
     auto executable_begin = e.byte_ptr( executable_buffer_begin ) + 0x100;
     auto executable_end = executable_begin + ( executable_buffer_size - 0x100 );
