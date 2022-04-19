@@ -60,7 +60,6 @@ namespace cleanup
             ::memcpy( &something, e.memory( another_pointer2 ), sizeof( something ) );
             another_pointer2 += sizeof( something );
 
-            e.dx = something.len2 + 1;
             if( something.len1 != 0 )
             {
                 assert( !e.flags.dir );
@@ -85,9 +84,8 @@ namespace cleanup
                 std::stack<uint16_t> stack;
 
                 auto loc_128_block = [&e, &src_buffer, &stack]() {
-                    e.ax = ( e.bl << 8 ) + *e.byte_ptr( src_buffer.segment, e.bx + 0x100 );
-
-                    stack.push( e.ax );
+                    const uint16_t val = ( e.bl << 8 ) + *e.byte_ptr( src_buffer.segment, e.bx + 0x100 );
+                    stack.push( val );
 
                     e.ax = *e.byte_ptr( src_buffer.segment, e.bx );
                 };
@@ -104,6 +102,7 @@ namespace cleanup
                         return true; // goto loc_124;
                     }
 
+                    // e.ah != 0 sometimes
                     e.bl = e.ah;
                     e.ah = 0;
                     return false;
@@ -113,10 +112,12 @@ namespace cleanup
                 {
                     assert( !e.flags.dir );
 
+                    assert( e.ah == 0 );
                     e.al = *e.byte_ptr( another_pointer2++ );
 
-                    e.bx = e.ax;
-                    const uint8_t val301_0 = *e.byte_ptr( src_buffer.segment, e.bx + 0x301 );
+                    e.bx = e.al;
+                    assert( e.bh == 0 );
+                    const uint8_t val301_0 = *e.byte_ptr( src_buffer.segment, 0x301 + e.bx );
                     if( val301_0 == 0 )
                     {
                         *e.byte_ptr( dest_buffer++ ) = e.al;
@@ -133,8 +134,11 @@ namespace cleanup
                         bool end_inner_loop = false;
                         while( true )
                         {
+                            assert( e.ah == 0 );
                             e.bp = e.ax;
-                            const uint8_t val301_1 = *e.byte_ptr( src_buffer.segment, e.bp + 0x301 );
+                            assert( e.bp < 256 );
+
+                            const uint8_t val301_1 = *e.byte_ptr( src_buffer.segment, 0x301 + e.bp );
 
                             if( val301_1 == 0 )
                             {
@@ -156,10 +160,13 @@ namespace cleanup
                                 e.bl = val301_1;
                                 while( true )
                                 {
-                                    e.bl = *e.byte_ptr( src_buffer.segment, e.bx + 0x402 );
+                                    assert( e.bh == 0 );
+                                    e.bl = *e.byte_ptr( src_buffer.segment, 0x402 + e.bx );
                                     if( e.bl == 0 )
                                     {
+                                        assert( e.bp < 256 );
                                         e.ax = e.bp;
+
                                         if( loc_572_block() )
                                         {
                                             end_inner_loop = true;
