@@ -38,10 +38,11 @@ namespace cleanup
 #pragma pack( pop )
         static_assert( sizeof( something_t ) == 4, "wrong size" );
 
+
         while( true )
         {
             assert( !e.flags.dir );
-            ::memset( e.memory( e.ds, 0x301 ), 0, 128 * sizeof( uint16_t ) );
+            ::memset( e.memory( src_buffer.segment, 0x301 ), 0, 128 * sizeof( uint16_t ) );
 
             // interrutp[1].offset is used as a temporary???
             //0:0: offset, segment interrupt 0
@@ -63,28 +64,28 @@ namespace cleanup
             if( something.len1 != 0 )
             {
                 assert( !e.flags.dir );
-                ::memcpy( e.memory( e.ds, 0x201 ), e.memory( another_pointer2 ), something.len1 );
+                ::memcpy( e.memory( src_buffer.segment, 0x201 ), e.memory( another_pointer2 ), something.len1 );
                 another_pointer2 += something.len1;
 
-                ::memcpy( e.memory( e.ds, 0x001 ), e.memory( another_pointer2 ), something.len1 );
+                ::memcpy( e.memory( src_buffer.segment, 0x001 ), e.memory( another_pointer2 ), something.len1 );
                 another_pointer2 += something.len1;
 
-                ::memcpy( e.memory( e.ds, 0x101 ), e.memory( another_pointer2 ), something.len1 );
+                ::memcpy( e.memory( src_buffer.segment, 0x101 ), e.memory( another_pointer2 ), something.len1 );
                 another_pointer2 += something.len1;
 
                 for( uint16_t i = 0; i < something.len1; ++i )
                 {
                     const uint8_t ofs = i + 1;
-                    e.ax = *e.byte_ptr( e.ds, ofs + 0x200 );
-                    uint8_t* at0x301 = e.byte_ptr( e.ds, e.ax + 0x301 );
-                    *e.byte_ptr( e.ds, ofs + 0x402 ) = *at0x301;
+                    e.ax = *e.byte_ptr( src_buffer.segment, ofs + 0x200 );
+                    uint8_t* at0x301 = e.byte_ptr( src_buffer.segment, e.ax + 0x301 );
+                    *e.byte_ptr( src_buffer.segment, ofs + 0x402 ) = *at0x301;
                     *at0x301 = ofs;
                 }
 
-                auto loc_128_block = [&e]() {
-                    e.ax = ( e.bl << 8 ) + *e.byte_ptr( e.ds, e.bx + 0x100 );
+                auto loc_128_block = [&e, &src_buffer]() {
+                    e.ax = ( e.bl << 8 ) + *e.byte_ptr( src_buffer.segment, e.bx + 0x100 );
                     e.push( e.ax ); // save ax for loc_572_block
-                    e.ax = *e.byte_ptr( e.ds, e.bx );
+                    e.ax = *e.byte_ptr( src_buffer.segment, e.bx );
                 };
 
                 auto loc_572_block = [&e, &dest_buffer]() {
@@ -109,7 +110,7 @@ namespace cleanup
                     e.al = *e.byte_ptr( another_pointer2++ );
 
                     e.bx = e.ax;
-                    const uint8_t val301_0 = *e.byte_ptr( e.ds, e.bx + 0x301 );
+                    const uint8_t val301_0 = *e.byte_ptr( src_buffer.segment, e.bx + 0x301 );
                     if( val301_0 == 0 )
                     {
                         *e.byte_ptr( dest_buffer++ ) = e.al;
@@ -126,7 +127,7 @@ namespace cleanup
                         while( true )
                         {
                             e.bp = e.ax;
-                            const uint8_t val301_1 = *e.byte_ptr( e.ds, e.bp + 0x301 );
+                            const uint8_t val301_1 = *e.byte_ptr( src_buffer.segment, e.bp + 0x301 );
 
                             if( val301_1 == 0 )
                             {
@@ -148,7 +149,7 @@ namespace cleanup
                                 e.bl = val301_1;
                                 while( true )
                                 {
-                                    e.bl = *e.byte_ptr( e.ds, e.bx + 0x402 );
+                                    e.bl = *e.byte_ptr( src_buffer.segment, e.bx + 0x402 );
                                     if( e.bl == 0 )
                                     {
                                         e.ax = e.bp;
@@ -266,8 +267,9 @@ namespace cleanup
             assert( !e.flags.carry && ( e.ax == 4 ) );
 
             e.si = e.dx;
-            e.cx = swap( *e.word_ptr( e.ds, e.si ) );
-            e.dx = swap( *e.word_ptr( e.ds, e.si + 2 ) );
+            const uint16_t* val16_1 = e.word_ptr( e.ds, e.si );
+            e.cx = swap( val16_1[0] );
+            e.dx = swap( val16_1[1] );
             e.di = ( e.di * 4 ) + 2;
             e.add( e.dx, e.di );
             e.adc( e.cx, 0 );
@@ -287,16 +289,11 @@ namespace cleanup
         assert( !e.flags.carry && ( e.ax == 8 ) );
 
         e.lds( e.bp, executable_buffer_ );
-        e.ax = swap( *e.word_ptr( e.ds, e.bp + 0 ) );
-        e.cx = swap( *e.word_ptr( e.ds, e.bp + 2 ) );
-        word_44 = e.cx;
-        word_45 = e.ax;
-        e.ax = swap( *e.word_ptr( e.ds, e.bp + 4 ) );
-        e.cx = swap( *e.word_ptr( e.ds, e.bp + 6 ) );
-        some_game_ptr.offset = e.cx;
-        some_game_ptr.segment = e.ax;
-        e.si = e.cx;
-        e.di = e.ax;
+        const uint16_t* val16_2 = e.word_ptr( e.ds, e.bp );
+        word_44 = swap( val16_2[1] );
+        word_45 = swap( val16_2[0] );
+        e.si = some_game_ptr.offset = swap( val16_2[3] );
+        e.di = some_game_ptr.segment = swap( val16_2[2] );
         e.lds( e.cx, executable_buffer_ );
         e.add( e.si, e.cx );
         e.adc( e.di, 0 );
@@ -314,14 +311,11 @@ namespace cleanup
         e.ds = e.ax;
         e.cx &= 0x0F;
 
-        another_far_ptr.offset = e.cx;
-        another_far_ptr.segment = e.ds;
-        another_pointer2.offset = e.cx;
-        another_pointer2.segment = e.ds;
+        another_pointer2.offset = another_far_ptr.offset = e.cx;
+        another_pointer2.segment = another_far_ptr.segment = e.ds;
         e.si = word_44;
         e.di = word_45;
-        also_a_pointer.offset = 0;
-        also_a_pointer.segment = 0;
+        also_a_pointer = 0;
         e.lds( e.dx, another_far_ptr );
 
         do
@@ -365,6 +359,7 @@ namespace cleanup
         another_far_ptr.offset = e.di;
         another_far_ptr.segment = e.es;
         e.lds( e.si, some_game_ptr );
+
         e.cx = e.ds;
         e.si += 16;
         e.add( e.cx, 0 );
