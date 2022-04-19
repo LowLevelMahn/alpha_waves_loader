@@ -24,6 +24,36 @@ public:
         // in memory order
         uint16_t offset{};
         uint16_t segment{};
+
+        // huge pointer behavior
+
+        ptr16_t operator++( int )
+        {
+            const auto before = *this;
+            advance( 1 );
+            return before;
+        }
+
+        ptr16_t& operator+=( const size_t distance_ )
+        {
+            advance( distance_ );
+            return *this;
+        }
+
+    private:
+        void advance( size_t distance_ )
+        {
+            const uint32_t new_offset = offset + distance_;
+            if( new_offset < 0xFFFF )
+            {
+                offset = new_offset;
+            }
+            else
+            {
+                segment += new_offset / 16;
+                offset = new_offset % 16;
+            }
+        }
     };
 
 public:

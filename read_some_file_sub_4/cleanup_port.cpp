@@ -53,7 +53,15 @@ namespace cleanup
         normalize_ptr( another_pointer2 );
         assert( !e.flags.dir );
         ::memcpy( &something, e.memory( another_pointer2 ), sizeof( something ) );
-        e.add( another_pointer2.offset, 4 );
+        another_pointer2 += sizeof( something );
+
+        auto end_or_loop = [&something]() {
+            if( something.unknown1 == 0 )
+            {
+                return true;
+            }
+            return false;
+        };
 
         e.dx = something.len2 + 1;
         if( something.len1 == 0 )
@@ -62,27 +70,27 @@ namespace cleanup
             ::memcpy( e.memory( e.es, e.di ), e.memory( another_pointer2 ), something.len2 );
             e.si += something.len2;
             e.di += something.len2;
-            another_pointer2.offset += something.len2;
+            another_pointer2 += something.len2;
 
-            //================
-            // # Block 1
-            if( something.unknown1 == 0 )
+            if( end_or_loop() )
             {
                 return;
             }
-            goto start;
-            //================
+            else
+            {
+                goto start;
+            }
         }
 
         assert( !e.flags.dir );
         ::memcpy( e.memory( e.ds, 0x201 ), e.memory( another_pointer2 ), something.len1 );
-        another_pointer2.offset += something.len1;
+        another_pointer2 += something.len1;
 
         ::memcpy( e.memory( e.ds, 0x001 ), e.memory( another_pointer2 ), something.len1 );
-        another_pointer2.offset += something.len1;
+        another_pointer2 += something.len1;
 
         ::memcpy( e.memory( e.ds, 0x101 ), e.memory( another_pointer2 ), something.len1 );
-        another_pointer2.offset += something.len1;
+        another_pointer2 += something.len1;
 
         for( uint16_t i = 0; i < something.len1; ++i )
         {
@@ -97,11 +105,9 @@ namespace cleanup
         ++e.dx;
 
         auto loc_128_block = [&e]() {
-            e.al = *e.byte_ptr( e.ds, e.bx + 0x100 );
-            e.ah = e.bl;
+            e.ax = ( e.bl << 8 ) + *e.byte_ptr( e.ds, e.bx + 0x100 );
             e.push( e.ax ); // save ax for loc_572_block
-            e.ah = 0;
-            e.al = *e.byte_ptr( e.ds, e.bx );
+            e.ax = *e.byte_ptr( e.ds, e.bx );
         };
 
         auto loc_572_block = [&e]() {
@@ -120,83 +126,90 @@ namespace cleanup
             return false;
         };
 
-    loc_124:
-        --e.dx;
-        if( e.dx == 0 )
+        while( true )
         {
-            //================
-            // # Block 1
-            if( something.unknown1 == 0 )
+            --e.dx;
+            if( e.dx == 0 )
             {
-                return;
-            }
-            goto start;
-            //================
-        }
-
-        assert( !e.flags.dir );
-
-        e.al = *e.byte_ptr( another_pointer2 );
-        ++another_pointer2.offset;
-
-        e.bx = e.ax;
-        const uint8_t val301_0 = *e.byte_ptr( e.ds, e.bx + 0x301 );
-        if( val301_0 != 0 )
-        {
-            e.bl = val301_0;
-            e.ax = 0;
-
-            e.push( e.ax );
-            loc_128_block(); // also e.push(e.ax)
-
-            while( true )
-            {
-                e.bp = e.ax;
-                const uint8_t val301_1 = *e.byte_ptr( e.ds, e.bp + 0x301 );
-
-                if( val301_1 == 0 )
+                if( end_or_loop() )
                 {
-                    if( loc_572_block() )
-                    {
-                        goto loc_124;
-                    }
-                }
-                else if( e.bl > val301_1 )
-                {
-                    e.bl = val301_1;
-
-                    loc_128_block();
+                    return;
                 }
                 else
                 {
-                    e.al = e.bl;
-                    e.bl = val301_1;
-                    while( true )
+                    goto start;
+                }
+            }
+
+            assert( !e.flags.dir );
+
+            e.al = *e.byte_ptr( another_pointer2++ );
+
+            e.bx = e.ax;
+            const uint8_t val301_0 = *e.byte_ptr( e.ds, e.bx + 0x301 );
+            if( val301_0 == 0 )
+            {
+                *e.byte_ptr( e.es, e.di++ ) = e.al;
+            }
+            else
+            {
+                e.bl = val301_0;
+                e.ax = 0;
+
+                e.push( e.ax );
+                loc_128_block(); // also e.push(e.ax)
+
+                bool end_inner_loop = false;
+                while( true )
+                {
+                    e.bp = e.ax;
+                    const uint8_t val301_1 = *e.byte_ptr( e.ds, e.bp + 0x301 );
+
+                    if( val301_1 == 0 )
                     {
-                        e.bl = *e.byte_ptr( e.ds, e.bx + 0x402 );
-                        if( e.bl == 0 )
+                        if( loc_572_block() )
                         {
-                            e.ax = e.bp;
-                            if( loc_572_block() )
+                            end_inner_loop = true;
+                            break;
+                        }
+                    }
+                    else if( e.bl > val301_1 )
+                    {
+                        e.bl = val301_1;
+
+                        loc_128_block();
+                    }
+                    else
+                    {
+                        e.al = e.bl;
+                        e.bl = val301_1;
+                        while( true )
+                        {
+                            e.bl = *e.byte_ptr( e.ds, e.bx + 0x402 );
+                            if( e.bl == 0 )
                             {
-                                goto loc_124;
+                                e.ax = e.bp;
+                                if( loc_572_block() )
+                                {
+                                    end_inner_loop = true;
+                                }
+                                break;
                             }
-                            break;
+                            else if( e.bl < e.al )
+                            {
+                                loc_128_block();
+                                break;
+                            }
+                            // another run
                         }
-                        else if( e.bl < e.al )
-                        {
-                            loc_128_block();
-                            break;
-                        }
+                    }
+                    if( end_inner_loop )
+                    {
+                        break;
                     }
                 }
             }
         }
-
-        *e.byte_ptr( e.es, e.di ) = e.al;
-        ++e.di;
-
-        goto loc_124;
     }
 
     namespace
