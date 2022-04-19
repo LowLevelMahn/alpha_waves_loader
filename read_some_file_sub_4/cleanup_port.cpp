@@ -82,17 +82,23 @@ namespace cleanup
                     *at0x301 = ofs;
                 }
 
-                auto loc_128_block = [&e, &src_buffer]() {
+                std::stack<uint16_t> stack;
+
+                auto loc_128_block = [&e, &src_buffer, &stack]() {
                     e.ax = ( e.bl << 8 ) + *e.byte_ptr( src_buffer.segment, e.bx + 0x100 );
-                    e.push( e.ax ); // save ax for loc_572_block
+
+                    stack.push( e.ax );
+
                     e.ax = *e.byte_ptr( src_buffer.segment, e.bx );
                 };
 
-                auto loc_572_block = [&e, &dest_buffer]() {
+                auto loc_572_block = [&e, &dest_buffer, &stack]() {
                     assert( !e.flags.dir );
                     *e.byte_ptr( dest_buffer++ ) = e.al;
 
-                    e.pop( e.ax ); // restore ax from loc_128_block
+                    e.ax = stack.top();
+                    stack.pop();
+
                     if( e.ax == 0 )
                     {
                         return true; // goto loc_124;
@@ -120,7 +126,8 @@ namespace cleanup
                         e.bl = val301_0;
                         e.ax = 0;
 
-                        e.push( e.ax );
+                        stack.push( e.ax );
+
                         loc_128_block(); // also e.push(e.ax)
 
                         bool end_inner_loop = false;
