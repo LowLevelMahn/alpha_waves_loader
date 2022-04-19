@@ -40,6 +40,15 @@ public:
             return *this;
         }
 
+        ptr16_t& operator=( const size_t offset32_ )
+        {
+            assert( offset32_ < 0x10000 );
+            segment = static_cast<uint16_t>( offset32_ / 16 );
+            offset = static_cast<uint16_t>( offset32_ % 16 );
+
+            return *this;
+        }
+
     private:
         void advance( size_t distance_ )
         {
@@ -230,6 +239,11 @@ public:
     uint16_t* word_ptr( uint16_t segment_, uint16_t offset_ )
     {
         return memory<uint16_t>( segment_, offset_ );
+    }
+
+    uint32_t* dword_ptr( uint16_t segment_, uint16_t offset_ )
+    {
+        return memory<uint32_t>( segment_, offset_ );
     }
 
     uint16_t* word_ptr( const ptr16_t ptr_ )
