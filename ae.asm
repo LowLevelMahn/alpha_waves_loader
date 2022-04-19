@@ -1549,7 +1549,7 @@ GAME_START_sub_6 proc near		; CODE XREF: GAME_START_sub_7+25p
     test  al, 20h
     
 IFDEF REMOVE_DEAD_CODE
-    ; we never get here    
+    ; we never jump to loc_592 here
     jnz just_exit
 ELSE    
     jnz short loc_592
@@ -1574,6 +1574,7 @@ ENDIF
     retn
 ; ---------------------------------------------------------------------------
 
+IFNDEF REMOVE_DEAD_CODE
 loc_592:				; CODE XREF: GAME_START_sub_6+11j
     xor ax, ax
     mov ds, ax
@@ -1609,6 +1610,8 @@ loc_593:				; CODE XREF: GAME_START_sub_6+66j
     clc
     pop bx
     retn
+ENDIF
+    
 GAME_START_sub_6 endp
 
 

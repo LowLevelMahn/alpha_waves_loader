@@ -72,11 +72,14 @@ namespace cleanup
                 ::memcpy( e.memory( src_buffer.segment, 0x101 ), e.memory( another_pointer2 ), something.len1 );
                 another_pointer2 += something.len1;
 
+                uint8_t val_4 = 0;
+
                 for( uint16_t i = 0; i < something.len1; ++i )
                 {
                     const uint8_t ofs = i + 1;
-                    e.ax = *e.byte_ptr( src_buffer.segment, ofs + 0x200 );
-                    uint8_t* at0x301 = e.byte_ptr( src_buffer.segment, e.ax + 0x301 );
+                    val_4 = *e.byte_ptr( src_buffer.segment, ofs + 0x200 );
+                    e.ah = 0;
+                    uint8_t* at0x301 = e.byte_ptr( src_buffer.segment, val_4 + 0x301 );
                     *e.byte_ptr( src_buffer.segment, ofs + 0x402 ) = *at0x301;
                     *at0x301 = ofs;
                 }
@@ -84,17 +87,16 @@ namespace cleanup
                 std::stack<uint16_t> stack;
                 uint8_t val_3 = 0;
 
-                auto loc_128_block = [&e, &src_buffer, &stack, &val_3]() {
+                auto loc_128_block = [&e, &src_buffer, &stack, &val_3, &val_4]() {
                     const uint16_t val = ( val_3 << 8 ) + *e.byte_ptr( src_buffer.segment, val_3 + 0x100 );
                     stack.push( val ); //  hi(val) can be != 0 here
 
-                    e.al = *e.byte_ptr( src_buffer.segment, val_3 );
-                    assert( e.ah == 0 );
+                    val_4 = *e.byte_ptr( src_buffer.segment, val_3 );
                 };
 
-                auto loc_572_block = [&e, &dest_buffer, &stack, &val_3]() {
+                auto loc_572_block = [&e, &dest_buffer, &stack, &val_3, &val_4]() {
                     assert( !e.flags.dir );
-                    *e.byte_ptr( dest_buffer++ ) = e.al;
+                    *e.byte_ptr( dest_buffer++ ) = val_4;
 
                     uint16_t stack_val = stack.top();
                     // e.ah can be != 0 here
@@ -106,7 +108,7 @@ namespace cleanup
                     }
 
                     val_3 = hi( stack_val );
-                    e.al = lo( stack_val );
+                    val_4 = lo( stack_val );
                     e.ah = 0;
                     return false;
                 };
@@ -116,7 +118,6 @@ namespace cleanup
                     assert( !e.flags.dir );
 
                     val_3 = *e.byte_ptr( another_pointer2++ );
-                    assert( e.ah == 0 );
 
                     const uint8_t val301_0 = *e.byte_ptr( src_buffer.segment, val_3 + 0x301 );
                     if( val301_0 == 0 )
@@ -134,8 +135,7 @@ namespace cleanup
                         bool end_inner_loop = false;
                         while( true )
                         {
-                            uint8_t ofs1 = e.al;
-                            assert( e.ah == 0 );
+                            uint8_t ofs1 = val_4;
 
                             const uint8_t val301_1 = *e.byte_ptr( src_buffer.segment, ofs1 + 0x301 );
 
@@ -155,25 +155,21 @@ namespace cleanup
                             }
                             else
                             {
-                                assert( e.ah == 0 );
-                                e.al = val_3;
+                                val_4 = val_3;
                                 val_3 = val301_1;
                                 while( true )
                                 {
                                     val_3 = *e.byte_ptr( src_buffer.segment, val_3 + 0x402 );
                                     if( val_3 == 0 )
                                     {
-                                        assert( ofs1 < 256 );
-                                        e.al = ofs1;
-                                        assert( e.ah == 0 );
-
+                                        val_4 = ofs1;
                                         if( loc_572_block() )
                                         {
                                             end_inner_loop = true;
                                         }
                                         break;
                                     }
-                                    else if( val_3 < e.al )
+                                    else if( val_3 < val_4 )
                                     {
                                         loc_128_block();
                                         break;
