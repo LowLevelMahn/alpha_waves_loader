@@ -24,9 +24,17 @@ namespace cleanup
 {
     void emu_GAME_START_sub_3( emu_t& e, emu_t::ptr16_t another_pointer2, const slice_t& executable_buffer_slice_ )
     {
-        std::array<uint8_t, 4> byte_57{}; // gets written, some sort of length
-        uint8_t& byte_569 = byte_57[1];
-        uint16_t& word_60 = *reinterpret_cast<uint16_t*>( &byte_57[2] );
+#pragma pack( push, 1 )
+        struct something_t
+        {
+            uint8_t len1{};
+            uint8_t unknown1{};
+            uint16_t len2{};
+        };
+#pragma pack( pop )
+        static_assert( sizeof( something_t ) == 4, "wrong size" );
+
+        something_t something{};
 
     start:
         assert( !e.flags.dir );
@@ -44,124 +52,151 @@ namespace cleanup
 
         normalize_ptr( another_pointer2 );
         assert( !e.flags.dir );
-        ::memcpy( &byte_57, e.memory( another_pointer2 ), 4 );
+        ::memcpy( &something, e.memory( another_pointer2 ), sizeof( something ) );
         e.add( another_pointer2.offset, 4 );
 
-        e.dx = word_60 + 1;
-        if( byte_57[0] != 0 )
+        e.dx = something.len2 + 1;
+        if( something.len1 == 0 )
         {
             assert( !e.flags.dir );
-            ::memcpy( e.memory( e.ds, 0x201 ), e.memory( another_pointer2 ), byte_57[0] );
-            another_pointer2.offset += byte_57[0];
+            ::memcpy( e.memory( e.es, e.di ), e.memory( another_pointer2 ), something.len2 );
+            e.si += something.len2;
+            e.di += something.len2;
+            another_pointer2.offset += something.len2;
 
-            ::memcpy( e.memory( e.ds, 1 ), e.memory( another_pointer2 ), byte_57[0] );
-            another_pointer2.offset += byte_57[0];
-
-            ::memcpy( e.memory( e.ds, 0x101 ), e.memory( another_pointer2 ), byte_57[0] );
-            another_pointer2.offset += byte_57[0];
-
-            for( uint16_t i = 0; i < byte_57[0]; ++i )
-            {
-                const uint8_t ofs = i + 1;
-                e.ax = *e.byte_ptr( e.ds, ofs + 0x200 );
-                uint8_t* at0x301 = e.byte_ptr( e.ds, e.ax + 0x301 );
-                *e.byte_ptr( e.ds, ofs + 0x402 ) = *at0x301;
-                *at0x301 = ofs;
-            }
-
-            e.dx = word_60;
-            ++e.dx;
-
-        loc_124:
-            --e.dx;
-            if( e.dx != 0 )
-            {
-                assert( !e.flags.dir );
-
-                e.al = *e.byte_ptr( another_pointer2 );
-                ++another_pointer2.offset;
-
-                e.bx = e.ax;
-                if( *e.byte_ptr( e.ds, e.bx + 0x301 ) != 0 )
-                {
-                    e.bl = *e.byte_ptr( e.ds, e.bx + 0x301 );
-                    e.ax = 0;
-                    e.push( e.ax );
-                    goto loc_128;
-                }
-
-                *e.byte_ptr( e.es, e.di ) = e.al;
-                ++e.di;
-
-                goto loc_124;
-            }
-
-        loc_577:
-            if( byte_569 == 0 )
+            //================
+            // # Block 1
+            if( something.unknown1 == 0 )
             {
                 return;
             }
             goto start;
+            //================
+        }
 
-        loc_129:
-            e.bp = e.ax;
-            uint8_t val0x301 = *e.byte_ptr( e.ds, e.bp + 0x301 );
-            if( val0x301 == 0 )
-            {
-                goto loc_572;
-            }
-            if( e.bl > val0x301 )
-            {
-                e.bl = *e.byte_ptr( e.ds, e.bp + 0x301 );
-                goto loc_128;
-            }
-            e.al = e.bl;
-            e.bl = val0x301;
+        assert( !e.flags.dir );
+        ::memcpy( e.memory( e.ds, 0x201 ), e.memory( another_pointer2 ), something.len1 );
+        another_pointer2.offset += something.len1;
 
-            do
-            {
-                e.bl = *e.byte_ptr( e.ds, e.bx + 0x402 );
-                if( e.bl == 0 )
-                {
-                    e.ax = e.bp;
-                    goto loc_572;
-                }
-                if( e.bl < e.al )
-                {
-                    goto loc_128;
-                }
-            } while( true );
+        ::memcpy( e.memory( e.ds, 0x001 ), e.memory( another_pointer2 ), something.len1 );
+        another_pointer2.offset += something.len1;
 
-        loc_128:
+        ::memcpy( e.memory( e.ds, 0x101 ), e.memory( another_pointer2 ), something.len1 );
+        another_pointer2.offset += something.len1;
+
+        for( uint16_t i = 0; i < something.len1; ++i )
+        {
+            const uint8_t ofs = i + 1;
+            e.ax = *e.byte_ptr( e.ds, ofs + 0x200 );
+            uint8_t* at0x301 = e.byte_ptr( e.ds, e.ax + 0x301 );
+            *e.byte_ptr( e.ds, ofs + 0x402 ) = *at0x301;
+            *at0x301 = ofs;
+        }
+
+        e.dx = something.len2;
+        ++e.dx;
+
+        auto loc_128_block = [&e]() {
             e.al = *e.byte_ptr( e.ds, e.bx + 0x100 );
             e.ah = e.bl;
-            e.push( e.ax );
+            e.push( e.ax ); // save ax for loc_572_block
             e.ah = 0;
             e.al = *e.byte_ptr( e.ds, e.bx );
-            goto loc_129;
+        };
 
-        loc_572:
+        auto loc_572_block = [&e]() {
             assert( !e.flags.dir );
             *e.byte_ptr( e.es, e.di ) = e.al;
             ++e.di;
 
-            e.pop( e.ax );
+            e.pop( e.ax ); // restore ax from loc_128_block
             if( e.ax == 0 )
             {
-                goto loc_124;
+                return true; // goto loc_124;
             }
 
             e.bl = e.ah;
             e.ah = 0;
-            goto loc_129;
+            return false;
+        };
+
+    loc_124:
+        --e.dx;
+        if( e.dx == 0 )
+        {
+            //================
+            // # Block 1
+            if( something.unknown1 == 0 )
+            {
+                return;
+            }
+            goto start;
+            //================
         }
 
         assert( !e.flags.dir );
-        ::memcpy( e.memory( e.es, e.di ), e.memory( another_pointer2 ), word_60 );
-        e.si += word_60;
-        e.di += word_60;
-        another_pointer2.offset += word_60;
-        goto loc_577;
+
+        e.al = *e.byte_ptr( another_pointer2 );
+        ++another_pointer2.offset;
+
+        e.bx = e.ax;
+        const uint8_t val301_0 = *e.byte_ptr( e.ds, e.bx + 0x301 );
+        if( val301_0 != 0 )
+        {
+            e.bl = val301_0;
+            e.ax = 0;
+
+            e.push( e.ax );
+            loc_128_block(); // also e.push(e.ax)
+
+            while( true )
+            {
+                e.bp = e.ax;
+                const uint8_t val301_1 = *e.byte_ptr( e.ds, e.bp + 0x301 );
+
+                if( val301_1 == 0 )
+                {
+                    if( loc_572_block() )
+                    {
+                        goto loc_124;
+                    }
+                }
+                else if( e.bl > val301_1 )
+                {
+                    e.bl = val301_1;
+
+                    loc_128_block();
+                }
+                else
+                {
+                    e.al = e.bl;
+                    e.bl = val301_1;
+                    while( true )
+                    {
+                        e.bl = *e.byte_ptr( e.ds, e.bx + 0x402 );
+                        if( e.bl == 0 )
+                        {
+                            e.ax = e.bp;
+                            if( loc_572_block() )
+                            {
+                                goto loc_124;
+                            }
+                            break;
+                        }
+                        else if( e.bl < e.al )
+                        {
+                            loc_128_block();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        *e.byte_ptr( e.es, e.di ) = e.al;
+        ++e.di;
+
+        goto loc_124;
     }
 
     namespace
