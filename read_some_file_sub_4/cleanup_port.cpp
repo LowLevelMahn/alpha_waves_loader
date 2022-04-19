@@ -82,20 +82,21 @@ namespace cleanup
                 }
 
                 std::stack<uint16_t> stack;
-                //uint8_t bl = 0;
+                uint8_t val_3 = 0;
 
-                auto loc_128_block = [&e, &src_buffer, &stack]() {
-                    const uint16_t val = ( e.bl << 8 ) + *e.byte_ptr( src_buffer.segment, e.bl + 0x100 );
-                    stack.push( val );
+                auto loc_128_block = [&e, &src_buffer, &stack, &val_3]() {
+                    const uint16_t val = ( val_3 << 8 ) + *e.byte_ptr( src_buffer.segment, val_3 + 0x100 );
+                    stack.push( val ); //  hi(val) can be != 0 here
 
-                    e.ax = *e.byte_ptr( src_buffer.segment, e.bl );
+                    e.ax = *e.byte_ptr( src_buffer.segment, val_3 );
                 };
 
-                auto loc_572_block = [&e, &dest_buffer, &stack]() {
+                auto loc_572_block = [&e, &dest_buffer, &stack, &val_3]() {
                     assert( !e.flags.dir );
                     *e.byte_ptr( dest_buffer++ ) = e.al;
 
                     e.ax = stack.top();
+                    // e.ah can be != 0 here
                     stack.pop();
 
                     if( e.ax == 0 )
@@ -103,9 +104,8 @@ namespace cleanup
                         return true; // goto loc_124;
                     }
 
-                    // e.ah != 0 sometimes
-                    e.bl = e.ah;
-                    e.ah = 0;
+                    val_3 = e.ah;
+					e.ah = 0;
                     return false;
                 };
 
@@ -113,19 +113,18 @@ namespace cleanup
                 {
                     assert( !e.flags.dir );
 
-                    assert( e.ah == 0 );
                     e.al = *e.byte_ptr( another_pointer2++ );
+                    val_3 = e.al;
+                    assert( e.ah == 0 );
 
-                    e.bl = e.al;
-                    assert( e.bh == 0 );
-                    const uint8_t val301_0 = *e.byte_ptr( src_buffer.segment, 0x301 + e.bl );
+                    const uint8_t val301_0 = *e.byte_ptr( src_buffer.segment, val_3 + 0x301 );
                     if( val301_0 == 0 )
                     {
                         *e.byte_ptr( dest_buffer++ ) = e.al;
                     }
                     else
                     {
-                        e.bl = val301_0;
+                        val_3 = val301_0;
 
                         stack.push( 0 );
 
@@ -135,8 +134,9 @@ namespace cleanup
                         while( true )
                         {
                             uint8_t ofs1 = e.al;
+                            assert( e.ah == 0 );
 
-                            const uint8_t val301_1 = *e.byte_ptr( src_buffer.segment, 0x301 + ofs1 );
+                            const uint8_t val301_1 = *e.byte_ptr( src_buffer.segment, ofs1 + 0x301 );
 
                             if( val301_1 == 0 )
                             {
@@ -146,24 +146,25 @@ namespace cleanup
                                     break;
                                 }
                             }
-                            else if( e.bl > val301_1 )
+                            else if( val_3 > val301_1 )
                             {
-                                e.bl = val301_1;
+                                val_3 = val301_1;
 
                                 loc_128_block();
                             }
                             else
                             {
-                                e.al = e.bl;
-                                e.bl = val301_1;
+                                assert( e.ah == 0 );
+                                e.al = val_3;
+                                val_3 = val301_1;
                                 while( true )
                                 {
-                                    assert( e.bh == 0 );
-                                    e.bl = *e.byte_ptr( src_buffer.segment, 0x402 + e.bl );
-                                    if( e.bl == 0 )
+                                    val_3 = *e.byte_ptr( src_buffer.segment, val_3 + 0x402 );
+                                    if( val_3 == 0 )
                                     {
                                         assert( ofs1 < 256 );
-                                        e.ax = ofs1;
+                                        e.al = ofs1;
+                                        assert( e.ah == 0 );
 
                                         if( loc_572_block() )
                                         {
@@ -171,7 +172,7 @@ namespace cleanup
                                         }
                                         break;
                                     }
-                                    else if( e.bl < e.al )
+                                    else if( val_3 < e.al )
                                     {
                                         loc_128_block();
                                         break;
