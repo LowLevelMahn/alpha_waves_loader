@@ -42,7 +42,7 @@ namespace cleanup
 
         // interrutp[1].offset is used as a temporary???
         //0:0: offset, segment interrupt 0
-        //0:4: offset, segment interrupt 1
+        //0:4: offset, segment interrupt 1 <---
         //...
         const uint16_t intr1_offset_value = *e.word_ptr( 0, 4 );
         assert( intr1_offset_value == 0 ); // seems to be always 0
