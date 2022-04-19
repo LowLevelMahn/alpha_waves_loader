@@ -22,10 +22,12 @@ namespace
 
 namespace cleanup
 {
-    void emu_GAME_START_sub_3( emu_t& e, emu_t::ptr16_t another_pointer2, const slice_t& executable_buffer_slice_ )
+    void emu_GAME_START_sub_3( emu_t& e,
+                               emu_t::ptr16_t src_buffer,
+                               emu_t::ptr16_t dest_buffer,
+                               emu_t::ptr16_t another_pointer2,
+                               const slice_t& executable_buffer_slice_ )
     {
-        emu_t::ptr16_t target_buffer( e.es, e.di );
-
 #pragma pack( push, 1 )
         struct something_t
         {
@@ -47,9 +49,9 @@ namespace cleanup
             //...
             const uint16_t intr1_offset_value = *e.word_ptr( 0, 4 );
             assert( intr1_offset_value == 0 ); // seems to be always 0
-            e.sub( target_buffer.offset, intr1_offset_value );
+            e.sub( dest_buffer.offset, intr1_offset_value );
             normalize_ptr( e.es, e.di );
-            e.add( target_buffer.offset, intr1_offset_value );
+            e.add( dest_buffer.offset, intr1_offset_value );
 
             normalize_ptr( another_pointer2 );
             assert( !e.flags.dir );
@@ -85,9 +87,9 @@ namespace cleanup
                     e.ax = *e.byte_ptr( e.ds, e.bx );
                 };
 
-                auto loc_572_block = [&e, &target_buffer]() {
+                auto loc_572_block = [&e, &dest_buffer]() {
                     assert( !e.flags.dir );
-                    *e.byte_ptr( target_buffer++ ) = e.al;
+                    *e.byte_ptr( dest_buffer++ ) = e.al;
 
                     e.pop( e.ax ); // restore ax from loc_128_block
                     if( e.ax == 0 )
@@ -110,7 +112,7 @@ namespace cleanup
                     const uint8_t val301_0 = *e.byte_ptr( e.ds, e.bx + 0x301 );
                     if( val301_0 == 0 )
                     {
-                        *e.byte_ptr( target_buffer++ ) = e.al;
+                        *e.byte_ptr( dest_buffer++ ) = e.al;
                     }
                     else
                     {
@@ -180,9 +182,9 @@ namespace cleanup
             else
             {
                 assert( !e.flags.dir );
-                ::memcpy( e.memory( target_buffer ), e.memory( another_pointer2 ), something.len2 );
+                ::memcpy( e.memory( dest_buffer ), e.memory( another_pointer2 ), something.len2 );
                 e.si += something.len2;
-                target_buffer += something.len2;
+                dest_buffer += something.len2;
                 another_pointer2 += something.len2;
             }
         }
@@ -390,7 +392,9 @@ namespace cleanup
         }
 
         // some sort of uncompression, after that the executable is +sizeof(PSP) behind executable_buffer_begin
-        emu_GAME_START_sub_3( e, another_pointer2, executable_buffer_slice_ );
+        emu_t::ptr16_t src_buffer{ e.ds, e.si };
+        emu_t::ptr16_t dest_buffer{ e.es, e.di };
+        emu_GAME_START_sub_3( e, src_buffer, dest_buffer, another_pointer2, executable_buffer_slice_ );
 
         write_binary_file( "d:/temp/out.after_game_sub_3_call.BIN", executable_buffer_slice_.data,
                            executable_buffer_slice_.size );
