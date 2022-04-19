@@ -135,10 +135,10 @@ namespace cleanup
                         while( true )
                         {
                             assert( e.ah == 0 );
-                            e.bp = e.ax;
-                            assert( e.bp < 256 );
+                            uint8_t ofs1 = e.al;
+                            assert( ofs1 < 256 );
 
-                            const uint8_t val301_1 = *e.byte_ptr( src_buffer.segment, 0x301 + e.bp );
+                            const uint8_t val301_1 = *e.byte_ptr( src_buffer.segment, 0x301 + ofs1 );
 
                             if( val301_1 == 0 )
                             {
@@ -164,8 +164,8 @@ namespace cleanup
                                     e.bl = *e.byte_ptr( src_buffer.segment, 0x402 + e.bx );
                                     if( e.bl == 0 )
                                     {
-                                        assert( e.bp < 256 );
-                                        e.ax = e.bp;
+                                        assert( ofs1 < 256 );
+                                        e.ax = ofs1;
 
                                         if( loc_572_block() )
                                         {
