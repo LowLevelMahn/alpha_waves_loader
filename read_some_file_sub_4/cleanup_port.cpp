@@ -88,24 +88,26 @@ namespace cleanup
                     const uint16_t val = ( val_3 << 8 ) + *e.byte_ptr( src_buffer.segment, val_3 + 0x100 );
                     stack.push( val ); //  hi(val) can be != 0 here
 
-                    e.ax = *e.byte_ptr( src_buffer.segment, val_3 );
+                    e.al = *e.byte_ptr( src_buffer.segment, val_3 );
+                    assert( e.ah == 0 );
                 };
 
                 auto loc_572_block = [&e, &dest_buffer, &stack, &val_3]() {
                     assert( !e.flags.dir );
                     *e.byte_ptr( dest_buffer++ ) = e.al;
 
-                    e.ax = stack.top();
+                    uint16_t stack_val = stack.top();
                     // e.ah can be != 0 here
                     stack.pop();
 
-                    if( e.ax == 0 )
+                    if( stack_val == 0 )
                     {
                         return true; // goto loc_124;
                     }
 
-                    val_3 = e.ah;
-					e.ah = 0;
+                    val_3 = hi( stack_val );
+                    e.al = lo( stack_val );
+                    e.ah = 0;
                     return false;
                 };
 
@@ -113,14 +115,13 @@ namespace cleanup
                 {
                     assert( !e.flags.dir );
 
-                    e.al = *e.byte_ptr( another_pointer2++ );
-                    val_3 = e.al;
+                    val_3 = *e.byte_ptr( another_pointer2++ );
                     assert( e.ah == 0 );
 
                     const uint8_t val301_0 = *e.byte_ptr( src_buffer.segment, val_3 + 0x301 );
                     if( val301_0 == 0 )
                     {
-                        *e.byte_ptr( dest_buffer++ ) = e.al;
+                        *e.byte_ptr( dest_buffer++ ) = val_3;
                     }
                     else
                     {
