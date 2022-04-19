@@ -76,7 +76,24 @@ namespace cleanup
             --e.dx;
             if( e.dx != 0 )
             {
-                goto loc_568;
+                assert( !e.flags.dir );
+
+                e.al = *e.byte_ptr( another_pointer2 );
+                ++another_pointer2.offset;
+
+                e.bx = e.ax;
+                if( *e.byte_ptr( e.ds, e.bx + 0x301 ) != 0 )
+                {
+                    e.bl = *e.byte_ptr( e.ds, e.bx + 0x301 );
+                    e.ax = 0;
+                    e.push( e.ax );
+                    goto loc_128;
+                }
+
+                *e.byte_ptr( e.es, e.di ) = e.al;
+                ++e.di;
+
+                goto loc_124;
             }
 
         loc_577:
@@ -85,26 +102,6 @@ namespace cleanup
                 return;
             }
             goto start;
-
-        loc_568:
-            assert( !e.flags.dir );
-
-            e.al = *e.byte_ptr( another_pointer2 );
-            ++another_pointer2.offset;
-
-            e.bx = e.ax;
-            if( *e.byte_ptr( e.ds, e.bx + 0x301 ) != 0 )
-            {
-                e.bl = *e.byte_ptr( e.ds, e.bx + 0x301 );
-                e.ax = 0;
-                e.push( e.ax );
-                goto loc_128;
-            }
-
-            *e.byte_ptr( e.es, e.di ) = e.al;
-            ++e.di;
-
-            goto loc_124;
 
         loc_129:
             e.bp = e.ax;
@@ -115,25 +112,25 @@ namespace cleanup
             }
             if( e.bl > val0x301 )
             {
-                goto loc_573;
+                e.bl = *e.byte_ptr( e.ds, e.bp + 0x301 );
+                goto loc_128;
             }
             e.al = e.bl;
             e.bl = val0x301;
 
-        loc_575:
-            e.bl = *e.byte_ptr( e.ds, e.bx + 0x402 );
-            if( e.bl == 0 )
+            do
             {
-                goto loc_574;
-            }
-            if( e.bl < e.al )
-            {
-                goto loc_128;
-            }
-            goto loc_575;
-
-        loc_573:
-            e.bl = *e.byte_ptr( e.ds, e.bp + 0x301 );
+                e.bl = *e.byte_ptr( e.ds, e.bx + 0x402 );
+                if( e.bl == 0 )
+                {
+                    e.ax = e.bp;
+                    goto loc_572;
+                }
+                if( e.bl < e.al )
+                {
+                    goto loc_128;
+                }
+            } while( true );
 
         loc_128:
             e.al = *e.byte_ptr( e.ds, e.bx + 0x100 );
@@ -143,22 +140,20 @@ namespace cleanup
             e.al = *e.byte_ptr( e.ds, e.bx );
             goto loc_129;
 
-        loc_574:
-            e.ax = e.bp;
         loc_572:
             assert( !e.flags.dir );
             *e.byte_ptr( e.es, e.di ) = e.al;
             ++e.di;
 
             e.pop( e.ax );
-            if( e.ax != 0 )
+            if( e.ax == 0 )
             {
-                e.bl = e.ah;
-                e.ah = 0;
-                goto loc_129;
+                goto loc_124;
             }
 
-            goto loc_124;
+            e.bl = e.ah;
+            e.ah = 0;
+            goto loc_129;
         }
 
         assert( !e.flags.dir );
@@ -168,6 +163,18 @@ namespace cleanup
         another_pointer2.offset += word_60;
         goto loc_577;
     }
+
+    namespace
+    {
+        void long_div( uint16_t& hi_, uint16_t& lo_, const uint16_t divider_ )
+        {
+            uint32_t val = ( hi_ << 16 ) + lo_;
+            val /= divider_;
+            hi_ = val >> 16;
+            lo_ = val & 0xFFFF;
+        }
+
+    } // namespace
 
     void emu_read_some_file_sub_4( emu_t& e,
                                    const uint8_t byte_55_,
@@ -211,12 +218,11 @@ namespace cleanup
                            // DS:DX->buffer
             assert( !e.flags.carry || ( e.ax == 2 ) );
             e.di = e.dx;
-            e.cx = *e.word_ptr( e.ds, e.di );
-            e.xchg( e.cl, e.ch );
+            e.cx = swap( *e.word_ptr( e.ds, e.di ) );
             e.di = e.cx;
             e.al = e.memory<config_tat_t::executable_info_t>( e.cs, e.si )->byte_12h;
             e.ah = 0;
-            e.shl( e.ax, 2 );
+            e.ax *= 4;
             e.dx = e.ax;
             e.cx = 0;
             e.al = 1;
@@ -234,12 +240,9 @@ namespace cleanup
             assert( !e.flags.carry && ( e.ax == 4 ) );
 
             e.si = e.dx;
-            e.cx = *e.word_ptr( e.ds, e.si );
-            e.xchg( e.cl, e.ch );
-            e.dx = *e.word_ptr( e.ds, e.si + 2 );
-            e.xchg( e.dl, e.dh );
-            e.shl( e.di, 2 );
-            e.add( e.di, 2 );
+            e.cx = swap( *e.word_ptr( e.ds, e.si ) );
+            e.dx = swap( *e.word_ptr( e.ds, e.si + 2 ) );
+            e.di = ( e.di * 4 ) + 2;
             e.add( e.dx, e.di );
             e.adc( e.cx, 0 );
             e.al = 0;
@@ -258,16 +261,12 @@ namespace cleanup
         assert( !e.flags.carry && ( e.ax == 8 ) );
 
         e.lds( e.bp, executable_buffer_ );
-        e.ax = *e.word_ptr( e.ds, e.bp + 0 );
-        e.cx = *e.word_ptr( e.ds, e.bp + 2 );
-        e.xchg( e.al, e.ah );
-        e.xchg( e.cl, e.ch );
+        e.ax = swap( *e.word_ptr( e.ds, e.bp + 0 ) );
+        e.cx = swap( *e.word_ptr( e.ds, e.bp + 2 ) );
         word_44 = e.cx;
         word_45 = e.ax;
-        e.ax = *e.word_ptr( e.ds, e.bp + 4 );
-        e.cx = *e.word_ptr( e.ds, e.bp + 6 );
-        e.xchg( e.al, e.ah );
-        e.xchg( e.cl, e.ch );
+        e.ax = swap( *e.word_ptr( e.ds, e.bp + 4 ) );
+        e.cx = swap( *e.word_ptr( e.ds, e.bp + 6 ) );
         some_game_ptr.offset = e.cx;
         some_game_ptr.segment = e.ax;
         e.si = e.cx;
@@ -277,21 +276,17 @@ namespace cleanup
         e.adc( e.di, 0 );
         e.sub( e.si, word_44 );
         e.sbb( e.di, word_45 );
-        e.add( e.si, 0x10 );
+        e.si += 16;
         e.adc( e.di, 0 );
         e.cx = e.si;
-        e.shr( e.di, 1 );
-        e.rcr( e.si, 1 );
-        e.shr( e.di, 1 );
-        e.rcr( e.si, 1 );
-        e.shr( e.di, 1 );
-        e.rcr( e.si, 1 );
-        e.shr( e.di, 1 );
-        e.rcr( e.si, 1 );
+
+        long_div( e.di, e.si, 16 );
+        assert( e.di == 0 );
+
         e.ax = e.ds;
         e.add( e.ax, e.si );
         e.ds = e.ax;
-        e.and_w( e.cx, 0x0F );
+        e.cx &= 0x0F;
 
         another_far_ptr.offset = e.cx;
         another_far_ptr.segment = e.ds;
@@ -305,12 +300,7 @@ namespace cleanup
 
         do
         {
-            e.cx = e.dx;
-            e.shr( e.cx, 4 );
-            e.ax = e.ds;
-            e.add( e.ax, e.cx );
-            e.ds = e.ax;
-            e.and_w( e.dx, 0x0F );
+            normalize_ptr( e.ds, e.dx );
             e.ax = 48000;
             e.sub( e.si, e.ax );
             e.sbb( e.di, 0 );
@@ -350,25 +340,21 @@ namespace cleanup
         another_far_ptr.segment = e.es;
         e.lds( e.si, some_game_ptr );
         e.cx = e.ds;
-        e.add( e.si, 0x10 );
+        e.si += 16;
         e.add( e.cx, 0 );
         e.add( e.si, e.di );
         e.adc( e.cx, 0 );
         e.bx = e.si;
-        e.shr( e.cx, 1 );
-        e.rcr( e.si, 1 );
-        e.shr( e.cx, 1 );
-        e.rcr( e.si, 1 );
-        e.shr( e.cx, 1 );
-        e.rcr( e.si, 1 );
-        e.shr( e.cx, 1 );
-        e.rcr( e.si, 1 );
+
+        long_div( e.cx, e.si, 16 );
+        assert( e.cx == 0 );
+
         e.ax = e.es;
         e.add( e.ax, e.si );
         executable_buffer_.segment = e.ax;
-        e.inc( e.ax );
+        ++e.ax;
         e.ds = e.ax;
-        e.and_w( e.bx, 0x0F );
+        e.bx &= 0x0F;
         executable_buffer_.offset = e.bx;
         e.cld();
 
