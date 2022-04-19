@@ -24,6 +24,8 @@ namespace cleanup
 {
     void emu_GAME_START_sub_3( emu_t& e, emu_t::ptr16_t another_pointer2, const slice_t& executable_buffer_slice_ )
     {
+        emu_t::ptr16_t target_buffer( e.es, e.di );
+
 #pragma pack( push, 1 )
         struct something_t
         {
@@ -34,180 +36,154 @@ namespace cleanup
 #pragma pack( pop )
         static_assert( sizeof( something_t ) == 4, "wrong size" );
 
-        something_t something{};
-
-    start:
-        assert( !e.flags.dir );
-        ::memset( e.memory( e.ds, 0x301 ), 0, 128 * sizeof( uint16_t ) );
-
-        // interrutp[1].offset is used as a temporary???
-        //0:0: offset, segment interrupt 0
-        //0:4: offset, segment interrupt 1 <---
-        //...
-        const uint16_t intr1_offset_value = *e.word_ptr( 0, 4 );
-        assert( intr1_offset_value == 0 ); // seems to be always 0
-        e.sub( e.di, intr1_offset_value );
-        normalize_ptr( e.es, e.di );
-        e.add( e.di, intr1_offset_value );
-
-        normalize_ptr( another_pointer2 );
-        assert( !e.flags.dir );
-        ::memcpy( &something, e.memory( another_pointer2 ), sizeof( something ) );
-        another_pointer2 += sizeof( something );
-
-        auto end_or_loop = [&something]() {
-            if( something.unknown1 == 0 )
-            {
-                return true;
-            }
-            return false;
-        };
-
-        e.dx = something.len2 + 1;
-        if( something.len1 == 0 )
-        {
-            assert( !e.flags.dir );
-            ::memcpy( e.memory( e.es, e.di ), e.memory( another_pointer2 ), something.len2 );
-            e.si += something.len2;
-            e.di += something.len2;
-            another_pointer2 += something.len2;
-
-            if( end_or_loop() )
-            {
-                return;
-            }
-            else
-            {
-                goto start;
-            }
-        }
-
-        assert( !e.flags.dir );
-        ::memcpy( e.memory( e.ds, 0x201 ), e.memory( another_pointer2 ), something.len1 );
-        another_pointer2 += something.len1;
-
-        ::memcpy( e.memory( e.ds, 0x001 ), e.memory( another_pointer2 ), something.len1 );
-        another_pointer2 += something.len1;
-
-        ::memcpy( e.memory( e.ds, 0x101 ), e.memory( another_pointer2 ), something.len1 );
-        another_pointer2 += something.len1;
-
-        for( uint16_t i = 0; i < something.len1; ++i )
-        {
-            const uint8_t ofs = i + 1;
-            e.ax = *e.byte_ptr( e.ds, ofs + 0x200 );
-            uint8_t* at0x301 = e.byte_ptr( e.ds, e.ax + 0x301 );
-            *e.byte_ptr( e.ds, ofs + 0x402 ) = *at0x301;
-            *at0x301 = ofs;
-        }
-
-        e.dx = something.len2;
-        ++e.dx;
-
-        auto loc_128_block = [&e]() {
-            e.ax = ( e.bl << 8 ) + *e.byte_ptr( e.ds, e.bx + 0x100 );
-            e.push( e.ax ); // save ax for loc_572_block
-            e.ax = *e.byte_ptr( e.ds, e.bx );
-        };
-
-        auto loc_572_block = [&e]() {
-            assert( !e.flags.dir );
-            *e.byte_ptr( e.es, e.di ) = e.al;
-            ++e.di;
-
-            e.pop( e.ax ); // restore ax from loc_128_block
-            if( e.ax == 0 )
-            {
-                return true; // goto loc_124;
-            }
-
-            e.bl = e.ah;
-            e.ah = 0;
-            return false;
-        };
-
         while( true )
         {
-            --e.dx;
-            if( e.dx == 0 )
-            {
-                if( end_or_loop() )
-                {
-                    return;
-                }
-                else
-                {
-                    goto start;
-                }
-            }
-
             assert( !e.flags.dir );
+            ::memset( e.memory( e.ds, 0x301 ), 0, 128 * sizeof( uint16_t ) );
 
-            e.al = *e.byte_ptr( another_pointer2++ );
+            // interrutp[1].offset is used as a temporary???
+            //0:0: offset, segment interrupt 0
+            //0:4: offset, segment interrupt 1 <---
+            //...
+            const uint16_t intr1_offset_value = *e.word_ptr( 0, 4 );
+            assert( intr1_offset_value == 0 ); // seems to be always 0
+            e.sub( target_buffer.offset, intr1_offset_value );
+            normalize_ptr( e.es, e.di );
+            e.add( target_buffer.offset, intr1_offset_value );
 
-            e.bx = e.ax;
-            const uint8_t val301_0 = *e.byte_ptr( e.ds, e.bx + 0x301 );
-            if( val301_0 == 0 )
+            normalize_ptr( another_pointer2 );
+            assert( !e.flags.dir );
+            something_t something{};
+            ::memcpy( &something, e.memory( another_pointer2 ), sizeof( something ) );
+            another_pointer2 += sizeof( something );
+
+            e.dx = something.len2 + 1;
+            if( something.len1 != 0 )
             {
-                *e.byte_ptr( e.es, e.di++ ) = e.al;
-            }
-            else
-            {
-                e.bl = val301_0;
-                e.ax = 0;
+                assert( !e.flags.dir );
+                ::memcpy( e.memory( e.ds, 0x201 ), e.memory( another_pointer2 ), something.len1 );
+                another_pointer2 += something.len1;
 
-                e.push( e.ax );
-                loc_128_block(); // also e.push(e.ax)
+                ::memcpy( e.memory( e.ds, 0x001 ), e.memory( another_pointer2 ), something.len1 );
+                another_pointer2 += something.len1;
 
-                bool end_inner_loop = false;
-                while( true )
+                ::memcpy( e.memory( e.ds, 0x101 ), e.memory( another_pointer2 ), something.len1 );
+                another_pointer2 += something.len1;
+
+                for( uint16_t i = 0; i < something.len1; ++i )
                 {
-                    e.bp = e.ax;
-                    const uint8_t val301_1 = *e.byte_ptr( e.ds, e.bp + 0x301 );
+                    const uint8_t ofs = i + 1;
+                    e.ax = *e.byte_ptr( e.ds, ofs + 0x200 );
+                    uint8_t* at0x301 = e.byte_ptr( e.ds, e.ax + 0x301 );
+                    *e.byte_ptr( e.ds, ofs + 0x402 ) = *at0x301;
+                    *at0x301 = ofs;
+                }
 
-                    if( val301_1 == 0 )
+                auto loc_128_block = [&e]() {
+                    e.ax = ( e.bl << 8 ) + *e.byte_ptr( e.ds, e.bx + 0x100 );
+                    e.push( e.ax ); // save ax for loc_572_block
+                    e.ax = *e.byte_ptr( e.ds, e.bx );
+                };
+
+                auto loc_572_block = [&e, &target_buffer]() {
+                    assert( !e.flags.dir );
+                    *e.byte_ptr( target_buffer++ ) = e.al;
+
+                    e.pop( e.ax ); // restore ax from loc_128_block
+                    if( e.ax == 0 )
                     {
-                        if( loc_572_block() )
-                        {
-                            end_inner_loop = true;
-                            break;
-                        }
+                        return true; // goto loc_124;
                     }
-                    else if( e.bl > val301_1 )
-                    {
-                        e.bl = val301_1;
 
-                        loc_128_block();
+                    e.bl = e.ah;
+                    e.ah = 0;
+                    return false;
+                };
+
+                for( uint16_t i = something.len2; i > 0; --i )
+                {
+                    assert( !e.flags.dir );
+
+                    e.al = *e.byte_ptr( another_pointer2++ );
+
+                    e.bx = e.ax;
+                    const uint8_t val301_0 = *e.byte_ptr( e.ds, e.bx + 0x301 );
+                    if( val301_0 == 0 )
+                    {
+                        *e.byte_ptr( target_buffer++ ) = e.al;
                     }
                     else
                     {
-                        e.al = e.bl;
-                        e.bl = val301_1;
+                        e.bl = val301_0;
+                        e.ax = 0;
+
+                        e.push( e.ax );
+                        loc_128_block(); // also e.push(e.ax)
+
+                        bool end_inner_loop = false;
                         while( true )
                         {
-                            e.bl = *e.byte_ptr( e.ds, e.bx + 0x402 );
-                            if( e.bl == 0 )
+                            e.bp = e.ax;
+                            const uint8_t val301_1 = *e.byte_ptr( e.ds, e.bp + 0x301 );
+
+                            if( val301_1 == 0 )
                             {
-                                e.ax = e.bp;
                                 if( loc_572_block() )
                                 {
                                     end_inner_loop = true;
+                                    break;
                                 }
-                                break;
                             }
-                            else if( e.bl < e.al )
+                            else if( e.bl > val301_1 )
                             {
+                                e.bl = val301_1;
+
                                 loc_128_block();
+                            }
+                            else
+                            {
+                                e.al = e.bl;
+                                e.bl = val301_1;
+                                while( true )
+                                {
+                                    e.bl = *e.byte_ptr( e.ds, e.bx + 0x402 );
+                                    if( e.bl == 0 )
+                                    {
+                                        e.ax = e.bp;
+                                        if( loc_572_block() )
+                                        {
+                                            end_inner_loop = true;
+                                        }
+                                        break;
+                                    }
+                                    else if( e.bl < e.al )
+                                    {
+                                        loc_128_block();
+                                        break;
+                                    }
+                                    // another run
+                                }
+                            }
+                            if( end_inner_loop )
+                            {
                                 break;
                             }
-                            // another run
                         }
                     }
-                    if( end_inner_loop )
-                    {
-                        break;
-                    }
                 }
+
+                if( something.unknown1 == 0 )
+                {
+                    return;
+                }
+            }
+            else
+            {
+                assert( !e.flags.dir );
+                ::memcpy( e.memory( target_buffer ), e.memory( another_pointer2 ), something.len2 );
+                e.si += something.len2;
+                target_buffer += something.len2;
+                another_pointer2 += something.len2;
             }
         }
     }
