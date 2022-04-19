@@ -82,12 +82,13 @@ namespace cleanup
                 }
 
                 std::stack<uint16_t> stack;
+                //uint8_t bl = 0;
 
                 auto loc_128_block = [&e, &src_buffer, &stack]() {
-                    const uint16_t val = ( e.bl << 8 ) + *e.byte_ptr( src_buffer.segment, e.bx + 0x100 );
+                    const uint16_t val = ( e.bl << 8 ) + *e.byte_ptr( src_buffer.segment, e.bl + 0x100 );
                     stack.push( val );
 
-                    e.ax = *e.byte_ptr( src_buffer.segment, e.bx );
+                    e.ax = *e.byte_ptr( src_buffer.segment, e.bl );
                 };
 
                 auto loc_572_block = [&e, &dest_buffer, &stack]() {
@@ -115,9 +116,9 @@ namespace cleanup
                     assert( e.ah == 0 );
                     e.al = *e.byte_ptr( another_pointer2++ );
 
-                    e.bx = e.al;
+                    e.bl = e.al;
                     assert( e.bh == 0 );
-                    const uint8_t val301_0 = *e.byte_ptr( src_buffer.segment, 0x301 + e.bx );
+                    const uint8_t val301_0 = *e.byte_ptr( src_buffer.segment, 0x301 + e.bl );
                     if( val301_0 == 0 )
                     {
                         *e.byte_ptr( dest_buffer++ ) = e.al;
@@ -125,18 +126,15 @@ namespace cleanup
                     else
                     {
                         e.bl = val301_0;
-                        e.ax = 0;
 
-                        stack.push( e.ax );
+                        stack.push( 0 );
 
                         loc_128_block(); // also e.push(e.ax)
 
                         bool end_inner_loop = false;
                         while( true )
                         {
-                            assert( e.ah == 0 );
                             uint8_t ofs1 = e.al;
-                            assert( ofs1 < 256 );
 
                             const uint8_t val301_1 = *e.byte_ptr( src_buffer.segment, 0x301 + ofs1 );
 
@@ -161,7 +159,7 @@ namespace cleanup
                                 while( true )
                                 {
                                     assert( e.bh == 0 );
-                                    e.bl = *e.byte_ptr( src_buffer.segment, 0x402 + e.bx );
+                                    e.bl = *e.byte_ptr( src_buffer.segment, 0x402 + e.bl );
                                     if( e.bl == 0 )
                                     {
                                         assert( ofs1 < 256 );
