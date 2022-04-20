@@ -23,30 +23,27 @@ namespace
 namespace cleanup
 {
     void emu_GAME_START_sub_3( emu_t& e,
-                               emu_t::ptr16_t src_buffer,
+                               uint8_t* src_buffer_,
                                emu_t::ptr16_t dest_buffer,
                                emu_t::ptr16_t another_pointer2,
                                const slice_t& executable_buffer_slice_ )
     {
-        // src segment is always the same
-        const uint16_t SRC_SEG = src_buffer.segment;
-        uint8_t* src = e.byte_ptr( src_buffer.segment, 0 );
-        src_buffer = 0; // not needed anymore
-
         while( true )
         {
             assert( !e.flags.dir );
-            ::memset( &src[0x301], 0, 128 * sizeof( uint16_t ) );
+            ::memset( &src_buffer_[0x301], 0, 128 * sizeof( uint16_t ) );
 
-            // interrutp[1].offset is used as a temporary???
-            //0:0: offset, segment interrupt 0
-            //0:4: offset, segment interrupt 1 <---
-            //...
+#if 0 // always 0 \
+      // interrutp[1].offset is used as a temporary??? \
+      //0:0: offset, segment interrupt 0 \
+      //0:4: offset, segment interrupt 1 <--- \
+      //...
             const uint16_t intr1_offset_value = *e.word_ptr( 0, 4 );
             assert( intr1_offset_value == 0 ); // seems to be always 0
             e.sub( dest_buffer.offset, intr1_offset_value );
             normalize_ptr( dest_buffer );
             e.add( dest_buffer.offset, intr1_offset_value );
+#endif
 
             normalize_ptr( another_pointer2 );
             assert( !e.flags.dir );
@@ -75,13 +72,13 @@ namespace cleanup
             else
             {
                 assert( !e.flags.dir );
-                ::memcpy( &src[0x201], e.memory( another_pointer2 ), something.len1 );
+                ::memcpy( &src_buffer_[0x201], e.memory( another_pointer2 ), something.len1 );
                 another_pointer2 += something.len1;
 
-                ::memcpy( &src[0x001], e.memory( another_pointer2 ), something.len1 );
+                ::memcpy( &src_buffer_[0x001], e.memory( another_pointer2 ), something.len1 );
                 another_pointer2 += something.len1;
 
-                ::memcpy( &src[0x101], e.memory( another_pointer2 ), something.len1 );
+                ::memcpy( &src_buffer_[0x101], e.memory( another_pointer2 ), something.len1 );
                 another_pointer2 += something.len1;
 
                 uint8_t val_4 = 0;
@@ -89,9 +86,9 @@ namespace cleanup
                 for( uint16_t i = 0; i < something.len1; ++i )
                 {
                     const uint8_t ofs = i + 1;
-                    val_4 = src[ofs + 0x200];
-                    uint8_t* at0x301 = &src[val_4 + 0x301];
-                    src[ofs + 0x402] = *at0x301;
+                    val_4 = src_buffer_[ofs + 0x200];
+                    uint8_t* at0x301 = &src_buffer_[val_4 + 0x301];
+                    src_buffer_[ofs + 0x402] = *at0x301;
                     *at0x301 = ofs;
                 }
 
@@ -104,8 +101,8 @@ namespace cleanup
                 std::stack<stack_vals_t> stack;
                 uint8_t val_3 = 0;
 
-                auto loc_128_block = [&e, src, &stack, &val_3, &val_4]() {
-                    const uint8_t* vals = &src[val_3];
+                auto loc_128_block = [&e, src_buffer_, &stack, &val_3, &val_4]() {
+                    const uint8_t* vals = &src_buffer_[val_3];
 
                     stack.push( { val_3, vals[0x100] } );
                     val_4 = vals[0];
@@ -134,7 +131,7 @@ namespace cleanup
 
                     val_3 = *e.byte_ptr( another_pointer2++ );
 
-                    const uint8_t val301_0 = src[val_3 + 0x301];
+                    const uint8_t val301_0 = src_buffer_[val_3 + 0x301];
                     if( val301_0 == 0 )
                     {
                         *e.byte_ptr( dest_buffer++ ) = val_3;
@@ -152,7 +149,7 @@ namespace cleanup
                         {
                             const uint8_t ofs1 = val_4;
 
-                            const uint8_t val301_1 = src[ofs1 + 0x301];
+                            const uint8_t val301_1 = src_buffer_[ofs1 + 0x301];
 
                             if( val301_1 == 0 )
                             {
@@ -175,7 +172,7 @@ namespace cleanup
 
                                 while( true )
                                 {
-                                    val_3 = src[val_3 + 0x402];
+                                    val_3 = src_buffer_[val_3 + 0x402];
 
                                     if( val_3 == 0 )
                                     {
@@ -373,9 +370,11 @@ namespace cleanup
 
         e.les( e.di, executable_buffer_ );
 
+#if 0 // always 0
         uint16_t* intr1_offset = e.word_ptr( 0, 4 );
         assert( e.di == 0 );
         *intr1_offset = e.di;
+#endif
 
         another_far_ptr.offset = e.di;
         another_far_ptr.segment = e.es;
@@ -408,9 +407,9 @@ namespace cleanup
         }
 
         // some sort of uncompression, after that the executable is +sizeof(PSP) behind executable_buffer_begin
-        emu_t::ptr16_t src_buffer{ e.ds, e.si };
         emu_t::ptr16_t dest_buffer{ e.es, e.di };
-        emu_GAME_START_sub_3( e, src_buffer, dest_buffer, another_pointer2, executable_buffer_slice_ );
+
+        emu_GAME_START_sub_3( e, e.byte_ptr( e.ds, 0 ), dest_buffer, another_pointer2, executable_buffer_slice_ );
 
         write_binary_file( "d:/temp/out.after_game_sub_3_call.BIN", executable_buffer_slice_.data,
                            executable_buffer_slice_.size );
