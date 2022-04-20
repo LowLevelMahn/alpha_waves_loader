@@ -28,21 +28,12 @@ namespace cleanup
                                emu_t::ptr16_t another_pointer2,
                                const slice_t& executable_buffer_slice_ )
     {
-#pragma pack( push, 1 )
-        struct something_t
-        {
-            uint8_t len1{};
-            uint8_t unknown1{};
-            uint16_t len2{};
-        };
-#pragma pack( pop )
-        static_assert( sizeof( something_t ) == 4, "wrong size" );
-
-
         while( true )
         {
             assert( !e.flags.dir );
             ::memset( e.memory( src_buffer.segment, 0x301 ), 0, 128 * sizeof( uint16_t ) );
+
+            const uint8_t* src = e.byte_ptr( src_buffer.segment, 0 );
 
             // interrutp[1].offset is used as a temporary???
             //0:0: offset, segment interrupt 0
@@ -56,11 +47,29 @@ namespace cleanup
 
             normalize_ptr( another_pointer2 );
             assert( !e.flags.dir );
+
+#pragma pack( push, 1 )
+            struct something_t
+            {
+                uint8_t len1{};
+                uint8_t unknown1{};
+                uint16_t len2{};
+            };
+#pragma pack( pop )
+            static_assert( sizeof( something_t ) == 4, "wrong size" );
             something_t something{};
             ::memcpy( &something, e.memory( another_pointer2 ), sizeof( something ) );
             another_pointer2 += sizeof( something );
 
-            if( something.len1 != 0 )
+            if( something.len1 == 0 )
+            {
+                assert( !e.flags.dir );
+                ::memcpy( e.memory( dest_buffer ), e.memory( another_pointer2 ), something.len2 );
+                src_buffer += something.len2;
+                dest_buffer += something.len2;
+                another_pointer2 += something.len2;
+            }
+            else
             {
                 assert( !e.flags.dir );
                 ::memcpy( e.memory( src_buffer.segment, 0x201 ), e.memory( another_pointer2 ), something.len1 );
@@ -93,9 +102,10 @@ namespace cleanup
                 uint8_t val_3 = 0;
 
                 auto loc_128_block = [&e, &src_buffer, &stack, &val_3, &val_4]() {
-                    stack.push(
-                        { val_3, *e.byte_ptr( src_buffer.segment, val_3 + 0x100 ) } ); //  hi(val) can be != 0 here
-                    val_4 = *e.byte_ptr( src_buffer.segment, val_3 );
+                    const uint8_t* vals = e.byte_ptr( src_buffer.segment, val_3 );
+
+                    stack.push( { val_3, vals[0x100] } ); //  hi(val) can be != 0 here
+                    val_4 = vals[0];
                 };
 
                 auto loc_572_block = [&e, &dest_buffer, &stack, &val_3, &val_4]() {
@@ -132,7 +142,7 @@ namespace cleanup
 
                         stack.push( { 0, 0 } );
 
-                        loc_128_block(); // also e.push(e.ax)
+                        loc_128_block(); // also stack push
 
                         bool end_inner_loop = false;
                         while( true )
@@ -159,9 +169,11 @@ namespace cleanup
                             {
                                 val_4 = val_3;
                                 val_3 = val301_1;
+
                                 while( true )
                                 {
                                     val_3 = *e.byte_ptr( src_buffer.segment, val_3 + 0x402 );
+
                                     if( val_3 == 0 )
                                     {
                                         val_4 = ofs1;
@@ -176,6 +188,7 @@ namespace cleanup
                                         loc_128_block();
                                         break;
                                     }
+
                                     // another run
                                 }
                             }
@@ -191,14 +204,6 @@ namespace cleanup
                 {
                     return;
                 }
-            }
-            else
-            {
-                assert( !e.flags.dir );
-                ::memcpy( e.memory( dest_buffer ), e.memory( another_pointer2 ), something.len2 );
-                src_buffer += something.len2;
-                dest_buffer += something.len2;
-                another_pointer2 += something.len2;
             }
         }
     }
@@ -366,6 +371,7 @@ namespace cleanup
         e.les( e.di, executable_buffer_ );
 
         uint16_t* intr1_offset = e.word_ptr( 0, 4 );
+        assert( e.di == 0 );
         *intr1_offset = e.di;
 
         another_far_ptr.offset = e.di;
