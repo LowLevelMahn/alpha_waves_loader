@@ -22,27 +22,32 @@ namespace
 
 namespace cleanup
 {
-    void emu_GAME_START_sub_3( emu_t& e,
+#pragma pack( push, 1 )
+    struct something_t
+    {
+        uint8_t len1{};
+        uint8_t unknown1{};
+        uint16_t len2{};
+    };
+#pragma pack( pop )
+    static_assert( sizeof( something_t ) == 4, "wrong size" );
+
+    void emu_GAME_START_sub_3( emu_t& /*e*/,
                                uint8_t* src_buffer_,
                                uint8_t* dest_buffer_,
                                uint8_t* another_pointer2_,
                                const slice_t& executable_buffer_slice_ )
     {
+#if 0
+        size_t distance = src_buffer_ - dest_buffer_;
+		int brk = 1;
+#endif
+
         while( true )
         {
-            ::memset( &src_buffer_[0x301], 0, 128 * sizeof( uint16_t ) );
+            ::memset( &src_buffer_[0x301], 0, 128 * sizeof( uint16_t ) ); // clean 256 bytes
 
-#pragma pack( push, 1 )
-            struct something_t
-            {
-                uint8_t len1{};
-                uint8_t unknown1{};
-                uint16_t len2{};
-            };
-#pragma pack( pop )
-            static_assert( sizeof( something_t ) == 4, "wrong size" );
-            something_t something{};
-            ::memcpy( &something, another_pointer2_, sizeof( something ) );
+            const something_t something = *reinterpret_cast<something_t*>( another_pointer2_ );
             another_pointer2_ += sizeof( something );
 
             if( something.len1 == 0 )
@@ -53,7 +58,6 @@ namespace cleanup
             }
             else
             {
-                assert( !e.flags.dir );
                 ::memcpy( &src_buffer_[0x201], another_pointer2_, something.len1 );
                 another_pointer2_ += something.len1;
 
@@ -83,14 +87,14 @@ namespace cleanup
                 std::stack<stack_vals_t> stack;
                 uint8_t val_3 = 0;
 
-                auto loc_128_block = [&e, src_buffer_, &stack, &val_3, &val_4]() {
+                auto loc_128_block = [src_buffer_, &stack, &val_3, &val_4]() {
                     const uint8_t* vals = &src_buffer_[val_3];
 
                     stack.push( { val_3, vals[0x100] } );
                     val_4 = vals[0];
                 };
 
-                auto loc_572_block = [&e, &dest_buffer_, &stack, &val_3, &val_4]() {
+                auto loc_572_block = [&dest_buffer_, &stack, &val_3, &val_4]() {
                     *dest_buffer_++ = val_4;
 
                     const stack_vals_t stack_val = stack.top();
@@ -106,7 +110,7 @@ namespace cleanup
                     return false;
                 };
 
-                for( uint16_t i = something.len2; i > 0; --i )
+                for( uint16_t i = something.len2; i > 0; --i ) // just loop n times
                 {
                     val_3 = *another_pointer2_++;
 
