@@ -227,19 +227,17 @@ namespace cleanup
                            // DS:DX->buffer
             assert( !e.flags.carry || ( e.ax == 2 ) );
 
-            e.di = swap( *e.word_ptr( e.ds, e.dx ) );
-
+            uint16_t some_offset = swap( *e.word_ptr( e.ds, e.dx ) );
             const uint32_t pos2 = e.memory<config_tat_t::executable_info_t>( e.cs, e.si )->byte_12h * 4;
+
             e.dx = lo( pos2 );
             e.cx = hi( pos2 );
-
             e.al = 1;
             e.ah = 0x42;
             e.intr_0x21(); // DOS - 2 + -MOVE FILE READ / WRITE POINTER(LSEEK)
                            // AL = method: offset from present location
             assert( !e.flags.carry );
 
-            e.lds( e.dx, executable_buffer_ );
             e.ah = 0x3F;
             e.cx = 4;
             e.intr_0x21(); // DOS - 2 + -READ FROM FILE WITH HANDLE
@@ -247,7 +245,7 @@ namespace cleanup
                            // DS:DX->buffer
             assert( !e.flags.carry && ( e.ax == 4 ) );
 
-            const uint32_t pos = swap( *e.dword_ptr( e.ds, e.dx ) ) + ( e.di * 4 ) + 2;
+            const uint32_t pos = swap( *e.dword_ptr( executable_buffer_ ) ) + ( some_offset * 4 ) + 2;
             e.dx = lo( pos );
             e.cx = hi( pos );
 
@@ -283,7 +281,7 @@ namespace cleanup
         {
             normalize_ptr( e.ds, e.dx );
             e.ax = 48000;
-            e.sub( e.si, e.ax );
+            e.sub( e.si, 48000 );
             e.sbb( e.di, 0 );
             if( e.flags.carry )
             {
@@ -312,31 +310,10 @@ namespace cleanup
                        // BX = file handle
         assert( ( byte_55_ & 0x18 ) != 0 );
 
-        e.les( e.di, executable_buffer_ );
-
-        e.ds = hi( ofs2 );
-        e.si = lo( ofs2 );
-
-        e.cx = e.ds;
-        e.si += 16;
-        e.add( e.cx, 0 );
-        e.add( e.si, e.di );
-        e.adc( e.cx, 0 );
-        e.bx = e.si;
-
-        long_div( e.cx, e.si, 16 );
-        assert( e.cx == 0 );
-
-        e.ax = e.es;
-        e.add( e.ax, e.si );
-        executable_buffer_.segment = e.ax;
-        ++e.ax;
-        e.ds = e.ax;
-        e.bx &= 0x0F;
-        executable_buffer_.offset = e.bx;
-
-        uint8_t* src_buffer = e.byte_ptr( e.ds, 0 );
-        uint8_t* dest_buffer = e.byte_ptr( e.es, e.di );
+        const emu_t::ptr16_t exec_buff = emu_t::ptr16( emu_t::offset32( executable_buffer_ ) + ofs2 + 16 );
+        uint8_t* src_buffer = e.byte_ptr( exec_buff.segment + 1, 0 );
+        uint8_t* dest_buffer = e.byte_ptr( executable_buffer_ );
+        executable_buffer_ = exec_buff;
 
         // some sort of uncompression, after that the executable is +sizeof(PSP) behind executable_buffer_begin
         emu_GAME_START_sub_3( src_buffer, dest_buffer, e.byte_ptr( another_pointer2 ) );

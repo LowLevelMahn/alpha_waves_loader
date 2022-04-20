@@ -49,6 +49,11 @@ public:
             return *this;
         }
 
+        bool operator==( const ptr16_t& other_ ) const
+        {
+            return ( other_.segment == segment ) && ( other_.offset == offset );
+        }
+
     private:
         void advance( size_t distance_ )
         {
