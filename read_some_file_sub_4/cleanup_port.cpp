@@ -2,24 +2,6 @@
 #include "types.hpp"
 #include "helper.hpp"
 
-namespace
-{
-    void normalize_ptr( uint16_t& segment_, uint16_t& offset_ )
-    {
-        const auto normalized_ptr = emu_t::ptr16( emu_t::offset32( segment_, offset_ ) );
-        segment_ = normalized_ptr.segment;
-        offset_ = normalized_ptr.offset;
-    }
-
-    void normalize_ptr( emu_t::ptr16_t& ptr_ )
-    {
-        const auto normalized_ptr = emu_t::ptr16( emu_t::offset32( ptr_.segment, ptr_.offset ) );
-        ptr_.segment = normalized_ptr.segment;
-        ptr_.offset = normalized_ptr.offset;
-    }
-
-} // namespace
-
 namespace cleanup
 {
 #pragma pack( push, 1 )
@@ -182,18 +164,6 @@ namespace cleanup
             }
         }
     }
-
-    namespace
-    {
-        void long_div( uint16_t& hi_, uint16_t& lo_, const uint16_t divider_ )
-        {
-            uint32_t val = ( hi_ << 16 ) + lo_;
-            val /= divider_;
-            hi_ = val >> 16;
-            lo_ = val & 0xFFFF;
-        }
-
-    } // namespace
 
     void emu_read_some_file_sub_4( emu_t& e,
                                    const uint8_t byte_55_,
