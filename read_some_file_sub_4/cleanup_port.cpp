@@ -30,12 +30,13 @@ namespace cleanup
     {
         // src segment is always the same
         const uint16_t SRC_SEG = src_buffer.segment;
-        auto src_byte_ptr = [&e, SRC_SEG]( uint16_t offset_ ) { return e.byte_ptr( SRC_SEG, offset_ ); };
+        uint8_t* src = e.byte_ptr( src_buffer.segment, 0 );
+        src_buffer = 0; // not needed anymore
 
         while( true )
         {
             assert( !e.flags.dir );
-            ::memset( src_byte_ptr( 0x301 ), 0, 128 * sizeof( uint16_t ) );
+            ::memset( &src[0x301], 0, 128 * sizeof( uint16_t ) );
 
             // interrutp[1].offset is used as a temporary???
             //0:0: offset, segment interrupt 0
@@ -67,20 +68,20 @@ namespace cleanup
             {
                 assert( !e.flags.dir );
                 ::memcpy( e.memory( dest_buffer ), e.memory( another_pointer2 ), something.len2 );
-                src_buffer += something.len2;
+                //src_buffer += something.len2; // not used
                 dest_buffer += something.len2;
                 another_pointer2 += something.len2;
             }
             else
             {
                 assert( !e.flags.dir );
-                ::memcpy( src_byte_ptr( 0x201 ), e.memory( another_pointer2 ), something.len1 );
+                ::memcpy( &src[0x201], e.memory( another_pointer2 ), something.len1 );
                 another_pointer2 += something.len1;
 
-                ::memcpy( src_byte_ptr( 0x001 ), e.memory( another_pointer2 ), something.len1 );
+                ::memcpy( &src[0x001], e.memory( another_pointer2 ), something.len1 );
                 another_pointer2 += something.len1;
 
-                ::memcpy( src_byte_ptr( 0x101 ), e.memory( another_pointer2 ), something.len1 );
+                ::memcpy( &src[0x101], e.memory( another_pointer2 ), something.len1 );
                 another_pointer2 += something.len1;
 
                 uint8_t val_4 = 0;
@@ -88,9 +89,9 @@ namespace cleanup
                 for( uint16_t i = 0; i < something.len1; ++i )
                 {
                     const uint8_t ofs = i + 1;
-                    val_4 = *src_byte_ptr( ofs + 0x200 );
-                    uint8_t* at0x301 = src_byte_ptr( val_4 + 0x301 );
-                    *src_byte_ptr( ofs + 0x402 ) = *at0x301;
+                    val_4 = src[ofs + 0x200];
+                    uint8_t* at0x301 = &src[val_4 + 0x301];
+                    src[ofs + 0x402] = *at0x301;
                     *at0x301 = ofs;
                 }
 
@@ -103,8 +104,8 @@ namespace cleanup
                 std::stack<stack_vals_t> stack;
                 uint8_t val_3 = 0;
 
-                auto loc_128_block = [&e, src_byte_ptr, &stack, &val_3, &val_4]() {
-                    const uint8_t* vals = src_byte_ptr( val_3 );
+                auto loc_128_block = [&e, src, &stack, &val_3, &val_4]() {
+                    const uint8_t* vals = &src[val_3];
 
                     stack.push( { val_3, vals[0x100] } );
                     val_4 = vals[0];
@@ -133,7 +134,7 @@ namespace cleanup
 
                     val_3 = *e.byte_ptr( another_pointer2++ );
 
-                    const uint8_t val301_0 = *src_byte_ptr( val_3 + 0x301 );
+                    const uint8_t val301_0 = src[val_3 + 0x301];
                     if( val301_0 == 0 )
                     {
                         *e.byte_ptr( dest_buffer++ ) = val_3;
@@ -151,7 +152,7 @@ namespace cleanup
                         {
                             const uint8_t ofs1 = val_4;
 
-                            const uint8_t val301_1 = *src_byte_ptr( ofs1 + 0x301 );
+                            const uint8_t val301_1 = src[ofs1 + 0x301];
 
                             if( val301_1 == 0 )
                             {
@@ -174,7 +175,7 @@ namespace cleanup
 
                                 while( true )
                                 {
-                                    val_3 = *src_byte_ptr( val_3 + 0x402 );
+                                    val_3 = src[val_3 + 0x402];
 
                                     if( val_3 == 0 )
                                     {
