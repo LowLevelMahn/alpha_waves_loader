@@ -30,10 +30,7 @@ namespace cleanup
     {
         while( true )
         {
-            assert( !e.flags.dir );
             ::memset( &src_buffer_[0x301], 0, 128 * sizeof( uint16_t ) );
-
-            assert( !e.flags.dir );
 
 #pragma pack( push, 1 )
             struct something_t
@@ -50,9 +47,7 @@ namespace cleanup
 
             if( something.len1 == 0 )
             {
-                assert( !e.flags.dir );
                 ::memcpy( dest_buffer_, another_pointer2_, something.len2 );
-                //src_buffer += something.len2; // not used
                 dest_buffer_ += something.len2;
                 another_pointer2_ += something.len2;
             }
@@ -96,7 +91,6 @@ namespace cleanup
                 };
 
                 auto loc_572_block = [&e, &dest_buffer_, &stack, &val_3, &val_4]() {
-                    assert( !e.flags.dir );
                     *dest_buffer_++ = val_4;
 
                     const stack_vals_t stack_val = stack.top();
@@ -114,8 +108,6 @@ namespace cleanup
 
                 for( uint16_t i = something.len2; i > 0; --i )
                 {
-                    assert( !e.flags.dir );
-
                     val_3 = *another_pointer2_++;
 
                     const uint8_t val301_0 = src_buffer_[val_3 + 0x301];
