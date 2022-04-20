@@ -242,8 +242,7 @@ namespace original
     void emu_read_some_file_sub_4( emu_t& e,
                                    const uint8_t byte_55_,
                                    emu_t::ptr16_t& executable_buffer_,
-                                   const slice_t& executable_buffer_slice_,
-                                   std::vector<uint8_t>& before_game_sub_3_ )
+                                   const slice_t& executable_buffer_slice_ )
     {
         uint16_t word_44{};
         uint16_t word_45{};
@@ -506,18 +505,8 @@ namespace original
         executable_buffer_.offset = e.bx;
         e.cld();
 
-        //write_binary_file("d:/temp/out.before_game_sub_3_call.BIN", executable_buffer_slice_.data, executable_buffer_slice_.size);
-        {
-            auto begin = executable_buffer_slice_.data + 0x100;
-            auto end = begin + executable_buffer_slice_.size - 0x100;
-            before_game_sub_3_ = { begin, end };
-        }
-
         // some sort of uncompression, after that the executable is +sizeof(PSP) behind executable_buffer_begin
         emu_GAME_START_sub_3( e, another_pointer2, executable_buffer_slice_ );
-
-        write_binary_file( "d:/temp/out.after_game_sub_3_call.BIN", executable_buffer_slice_.data,
-                           executable_buffer_slice_.size );
 
         e.clc();
         return;

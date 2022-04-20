@@ -32,10 +32,7 @@ namespace cleanup
 #pragma pack( pop )
     static_assert( sizeof( something_t ) == 4, "wrong size" );
 
-    void emu_GAME_START_sub_3( uint8_t* src_buffer_,
-                               uint8_t* dest_buffer_,
-                               uint8_t* another_pointer2_,
-                               const slice_t& executable_buffer_slice_ )
+    void emu_GAME_START_sub_3( uint8_t* src_buffer_, uint8_t* dest_buffer_, uint8_t* another_pointer2_ )
     {
 #if 1
         size_t distance = src_buffer_ - dest_buffer_; // encoded size?
@@ -66,13 +63,10 @@ namespace cleanup
                 ::memcpy( &src_buffer_[0x101], another_pointer2_, something.len1 );
                 another_pointer2_ += something.len1;
 
-                uint8_t val_4 = 0;
-
                 for( uint16_t i = 0; i < something.len1; ++i )
                 {
                     const uint8_t ofs = i + 1;
-                    val_4 = src_buffer_[ofs + 0x200];
-                    uint8_t* at0x301 = &src_buffer_[val_4 + 0x301];
+                    uint8_t* at0x301 = &src_buffer_[src_buffer_[ofs + 0x200] + 0x301];
                     src_buffer_[ofs + 0x402] = *at0x301;
                     *at0x301 = ofs;
                 }
@@ -85,12 +79,11 @@ namespace cleanup
 
                 std::stack<stack_vals_t> stack;
                 uint8_t val_3 = 0;
+                uint8_t val_4 = 0;
 
                 auto loc_128_block = [src_buffer_, &stack, &val_3, &val_4]() {
-                    const uint8_t* vals = &src_buffer_[val_3];
-
-                    stack.push( { val_3, vals[0x100] } );
-                    val_4 = vals[0];
+                    stack.push( { val_3, src_buffer_[val_3 + 0x100] } );
+                    val_4 = src_buffer_[val_3];
                 };
 
                 auto loc_572_block = [&dest_buffer_, &stack, &val_3, &val_4]() {
@@ -122,7 +115,7 @@ namespace cleanup
                     {
                         val_3 = val301_0;
 
-                        stack.push( { 0, 0 } );
+                        stack.push( { 0, 0 } ); // end mark
 
                         loc_128_block(); // also stack push
 
@@ -205,8 +198,7 @@ namespace cleanup
     void emu_read_some_file_sub_4( emu_t& e,
                                    const uint8_t byte_55_,
                                    emu_t::ptr16_t& executable_buffer_,
-                                   const slice_t& executable_buffer_slice_,
-                                   std::vector<uint8_t>& before_game_sub_3_ )
+                                   const slice_t& executable_buffer_slice_ )
     {
         uint16_t word_44{};
         uint16_t word_45{};
@@ -243,14 +235,13 @@ namespace cleanup
                            // BX = file handle, CX = number of bytes to read
                            // DS:DX->buffer
             assert( !e.flags.carry || ( e.ax == 2 ) );
-            e.di = e.dx;
-            e.cx = swap( *e.word_ptr( e.ds, e.di ) );
-            e.di = e.cx;
-            e.al = e.memory<config_tat_t::executable_info_t>( e.cs, e.si )->byte_12h;
-            e.ah = 0;
-            e.ax *= 4;
-            e.dx = e.ax;
-            e.cx = 0;
+
+            e.di = swap( *e.word_ptr( e.ds, e.dx ) );
+
+            const uint32_t pos2 = e.memory<config_tat_t::executable_info_t>( e.cs, e.si )->byte_12h * 4;
+            e.dx = lo( pos2 );
+            e.cx = hi( pos2 );
+
             e.al = 1;
             e.ah = 0x42;
             e.intr_0x21(); // DOS - 2 + -MOVE FILE READ / WRITE POINTER(LSEEK)
@@ -265,13 +256,10 @@ namespace cleanup
                            // DS:DX->buffer
             assert( !e.flags.carry && ( e.ax == 4 ) );
 
-            e.si = e.dx;
-            const uint16_t* val16_1 = e.word_ptr( e.ds, e.si );
-            e.cx = swap( val16_1[0] );
-            e.dx = swap( val16_1[1] );
-            e.di = ( e.di * 4 ) + 2;
-            e.add( e.dx, e.di );
-            e.adc( e.cx, 0 );
+            const uint32_t pos = swap( *e.dword_ptr( e.ds, e.dx ) ) + ( e.di * 4 ) + 2;
+            e.dx = lo( pos );
+            e.cx = hi( pos );
+
             e.al = 0;
             e.ah = 0x42;
             e.intr_0x21(); // DOS - 2 + -MOVE FILE READ / WRITE POINTER(LSEEK)
@@ -288,6 +276,7 @@ namespace cleanup
         assert( !e.flags.carry && ( e.ax == 8 ) );
 
         e.lds( e.bp, executable_buffer_ );
+
         const uint16_t* val16_2 = e.word_ptr( e.ds, e.bp );
         word_44 = swap( val16_2[1] );
         word_45 = swap( val16_2[0] );
@@ -375,21 +364,14 @@ namespace cleanup
         executable_buffer_.offset = e.bx;
         e.cld();
 
-        //write_binary_file("d:/temp/out.before_game_sub_3_call.BIN", executable_buffer_slice_.data, executable_buffer_slice_.size);
-        {
-            auto begin = executable_buffer_slice_.data + 0x100;
-            auto end = begin + executable_buffer_slice_.size - 0x100;
-            before_game_sub_3_ = { begin, end };
-        }
-
         // some sort of uncompression, after that the executable is +sizeof(PSP) behind executable_buffer_begin
         uint8_t* src_buffer = e.byte_ptr( e.ds, 0 );
         uint8_t* dest_buffer = e.byte_ptr( e.es, e.di );
 
-        emu_GAME_START_sub_3( src_buffer, dest_buffer, e.byte_ptr( another_pointer2 ), executable_buffer_slice_ );
+        emu_GAME_START_sub_3( src_buffer, dest_buffer, e.byte_ptr( another_pointer2 ) );
 
-        write_binary_file( "d:/temp/out.after_game_sub_3_call.BIN", executable_buffer_slice_.data,
-                           executable_buffer_slice_.size );
+        //write_binary_file( "d:/temp/out.after_game_sub_3_call.BIN", executable_buffer_slice_.data,
+        //                   executable_buffer_slice_.size );
 
         e.clc();
         return;
