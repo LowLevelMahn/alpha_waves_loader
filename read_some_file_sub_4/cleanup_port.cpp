@@ -200,11 +200,6 @@ namespace cleanup
                                    emu_t::ptr16_t& executable_buffer_,
                                    const slice_t& executable_buffer_slice_ )
     {
-        // these are not all ptr16 but more lo/hi int32 offsets (the pair looked liked pointers)
-        emu_t::ptr16_t another_far_ptr;
-        emu_t::ptr16_t another_pointer2;
-        emu_t::ptr16_t also_a_pointer;
-
         e.ax = e.cs;
         e.ds = e.ax;
         e.dx = e.bx; // bx = gfx-block start = offset filename
@@ -276,13 +271,14 @@ namespace cleanup
         const uint32_t ofs2 = swap( val32[1] );
 
         const uint32_t distance = ( ofs2 - ofs1 ) + 16;
-        another_pointer2 = another_far_ptr = emu_t::ptr16( emu_t::offset32( executable_buffer_ ) + distance );
+        emu_t::ptr16_t another_pointer2 = emu_t::ptr16( emu_t::offset32( executable_buffer_ ) + distance );
 
         e.si = lo( ofs1 );
         e.di = hi( ofs1 );
+        emu_t::ptr16_t also_a_pointer;
         also_a_pointer = 0;
 
-        e.lds( e.dx, another_far_ptr );
+        e.lds( e.dx, another_pointer2 );
         do
         {
             normalize_ptr( e.ds, e.dx );
@@ -318,8 +314,6 @@ namespace cleanup
 
         e.les( e.di, executable_buffer_ );
 
-        another_far_ptr.offset = e.di;
-        another_far_ptr.segment = e.es;
         e.ds = hi( ofs2 );
         e.si = lo( ofs2 );
 
@@ -340,18 +334,13 @@ namespace cleanup
         e.ds = e.ax;
         e.bx &= 0x0F;
         executable_buffer_.offset = e.bx;
-        e.cld();
 
-        // some sort of uncompression, after that the executable is +sizeof(PSP) behind executable_buffer_begin
         uint8_t* src_buffer = e.byte_ptr( e.ds, 0 );
         uint8_t* dest_buffer = e.byte_ptr( e.es, e.di );
 
+        // some sort of uncompression, after that the executable is +sizeof(PSP) behind executable_buffer_begin
         emu_GAME_START_sub_3( src_buffer, dest_buffer, e.byte_ptr( another_pointer2 ) );
 
-        //write_binary_file( "d:/temp/out.after_game_sub_3_call.BIN", executable_buffer_slice_.data,
-        //                   executable_buffer_slice_.size );
-
-        e.clc();
         return;
     }
 
