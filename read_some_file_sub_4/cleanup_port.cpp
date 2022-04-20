@@ -32,15 +32,14 @@ namespace cleanup
 #pragma pack( pop )
     static_assert( sizeof( something_t ) == 4, "wrong size" );
 
-    void emu_GAME_START_sub_3( emu_t& /*e*/,
-                               uint8_t* src_buffer_,
+    void emu_GAME_START_sub_3( uint8_t* src_buffer_,
                                uint8_t* dest_buffer_,
                                uint8_t* another_pointer2_,
                                const slice_t& executable_buffer_slice_ )
     {
-#if 0
-        size_t distance = src_buffer_ - dest_buffer_;
-		int brk = 1;
+#if 1
+        size_t distance = src_buffer_ - dest_buffer_; // encoded size?
+        int brk = 1;
 #endif
 
         while( true )
@@ -387,7 +386,7 @@ namespace cleanup
         uint8_t* src_buffer = e.byte_ptr( e.ds, 0 );
         uint8_t* dest_buffer = e.byte_ptr( e.es, e.di );
 
-        emu_GAME_START_sub_3( e, src_buffer, dest_buffer, e.byte_ptr( another_pointer2 ), executable_buffer_slice_ );
+        emu_GAME_START_sub_3( src_buffer, dest_buffer, e.byte_ptr( another_pointer2 ), executable_buffer_slice_ );
 
         write_binary_file( "d:/temp/out.after_game_sub_3_call.BIN", executable_buffer_slice_.data,
                            executable_buffer_slice_.size );
