@@ -166,7 +166,7 @@ namespace cleanup
     }
 
     void emu_read_some_file_sub_4( emu_t& e,
-                                   const uint8_t byte_55_,
+                                   const uint8_t /*byte_55_*/,
                                    emu_t::ptr16_t& executable_buffer_,
                                    const slice_t& executable_buffer_slice_ )
     {
@@ -179,9 +179,9 @@ namespace cleanup
         FILE* fp = fopen( file_path.c_str(), "rb" );
         assert( fp );
 
-        assert( ( byte_55_ & 0x18 ) != 0 );
+        assert( ( exec_info->byte_13h & 0x18 ) != 0 );
 
-        if( ( byte_55_ & 0x10 ) != 0 )
+        if( ( exec_info->byte_13h & 0x10 ) != 0 )
         {
             assert( fread( executable_buffer, 1, 2, fp ) == 2 );
             uint16_t some_offset = swap( *reinterpret_cast<uint16_t*>( executable_buffer ) );
@@ -218,7 +218,7 @@ namespace cleanup
             //sometimes
             //assert( false );
         }
-        uint8_t* src_buffer = e.byte_ptr( exec_buff.segment + 1, 0 );
+        uint8_t* src_buffer = e.byte_ptr( exec_buff.segment + 1, 0 ); // some sort of align
 
         //printf( "distance: %u\n", src_buffer - e.byte_ptr( exec_buff ) );
 
