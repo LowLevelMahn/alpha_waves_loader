@@ -271,6 +271,15 @@ public:
         return m_memory;
     }
 
+    ptr16_t ptr_to_ptr16( void* ptr_ )
+    {
+        uint8_t* ptr = static_cast<uint8_t*>( ptr_ );
+        assert( ( ptr >= m_memory.data() ) && ( ptr < m_memory.data() + m_memory.size() ) );
+
+        size_t offset32 = ptr - m_memory.data();
+        return ptr16( offset32 );
+    }
+
 public:
     void dos_current_dir( const std::string& current_dir_ );
     const std::string& dos_current_dir() const;

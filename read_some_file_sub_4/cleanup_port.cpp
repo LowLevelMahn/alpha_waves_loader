@@ -210,8 +210,18 @@ namespace cleanup
 
         assert( fclose( fp ) == 0 );
 
+        assert( e.byte_ptr( executable_buffer_ ) == executable_buffer );
+
         const emu_t::ptr16_t exec_buff = emu_t::ptr16( emu_t::offset32( executable_buffer_ ) + ofs2 + 16 );
+        if( exec_buff.offset != 0 )
+        {
+            //sometimes
+            //assert( false );
+        }
         uint8_t* src_buffer = e.byte_ptr( exec_buff.segment + 1, 0 );
+
+        //printf( "distance: %u\n", src_buffer - e.byte_ptr( exec_buff ) );
+
         uint8_t* dest_buffer = e.byte_ptr( executable_buffer_ );
         executable_buffer_ = exec_buff;
 
