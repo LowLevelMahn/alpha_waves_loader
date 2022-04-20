@@ -200,115 +200,45 @@ namespace cleanup
                                    emu_t::ptr16_t& executable_buffer_,
                                    const slice_t& executable_buffer_slice_ )
     {
-        e.ax = e.cs;
-        e.ds = e.ax;
-        e.dx = e.bx; // bx = gfx-block start = offset filename
-        e.ah = 0x3D;
-        e.al = 0;
-        e.intr_0x21();
-        // DOS - 2 + -OPEN DISK FILE WITH HANDLE
-        // DS:DX->ASCIZ filename
-        // AL = access mode
-        //  0 - read
-        assert( !e.flags.carry );
+        const config_tat_t::executable_info_t* exec_info = e.memory<config_tat_t::executable_info_t>( e.cs, e.bx );
+        uint8_t* executable_buffer = e.byte_ptr( executable_buffer_ );
 
-        e.si = e.bx;
-        e.bx = e.ax;
-        e.ah = 0x3F;
-        e.cl = byte_55_;
-        assert( ( e.cl & 0x18 ) != 0 );
+        const std::string filename( exec_info->filename.data() );
+        const std::string game_dir = R"(F:\projects\fun\dos_games_rev\alpha_waves_dev\tests\alpha)";
+        const std::string file_path = game_dir + "\\" + filename;
+        FILE* fp = fopen( file_path.c_str(), "rb" );
+        assert( fp );
 
-        if( ( e.cl & 0x10 ) != 0 )
+        assert( ( byte_55_ & 0x18 ) != 0 );
+
+        if( ( byte_55_ & 0x10 ) != 0 )
         {
-            e.cx = 2;
-            e.lds( e.dx, executable_buffer_ );
-            e.intr_0x21(); // DOS - 2 + -READ FROM FILE WITH HANDLE
-                           // BX = file handle, CX = number of bytes to read
-                           // DS:DX->buffer
-            assert( !e.flags.carry || ( e.ax == 2 ) );
+            assert( fread( executable_buffer, 1, 2, fp ) == 2 );
+            uint16_t some_offset = swap( *reinterpret_cast<uint16_t*>( executable_buffer ) );
+            const uint32_t pos2 = exec_info->byte_12h * 4;
 
-            uint16_t some_offset = swap( *e.word_ptr( e.ds, e.dx ) );
-            const uint32_t pos2 = e.memory<config_tat_t::executable_info_t>( e.cs, e.si )->byte_12h * 4;
+            assert( fseek( fp, pos2, SEEK_CUR ) == 0 );
 
-            e.dx = lo( pos2 );
-            e.cx = hi( pos2 );
-            e.al = 1;
-            e.ah = 0x42;
-            e.intr_0x21(); // DOS - 2 + -MOVE FILE READ / WRITE POINTER(LSEEK)
-                           // AL = method: offset from present location
-            assert( !e.flags.carry );
+            assert( fread( executable_buffer, 1, 4, fp ) == 4 );
+            const uint32_t pos = swap( *reinterpret_cast<uint32_t*>( executable_buffer ) ) + ( some_offset * 4 ) + 2;
 
-            e.ah = 0x3F;
-            e.cx = 4;
-            e.intr_0x21(); // DOS - 2 + -READ FROM FILE WITH HANDLE
-                           // BX = file handle, CX = number of bytes to read
-                           // DS:DX->buffer
-            assert( !e.flags.carry && ( e.ax == 4 ) );
-
-            const uint32_t pos = swap( *e.dword_ptr( executable_buffer_ ) ) + ( some_offset * 4 ) + 2;
-            e.dx = lo( pos );
-            e.cx = hi( pos );
-
-            e.al = 0;
-            e.ah = 0x42;
-            e.intr_0x21(); // DOS - 2 + -MOVE FILE READ / WRITE POINTER(LSEEK)
-                           // AL = method: offset from beginning of file
-            assert( !e.flags.carry );
+            assert( fseek( fp, pos, SEEK_SET ) == 0 );
         }
 
-        e.lds( e.dx, executable_buffer_ );
-        e.ah = 0x3F;
-        e.cx = 8;
-        e.intr_0x21(); // DOS - 2 + -READ FROM FILE WITH HANDLE
-                       // BX = file handle, CX = number of bytes to read
-                       // DS:DX->buffer
-        assert( !e.flags.carry && ( e.ax == 8 ) );
+        assert( fread( executable_buffer, 1, 8, fp ) == 8 );
 
-        const uint32_t* val32 = e.dword_ptr( executable_buffer_ );
+        const uint32_t* val32 = reinterpret_cast<uint32_t*>( executable_buffer );
         const uint32_t ofs1 = swap( val32[0] );
         const uint32_t ofs2 = swap( val32[1] );
 
         const uint32_t distance = ( ofs2 - ofs1 ) + 16;
-        emu_t::ptr16_t another_pointer2 = emu_t::ptr16( emu_t::offset32( executable_buffer_ ) + distance );
 
-        e.si = lo( ofs1 );
-        e.di = hi( ofs1 );
-        emu_t::ptr16_t also_a_pointer;
-        also_a_pointer = 0;
+        uint8_t* another_pointer2 = executable_buffer + distance;
 
-        e.lds( e.dx, another_pointer2 );
-        do
-        {
-            normalize_ptr( e.ds, e.dx );
-            e.ax = 48000;
-            e.sub( e.si, 48000 );
-            e.sbb( e.di, 0 );
-            if( e.flags.carry )
-            {
-                e.add( e.si, e.ax );
-                e.ax = e.si;
-                e.si = 0;
-                e.di = 0;
-            }
+        size_t read_bytes = fread( another_pointer2, 1, ofs1, fp );
+        assert( read_bytes == ofs1 );
 
-            e.cx = e.ax;
-            e.ah = 0x3F;
-            e.intr_0x21(); // DOS - 2 + -READ FROM FILE WITH HANDLE
-                           // BX = file handle, CX = number of bytes to read
-                           // DS:DX->buffer
-            assert( !e.flags.carry );
-
-            e.add( also_a_pointer.offset, e.ax );
-            e.adc( also_a_pointer.segment, 0 );
-            e.add( e.dx, e.ax );
-            assert( e.ax == e.cx );
-            e.ax = e.si;
-        } while( ( e.ax | e.di ) != 0 );
-
-        e.ah = 0x3E;
-        e.intr_0x21(); // DOS - 2 + -CLOSE A FILE WITH HANDLE
-                       // BX = file handle
-        assert( ( byte_55_ & 0x18 ) != 0 );
+        assert( fclose( fp ) == 0 );
 
         const emu_t::ptr16_t exec_buff = emu_t::ptr16( emu_t::offset32( executable_buffer_ ) + ofs2 + 16 );
         uint8_t* src_buffer = e.byte_ptr( exec_buff.segment + 1, 0 );
@@ -316,9 +246,7 @@ namespace cleanup
         executable_buffer_ = exec_buff;
 
         // some sort of uncompression, after that the executable is +sizeof(PSP) behind executable_buffer_begin
-        emu_GAME_START_sub_3( src_buffer, dest_buffer, e.byte_ptr( another_pointer2 ) );
-
-        return;
+        emu_GAME_START_sub_3( src_buffer, dest_buffer, another_pointer2 );
     }
 
 } // namespace cleanup

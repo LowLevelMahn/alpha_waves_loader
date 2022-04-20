@@ -34,7 +34,7 @@ struct config_tat_t
 
     struct executable_info_t
     {
-        std::array<uint8_t, 18> filename;
+        std::array<char, 18> filename;
         uint8_t byte_12h{};
         uint8_t byte_13h{};
         uint8_t byte_14h{};
