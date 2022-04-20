@@ -51,7 +51,7 @@ namespace cleanup
             const uint16_t intr1_offset_value = *e.word_ptr( 0, 4 );
             assert( intr1_offset_value == 0 ); // seems to be always 0
             e.sub( dest_buffer.offset, intr1_offset_value );
-            normalize_ptr( e.es, e.di );
+            normalize_ptr( dest_buffer );
             e.add( dest_buffer.offset, intr1_offset_value );
 
             normalize_ptr( another_pointer2 );
@@ -78,19 +78,23 @@ namespace cleanup
                 {
                     const uint8_t ofs = i + 1;
                     val_4 = *e.byte_ptr( src_buffer.segment, ofs + 0x200 );
-                    e.ah = 0;
                     uint8_t* at0x301 = e.byte_ptr( src_buffer.segment, val_4 + 0x301 );
                     *e.byte_ptr( src_buffer.segment, ofs + 0x402 ) = *at0x301;
                     *at0x301 = ofs;
                 }
 
-                std::stack<uint16_t> stack;
+                struct stack_vals_t
+                {
+                    uint8_t val0{};
+                    uint8_t val1{};
+                };
+
+                std::stack<stack_vals_t> stack;
                 uint8_t val_3 = 0;
 
                 auto loc_128_block = [&e, &src_buffer, &stack, &val_3, &val_4]() {
-                    const uint16_t val = ( val_3 << 8 ) + *e.byte_ptr( src_buffer.segment, val_3 + 0x100 );
-                    stack.push( val ); //  hi(val) can be != 0 here
-
+                    stack.push(
+                        { val_3, *e.byte_ptr( src_buffer.segment, val_3 + 0x100 ) } ); //  hi(val) can be != 0 here
                     val_4 = *e.byte_ptr( src_buffer.segment, val_3 );
                 };
 
@@ -98,18 +102,16 @@ namespace cleanup
                     assert( !e.flags.dir );
                     *e.byte_ptr( dest_buffer++ ) = val_4;
 
-                    uint16_t stack_val = stack.top();
-                    // e.ah can be != 0 here
+                    const stack_vals_t stack_val = stack.top();
                     stack.pop();
 
-                    if( stack_val == 0 )
+                    if( ( stack_val.val0 == 0 ) && ( stack_val.val1 == 0 ) )
                     {
                         return true; // goto loc_124;
                     }
 
-                    val_3 = hi( stack_val );
-                    val_4 = lo( stack_val );
-                    e.ah = 0;
+                    val_3 = stack_val.val0;
+                    val_4 = stack_val.val1;
                     return false;
                 };
 
@@ -128,14 +130,14 @@ namespace cleanup
                     {
                         val_3 = val301_0;
 
-                        stack.push( 0 );
+                        stack.push( { 0, 0 } );
 
                         loc_128_block(); // also e.push(e.ax)
 
                         bool end_inner_loop = false;
                         while( true )
                         {
-                            uint8_t ofs1 = val_4;
+                            const uint8_t ofs1 = val_4;
 
                             const uint8_t val301_1 = *e.byte_ptr( src_buffer.segment, ofs1 + 0x301 );
 
@@ -194,7 +196,7 @@ namespace cleanup
             {
                 assert( !e.flags.dir );
                 ::memcpy( e.memory( dest_buffer ), e.memory( another_pointer2 ), something.len2 );
-                e.si += something.len2;
+                src_buffer += something.len2;
                 dest_buffer += something.len2;
                 another_pointer2 += something.len2;
             }
