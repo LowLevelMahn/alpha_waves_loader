@@ -246,6 +246,11 @@ public:
         return memory<uint32_t>( segment_, offset_ );
     }
 
+    uint32_t* dword_ptr( const ptr16_t ptr_ )
+    {
+        return dword_ptr( ptr_.segment, ptr_.offset );
+    }
+
     uint16_t* word_ptr( const ptr16_t ptr_ )
     {
         return word_ptr( ptr_.segment, ptr_.offset );

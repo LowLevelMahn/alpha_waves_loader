@@ -200,11 +200,7 @@ namespace cleanup
                                    emu_t::ptr16_t& executable_buffer_,
                                    const slice_t& executable_buffer_slice_ )
     {
-        uint16_t word_44{};
-        uint16_t word_45{};
-
         // these are not all ptr16 but more lo/hi int32 offsets (the pair looked liked pointers)
-        emu_t::ptr16_t some_game_ptr;
         emu_t::ptr16_t another_far_ptr;
         emu_t::ptr16_t another_pointer2;
         emu_t::ptr16_t also_a_pointer;
@@ -275,37 +271,18 @@ namespace cleanup
                        // DS:DX->buffer
         assert( !e.flags.carry && ( e.ax == 8 ) );
 
-        e.lds( e.bp, executable_buffer_ );
+        const uint32_t* val32 = e.dword_ptr( executable_buffer_ );
+        const uint32_t ofs1 = swap( val32[0] );
+        const uint32_t ofs2 = swap( val32[1] );
 
-        const uint16_t* val16_2 = e.word_ptr( e.ds, e.bp );
-        word_44 = swap( val16_2[1] );
-        word_45 = swap( val16_2[0] );
-        e.si = some_game_ptr.offset = swap( val16_2[3] );
-        e.di = some_game_ptr.segment = swap( val16_2[2] );
-        e.lds( e.cx, executable_buffer_ );
-        e.add( e.si, e.cx );
-        e.adc( e.di, 0 );
-        e.sub( e.si, word_44 );
-        e.sbb( e.di, word_45 );
-        e.si += 16;
-        e.adc( e.di, 0 );
-        e.cx = e.si;
+        const uint32_t distance = ( ofs2 - ofs1 ) + 16;
+        another_pointer2 = another_far_ptr = emu_t::ptr16( emu_t::offset32( executable_buffer_ ) + distance );
 
-        long_div( e.di, e.si, 16 );
-        assert( e.di == 0 );
-
-        e.ax = e.ds;
-        e.add( e.ax, e.si );
-        e.ds = e.ax;
-        e.cx &= 0x0F;
-
-        another_pointer2.offset = another_far_ptr.offset = e.cx;
-        another_pointer2.segment = another_far_ptr.segment = e.ds;
-        e.si = word_44;
-        e.di = word_45;
+        e.si = lo( ofs1 );
+        e.di = hi( ofs1 );
         also_a_pointer = 0;
-        e.lds( e.dx, another_far_ptr );
 
+        e.lds( e.dx, another_far_ptr );
         do
         {
             normalize_ptr( e.ds, e.dx );
@@ -343,7 +320,8 @@ namespace cleanup
 
         another_far_ptr.offset = e.di;
         another_far_ptr.segment = e.es;
-        e.lds( e.si, some_game_ptr );
+        e.ds = hi( ofs2 );
+        e.si = lo( ofs2 );
 
         e.cx = e.ds;
         e.si += 16;
