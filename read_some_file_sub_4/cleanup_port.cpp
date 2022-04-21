@@ -16,11 +16,6 @@ namespace cleanup
 
     void emu_GAME_START_sub_3( uint8_t* src_buffer_, uint8_t* dest_buffer_, uint8_t* another_pointer2_ )
     {
-#if 1
-        size_t distance = src_buffer_ - dest_buffer_; // encoded size?
-        int brk = 1;
-#endif
-
         while( true )
         {
             ::memset( &src_buffer_[0x301], 0, 128 * sizeof( uint16_t ) ); // clean 256 bytes
@@ -181,19 +176,26 @@ namespace cleanup
 
         if( ( exec_info_->byte_13h & 0x10 ) != 0 )
         {
-            assert( fread( executable_buffer, 1, 2, fp ) == 2 );
+            size_t read_bytes = fread( executable_buffer, 1, 2, fp );
+            assert( read_bytes == 2 );
+
             uint16_t some_offset = swap( *reinterpret_cast<uint16_t*>( executable_buffer ) );
             const uint32_t pos2 = exec_info_->byte_12h * 4;
 
-            assert( fseek( fp, pos2, SEEK_CUR ) == 0 );
+            int res = fseek( fp, pos2, SEEK_CUR );
+            assert( res == 0 );
 
-            assert( fread( executable_buffer, 1, 4, fp ) == 4 );
+            read_bytes = fread( executable_buffer, 1, 4, fp );
+            assert( read_bytes == 4 );
+
             const uint32_t pos = swap( *reinterpret_cast<uint32_t*>( executable_buffer ) ) + ( some_offset * 4 ) + 2;
 
-            assert( fseek( fp, pos, SEEK_SET ) == 0 );
+            res = fseek( fp, pos, SEEK_SET );
+            assert( res == 0 );
         }
 
-        assert( fread( executable_buffer, 1, 8, fp ) == 8 );
+        size_t read_bytes = fread( executable_buffer, 1, 8, fp );
+        assert( read_bytes == 8 );
 
         const uint32_t* val32 = reinterpret_cast<uint32_t*>( executable_buffer );
         const uint32_t ofs1 = swap( val32[0] );
@@ -201,17 +203,22 @@ namespace cleanup
 
         uint8_t* another_pointer2 = executable_buffer + ( ofs2 - ofs1 ) + 16;
 
-        size_t read_bytes = fread( another_pointer2, 1, ofs1, fp );
+        read_bytes = fread( another_pointer2, 1, ofs1, fp );
         assert( read_bytes == ofs1 );
 
-        assert( fclose( fp ) == 0 );
+        int res = fclose( fp );
+        assert( res == 0 );
 
         const size_t ofs3 = ofs2 + 16;
         executable_buffer_ = e.ptr_to_ptr16( executable_buffer + ofs3 );
 
         const size_t ofs4 = ( ( ofs3 / 16 ) + 1 ) * 16; // align to segment adress
         uint8_t* src_buffer = executable_buffer + ofs4;
+        uint8_t* dest_buffer = executable_buffer;
         //---
+
+        // ofs4, ofs3 or ofs2 = encoded size?
+        // ofs2 = exact ae_vga.exe size or the possible size of adlib.com
 
         // some sort of uncompression, after that the executable is +sizeof(PSP) behind executable_buffer_begin
         emu_GAME_START_sub_3( src_buffer, executable_buffer, another_pointer2 );

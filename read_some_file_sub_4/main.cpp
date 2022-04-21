@@ -93,6 +93,9 @@ std::vector<uint8_t> extract_executable( const std::string& current_dir_,
 
     test_func_( e, e.memory<config_tat_t::executable_info_t>( e.cs, e.bx ), executable_buffer_ptr16 );
 
+    const size_t distance =
+        emu_t::offset32( executable_buffer_ptr16 ) - emu_t::offset32( executable_buffer_begin_ptr16 );
+
     auto executable_begin = e.byte_ptr( executable_buffer_begin ) + 0x100;
     auto executable_end = executable_begin + ( executable_buffer_size - 0x100 );
     return { executable_begin, executable_end };
