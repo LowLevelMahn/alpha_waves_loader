@@ -172,34 +172,38 @@ namespace cleanup
         FILE* fp = fopen( file_path.c_str(), "rb" );
         assert( fp );
 
+        //std::vector<uint8_t> prog_cc1_content = read_binary_file( file_path );
+
         assert( ( exec_info_->byte_13h & 0x18 ) != 0 );
 
         if( ( exec_info_->byte_13h & 0x10 ) != 0 )
         {
-            size_t read_bytes = fread( executable_buffer, 1, 2, fp );
-            assert( read_bytes == 2 );
+            uint16_t file_offset1{ 0 };
+            size_t read_bytes = fread( &file_offset1, 1, sizeof( file_offset1 ), fp );
+            assert( read_bytes == sizeof( file_offset1 ) );
 
-            uint16_t some_offset = swap( *reinterpret_cast<uint16_t*>( executable_buffer ) );
             const uint32_t pos2 = exec_info_->byte_12h * 4;
 
             int res = fseek( fp, pos2, SEEK_CUR );
             assert( res == 0 );
 
-            read_bytes = fread( executable_buffer, 1, 4, fp );
-            assert( read_bytes == 4 );
+            uint32_t offset2{};
+            read_bytes = fread( &offset2, 1, sizeof( offset2 ), fp );
+            assert( read_bytes == sizeof( offset2 ) );
 
-            const uint32_t pos = swap( *reinterpret_cast<uint32_t*>( executable_buffer ) ) + ( some_offset * 4 ) + 2;
+            const uint32_t pos = swap( offset2 ) + ( swap( file_offset1 ) * 4 ) + 2;
 
             res = fseek( fp, pos, SEEK_SET );
             assert( res == 0 );
         }
 
-        size_t read_bytes = fread( executable_buffer, 1, 8, fp );
-        assert( read_bytes == 8 );
+        uint32_t file_offsets2[2];
+        size_t read_bytes = fread( file_offsets2, 1, sizeof( file_offsets2 ), fp );
+        assert( read_bytes == sizeof( file_offsets2 ) );
 
-        const uint32_t* val32 = reinterpret_cast<uint32_t*>( executable_buffer );
-        const uint32_t ofs1 = swap( val32[0] );
-        const uint32_t ofs2 = swap( val32[1] );
+        // (un)packed sizes?
+        const uint32_t ofs1 = swap( file_offsets2[0] );
+        const uint32_t ofs2 = swap( file_offsets2[1] );
 
         uint8_t* another_pointer2 = executable_buffer + ( ofs2 - ofs1 ) + 16;
 
