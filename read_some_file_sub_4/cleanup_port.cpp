@@ -199,9 +199,7 @@ namespace cleanup
         const uint32_t ofs1 = swap( val32[0] );
         const uint32_t ofs2 = swap( val32[1] );
 
-        const uint32_t distance = ( ofs2 - ofs1 ) + 16;
-
-        uint8_t* another_pointer2 = executable_buffer + distance;
+        uint8_t* another_pointer2 = executable_buffer + ( ofs2 - ofs1 ) + 16;
 
         size_t read_bytes = fread( another_pointer2, 1, ofs1, fp );
         assert( read_bytes == ofs1 );
@@ -209,11 +207,10 @@ namespace cleanup
         assert( fclose( fp ) == 0 );
 
         const size_t ofs3 = ofs2 + 16;
-        uint8_t* exec_buff2 = executable_buffer + ofs3;
+        executable_buffer_ = e.ptr_to_ptr16( executable_buffer + ofs3 );
+
         const size_t ofs4 = ( ( ofs3 / 16 ) + 1 ) * 16; // align to segment adress
         uint8_t* src_buffer = executable_buffer + ofs4;
-
-        executable_buffer_ = e.ptr_to_ptr16( exec_buff2 );
         //---
 
         // some sort of uncompression, after that the executable is +sizeof(PSP) behind executable_buffer_begin
