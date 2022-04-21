@@ -166,26 +166,24 @@ namespace cleanup
     }
 
     void emu_read_some_file_sub_4( emu_t& e,
-                                   const uint8_t /*byte_55_*/,
-                                   emu_t::ptr16_t& executable_buffer_,
-                                   const slice_t& executable_buffer_slice_ )
+                                   config_tat_t::executable_info_t* exec_info_,
+                                   emu_t::ptr16_t& executable_buffer_ )
     {
-        const config_tat_t::executable_info_t* exec_info = e.memory<config_tat_t::executable_info_t>( e.cs, e.bx );
         uint8_t* executable_buffer = e.byte_ptr( executable_buffer_ );
 
-        const std::string filename( exec_info->filename.data() );
+        const std::string filename( exec_info_->filename.data() );
         const std::string game_dir = R"(F:\projects\fun\dos_games_rev\alpha_waves_dev\tests\alpha)";
         const std::string file_path = game_dir + "\\" + filename;
         FILE* fp = fopen( file_path.c_str(), "rb" );
         assert( fp );
 
-        assert( ( exec_info->byte_13h & 0x18 ) != 0 );
+        assert( ( exec_info_->byte_13h & 0x18 ) != 0 );
 
-        if( ( exec_info->byte_13h & 0x10 ) != 0 )
+        if( ( exec_info_->byte_13h & 0x10 ) != 0 )
         {
             assert( fread( executable_buffer, 1, 2, fp ) == 2 );
             uint16_t some_offset = swap( *reinterpret_cast<uint16_t*>( executable_buffer ) );
-            const uint32_t pos2 = exec_info->byte_12h * 4;
+            const uint32_t pos2 = exec_info_->byte_12h * 4;
 
             assert( fseek( fp, pos2, SEEK_CUR ) == 0 );
 
@@ -210,23 +208,16 @@ namespace cleanup
 
         assert( fclose( fp ) == 0 );
 
-        assert( e.byte_ptr( executable_buffer_ ) == executable_buffer );
+        const size_t ofs3 = ofs2 + 16;
+        uint8_t* exec_buff2 = executable_buffer + ofs3;
+        const size_t ofs4 = ( ( ofs3 / 16 ) + 1 ) * 16; // align to segment adress
+        uint8_t* src_buffer = executable_buffer + ofs4;
 
-        const emu_t::ptr16_t exec_buff = emu_t::ptr16( emu_t::offset32( executable_buffer_ ) + ofs2 + 16 );
-        if( exec_buff.offset != 0 )
-        {
-            //sometimes
-            //assert( false );
-        }
-        uint8_t* src_buffer = e.byte_ptr( exec_buff.segment + 1, 0 ); // some sort of align
-
-        //printf( "distance: %u\n", src_buffer - e.byte_ptr( exec_buff ) );
-
-        uint8_t* dest_buffer = e.byte_ptr( executable_buffer_ );
-        executable_buffer_ = exec_buff;
+        executable_buffer_ = e.ptr_to_ptr16( exec_buff2 );
+        //---
 
         // some sort of uncompression, after that the executable is +sizeof(PSP) behind executable_buffer_begin
-        emu_GAME_START_sub_3( src_buffer, dest_buffer, another_pointer2 );
+        emu_GAME_START_sub_3( src_buffer, executable_buffer, another_pointer2 );
     }
 
 } // namespace cleanup

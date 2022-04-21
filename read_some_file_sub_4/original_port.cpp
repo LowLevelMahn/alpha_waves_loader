@@ -6,7 +6,7 @@
 
 namespace original
 {
-    void emu_GAME_START_sub_3( emu_t& e, emu_t::ptr16_t another_pointer2, const slice_t& executable_buffer_slice_ )
+    void emu_GAME_START_sub_3( emu_t& e, emu_t::ptr16_t another_pointer2 )
     {
         std::array<uint8_t, 4> byte_57{}; // gets written
         uint8_t& byte_569 = byte_57[1];
@@ -240,9 +240,8 @@ namespace original
     }
 
     void emu_read_some_file_sub_4( emu_t& e,
-                                   const uint8_t byte_55_,
-                                   emu_t::ptr16_t& executable_buffer_,
-                                   const slice_t& executable_buffer_slice_ )
+                                   config_tat_t::executable_info_t* exec_info_,
+                                   emu_t::ptr16_t& executable_buffer_ )
     {
         uint16_t word_44{};
         uint16_t word_45{};
@@ -278,7 +277,7 @@ namespace original
         e.si = e.bx;
         e.bx = e.ax;
         e.ah = 0x3F;
-        e.cl = byte_55_;
+        e.cl = exec_info_->byte_13h;
         e.test( e.cl, 0x18 );
         if( e.jnz() )
             goto loc_579;
@@ -470,7 +469,7 @@ namespace original
         e.ah = 0x3E;
         e.intr_0x21(); // DOS - 2 + -CLOSE A FILE WITH HANDLE
         // BX = file handle
-        e.test( byte_55_, 0x18 );
+        e.test( exec_info_->byte_13h, 0x18 );
         if( e.jz() )
             goto loc_587;
         e.les( e.di, executable_buffer_ );
@@ -506,7 +505,7 @@ namespace original
         e.cld();
 
         // some sort of uncompression, after that the executable is +sizeof(PSP) behind executable_buffer_begin
-        emu_GAME_START_sub_3( e, another_pointer2, executable_buffer_slice_ );
+        emu_GAME_START_sub_3( e, another_pointer2 );
 
         e.clc();
         return;
