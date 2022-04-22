@@ -70,7 +70,7 @@ std::vector<uint8_t> extract_executable( const std::string& current_dir_,
 
     e.dos_current_dir( current_dir_ );
 
-    std::fill( e.memory().begin(), e.memory().end(), 0x00 );
+    std::fill( e.memory().begin(), e.memory().end(), 0xBB );
 
     const emu_t::ptr16_t block_begin_ptr16( 0, 0x100D );
     const size_t blocks_begin = emu_t::offset32( block_begin_ptr16 );
@@ -152,7 +152,7 @@ int main()
         }
     }
 
-    for( size_t gfx_nr = 0; gfx_nr < config_tat_t::GFX_COUNT; ++gfx_nr )
+    for( size_t gfx_nr = 0; gfx_nr < GFX_COUNT; ++gfx_nr )
     {
         auto& blocks = config_tat->gfx_info[gfx_nr].executable_info;
 
@@ -174,6 +174,7 @@ int main()
         }
     }
 
+#if 0
     auto extract = [&alpha_waves_filepath]( config_tat_t::gfx_infos_t& gfx_infos_, gfx_type_t gfx_type_,
                                             exec_type_t exec_type_ ) {
         return original_extract_executable( alpha_waves_filepath, gfx_infos_, static_cast<size_t>( gfx_type_ ),
@@ -190,6 +191,7 @@ int main()
     std::vector<uint8_t> tandy_game = extract( config_tat->gfx_info, gfx_type_t::Tandy, exec_type_t::Game );
     std::vector<uint8_t> hercules_game = extract( config_tat->gfx_info, gfx_type_t::Hercules, exec_type_t::Game );
     std::vector<uint8_t> vga_game = extract( config_tat->gfx_info, gfx_type_t::VGA, exec_type_t::Game );
+#endif
 
     return 0;
 }

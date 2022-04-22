@@ -169,36 +169,41 @@ namespace cleanup
         const std::string filename( exec_info_->filename.data() );
         const std::string game_dir = R"(F:\projects\fun\dos_games_rev\alpha_waves_dev\tests\alpha)";
         const std::string file_path = game_dir + "\\" + filename;
+
+        const std::vector<uint8_t> prog_cc1_content = read_binary_file( file_path );
+        assert( prog_cc1_content.size() == sizeof( progs_cc1_t ) );
+        const progs_cc1_t* progs_cc1 = reinterpret_cast<const progs_cc1_t*>( prog_cc1_content.data() );
+
         FILE* fp = fopen( file_path.c_str(), "rb" );
         assert( fp );
 
-        //std::vector<uint8_t> prog_cc1_content = read_binary_file( file_path );
-
         assert( ( exec_info_->byte_13h & 0x18 ) != 0 );
+        assert( ( exec_info_->byte_13h & 0x10 ) != 0 );
 
-        if( ( exec_info_->byte_13h & 0x10 ) != 0 )
-        {
-            uint16_t file_offset1{ 0 };
-            size_t read_bytes = fread( &file_offset1, 1, sizeof( file_offset1 ), fp );
-            assert( read_bytes == sizeof( file_offset1 ) );
+        //---
 
-            const uint32_t pos2 = exec_info_->byte_12h * 4;
+        uint16_t file_offset1{ 0 };
+        size_t read_bytes = fread( &file_offset1, 1, sizeof( file_offset1 ), fp );
+        assert( read_bytes == sizeof( file_offset1 ) );
 
-            int res = fseek( fp, pos2, SEEK_CUR );
-            assert( res == 0 );
+        const uint32_t pos2 = exec_info_->byte_12h * 4;
 
-            uint32_t offset2{};
-            read_bytes = fread( &offset2, 1, sizeof( offset2 ), fp );
-            assert( read_bytes == sizeof( offset2 ) );
+        int res = fseek( fp, pos2, SEEK_CUR );
+        assert( res == 0 );
 
-            const uint32_t pos = swap( offset2 ) + ( swap( file_offset1 ) * 4 ) + 2;
+        uint32_t offset2{};
+        read_bytes = fread( &offset2, 1, sizeof( offset2 ), fp );
+        assert( read_bytes == sizeof( offset2 ) );
 
-            res = fseek( fp, pos, SEEK_SET );
-            assert( res == 0 );
-        }
+        const uint32_t pos = swap( offset2 ) + ( swap( file_offset1 ) * 4 ) + 2;
+
+        res = fseek( fp, pos, SEEK_SET );
+        assert( res == 0 );
+
+        //---
 
         uint32_t file_offsets2[2];
-        size_t read_bytes = fread( file_offsets2, 1, sizeof( file_offsets2 ), fp );
+        read_bytes = fread( file_offsets2, 1, sizeof( file_offsets2 ), fp );
         assert( read_bytes == sizeof( file_offsets2 ) );
 
         // (un)packed sizes?
@@ -210,7 +215,7 @@ namespace cleanup
         read_bytes = fread( another_pointer2, 1, ofs1, fp );
         assert( read_bytes == ofs1 );
 
-        int res = fclose( fp );
+        res = fclose( fp );
         assert( res == 0 );
 
         const size_t ofs3 = ofs2 + 16;

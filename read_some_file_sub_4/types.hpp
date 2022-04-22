@@ -26,12 +26,12 @@ enum class exec_type_t : size_t
     Game = 3
 };
 
+constexpr size_t GFX_COUNT = 5; // 0=CGA, 1=EGA, 2=Tandy, 3=Hercules, 4=VGA
+
 #pragma pack( push, 1 )
 
 struct config_tat_t
 {
-    static constexpr size_t GFX_COUNT = 5; // 0=CGA, 1=EGA, 2=Tandy, 3=Hercules, 4=VGA
-
     struct executable_info_t
     {
         std::array<char, 18> filename;
@@ -88,5 +88,77 @@ struct config_tat_t
     std::array<char, 21> disk_name; // " \0x2ALPHA WAVES DISK 1\0x0"
 };
 static_assert( sizeof( config_tat_t ) == 0x233, "wrong size" );
+
+//000000: uint16_t = 6
+//
+//uint32_t[6]
+//000002: uint32_t PC Buz data offset, if executable_info_t::byte_12h = 0
+//000006: uint32_t Tandy data offset, if executable_info_t::byte_12h = 1
+//000010: uint32_t Adlib data offset, if executable_info_t::byte_12h = 2
+//000014: uint32_t CGA/Hercules data offset, if executable_info_t::byte_12h = 3
+//000018: uint32_t EGA/VGA, if executable_info_t::byte_12h = 4
+//000022: uint32_t Tandy, if executable_info_t::byte_12h = 5
+//
+//000026: 2*uint32_t PC Buz
+//000034: 2422
+//
+//002456: 2*uint32_t
+//002464: 2885        Tandy
+//
+//005349: 2*uint32_t
+//005357: 3053        Adlib
+//
+//008410: 2*uint32_t
+//008418: 51265       CGA,Hercules
+//
+//059683: 2*uint32_t
+//059691: 51720       Tandy
+//
+//111411: 2*uint32_t
+//111419: 50404       EGA,VGA
+
+template <size_t Size>
+struct exec_data_t
+{
+    uint32_t unknown1;
+    uint32_t unknown2;
+    uint8_t data[Size];
+};
+
+struct progs_cc1_t
+{
+    //0:
+    uint16_t unknown0;
+    //2:
+    std::array<uint32_t, 6> unknown1;
+    //26
+    //26 + unknown1[n] offset
+    struct sound_t
+    {
+        exec_data_t<2422> pc_buz;
+        exec_data_t<2885> tandy;
+        exec_data_t<3053> adlib;
+    };
+
+    sound_t sound;
+
+    struct gfx_t
+    {
+        exec_data_t<51265> cga_hercules;
+        exec_data_t<51720> tandy;
+        exec_data_t<50404> ega_vga;
+    };
+    gfx_t gfx;
+};
+
+static_assert( sizeof( progs_cc1_t ) == 161823, "wrong size" );
+static_assert( offsetof( progs_cc1_t, unknown0 ) == 0, "wrong offset" );
+static_assert( offsetof( progs_cc1_t, unknown1 ) == 2, "wrong offset" );
+static_assert( offsetof( progs_cc1_t, sound.pc_buz ) == 26, "wrong offset" );
+static_assert( offsetof( progs_cc1_t, sound.tandy ) == 2456, "wrong offset" );
+static_assert( offsetof( progs_cc1_t, sound.adlib ) == 5349, "wrong offset" );
+static_assert( offsetof( progs_cc1_t, gfx.cga_hercules ) == 8410, "wrong offset" );
+static_assert( offsetof( progs_cc1_t, gfx.tandy ) == 59683, "wrong offset" );
+static_assert( offsetof( progs_cc1_t, gfx.ega_vga ) == 111411, "wrong offset" );
 
 #pragma pack( pop )
