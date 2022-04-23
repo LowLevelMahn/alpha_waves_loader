@@ -153,9 +153,9 @@ int main()
         }
     }
 
-#define TEST_FULL() ( false )
+#define TEST_FULL() ( true )
 
-#if TEST_FULL
+#if TEST_FULL()
     for( size_t gfx_nr = 0; gfx_nr < GFX_COUNT; ++gfx_nr )
 #else
     size_t gfx_nr = 0;
@@ -163,7 +163,7 @@ int main()
     {
         auto& blocks = config_tat->gfx_info[gfx_nr].executable_info;
 
-#if TEST_FULL
+#if TEST_FULL()
         for( int exec_nr = 0; exec_nr < config_tat_t::gfx_info_t::EXECUTABLE_COUNT; ++exec_nr )
 #else
         int exec_nr = 2;
