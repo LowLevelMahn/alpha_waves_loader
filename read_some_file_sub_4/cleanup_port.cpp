@@ -14,22 +14,26 @@ namespace cleanup
 #pragma pack( pop )
     static_assert( sizeof( pack_block_t ) == 4, "wrong size" );
 
-    void emu_GAME_START_sub_3( uint8_t* uncompressed_, uint8_t* compressed_ )
+    void emu_GAME_START_sub_3( std::vector<uint8_t>& uncompressed_buffer_,
+                               const std::vector<uint8_t>& compressed_buffer_ )
     {
+        uint8_t* uncompressed = uncompressed_buffer_.data();
+        const uint8_t* compressed = compressed_buffer_.data();
+
         // tests
-        uint8_t* org_uncompressed = uncompressed_;
-        uint8_t* org_compressed = compressed_;
+        uint8_t* org_uncompressed = uncompressed;
+        const uint8_t* org_compressed = compressed;
 
         while( true )
         {
             {
                 // dest_buffer_ and another_pointer2_ do only grow
                 assert( org_uncompressed >= org_uncompressed );
-                assert( compressed_ >= org_compressed );
+                assert( compressed >= org_compressed );
             }
 
-            const pack_block_t pack_block = *reinterpret_cast<pack_block_t*>( compressed_ );
-            compressed_ += sizeof( pack_block );
+            const pack_block_t pack_block = *reinterpret_cast<const pack_block_t*>( compressed );
+            compressed += sizeof( pack_block );
 
             printf( "pack_block: packed_size: 0x%02X, flag: 0x%02X, data_len: 0x%04X\n", pack_block.packed_size,
                     pack_block.flag, pack_block.data_len );
@@ -42,9 +46,9 @@ namespace cleanup
 
                 printf( " uncompressed data\n" );
 
-                ::memcpy( uncompressed_, compressed_, pack_block.data_len );
-                uncompressed_ += pack_block.data_len;
-                compressed_ += pack_block.data_len;
+                ::memcpy( uncompressed, compressed, pack_block.data_len );
+                uncompressed += pack_block.data_len;
+                compressed += pack_block.data_len;
             }
             else
             {
@@ -56,20 +60,20 @@ namespace cleanup
 					uint8_t flag
 					uint16_t data_len
 				
-				uint8_t data1[pack_block.packed_size] -> src[0x201]
-				uint8_t data2[pack_block.packed_size] -> src[0x001]
-				uint8_t data3[pack_block.packed_size] -> src[0x101]
-				uint8_t data4[pack_block.packed_size] -> im loop "just loop n times" verarbeitet
+				uint8_t data1[1 + pack_block.packed_size]
+				uint8_t data2[1 + pack_block.packed_size]
+				uint8_t data3[1 + pack_block.packed_size]
+				uint8_t data4[1 + pack_block.packed_size]
 
 				pack_block 1
 					uint8_t packed_size
 					uint8_t flag
 					uint16_t data_len
 
-				uint8_t data1[pack_block.packed_size] -> src[0x201]
-				uint8_t data2[pack_block.packed_size] -> src[0x001]
-				uint8_t data3[pack_block.packed_size] -> src[0x101]
-				uint8_t data4[pack_block.packed_size] -> im loop "just loop n times" verarbeitet
+				uint8_t data1[1 + pack_block.packed_size]
+				uint8_t data2[1 + pack_block.packed_size]
+				uint8_t data3[1 + pack_block.packed_size]
+				uint8_t data4[1 + pack_block.packed_size]
 
 				pack_block 2
 				...
@@ -85,14 +89,14 @@ namespace cleanup
                 std::array<uint8_t, 256> table3{}; // needs to be 0 filled
                 std::vector<uint8_t> table4( 1 + pack_block.packed_size );
 
-                ::memcpy( &table2[1], compressed_, pack_block.packed_size );
-                compressed_ += pack_block.packed_size;
+                ::memcpy( &table2[1], compressed, pack_block.packed_size );
+                compressed += pack_block.packed_size;
 
-                ::memcpy( &table0[1], compressed_, pack_block.packed_size );
-                compressed_ += pack_block.packed_size;
+                ::memcpy( &table0[1], compressed, pack_block.packed_size );
+                compressed += pack_block.packed_size;
 
-                ::memcpy( &table1[1], compressed_, pack_block.packed_size );
-                compressed_ += pack_block.packed_size;
+                ::memcpy( &table1[1], compressed, pack_block.packed_size );
+                compressed += pack_block.packed_size;
 
                 for( uint16_t i = 0; i < pack_block.packed_size; ++i )
                 {
@@ -127,8 +131,8 @@ namespace cleanup
                     assert( ( val_4 >= 0 ) && ( val_4 <= 255 ) );
                 };
 
-                auto loc_572_block = [&uncompressed_, &stack, &val_3, &val_4]() {
-                    *uncompressed_++ = val_4;
+                auto loc_572_block = [&uncompressed, &stack, &val_3, &val_4]() {
+                    *uncompressed++ = val_4;
 
                     const stack_vals_t stack_val = stack.top();
                     stack.pop();
@@ -145,7 +149,7 @@ namespace cleanup
 
                 for( uint16_t i = 0; i < pack_block.data_len; ++i ) // just loop n times
                 {
-                    val_3 = *compressed_++;
+                    val_3 = *compressed++;
                     assert( ( val_3 >= 0 ) && ( val_3 <= 255 ) );
 
                     const uint8_t val301_0 = table3[val_3];
@@ -153,7 +157,7 @@ namespace cleanup
 
                     if( val301_0 == 0 )
                     {
-                        *uncompressed_++ = val_3;
+                        *uncompressed++ = val_3;
                     }
                     else
                     {
@@ -277,18 +281,15 @@ namespace cleanup
             return exec_data_slice_t{};
         }( exec_info_->byte_12h );
 
-        const size_t another_pointer2_ofs = ( slice.unpacked_data_size - slice.data_size ) + 16;
-        uint8_t* compress_data = executable_buffer + another_pointer2_ofs;
-
-        ::memcpy( compress_data, slice.data, slice.data_size );
-
-        const size_t result_executable_buffer_ofs = slice.unpacked_data_size + 16;
-        executable_buffer_ = e.ptr_to_ptr16( executable_buffer + result_executable_buffer_ofs );
-
-        uint8_t* uncompressed_data = executable_buffer;
+        std::vector<uint8_t> compress_data( slice.data, slice.data + slice.data_size );
+        std::vector<uint8_t> uncompressed_data( slice.unpacked_data_size );
 
         // some sort of uncompression, after that the executable is at executable_buffer[0] with size = slice.unpacked_data_size
         emu_GAME_START_sub_3( uncompressed_data, compress_data );
+
+        // only for the original port comparison
+        ::memcpy( e.memory( executable_buffer_ ), uncompressed_data.data(), uncompressed_data.size() );
+
         printf( "---------\n" );
 
         return slice.unpacked_data_size;
