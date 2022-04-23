@@ -15,7 +15,7 @@ Loader menu | Game intro
 | File         | MD5                               | Info                  | Analysed |                                                  
 | :----------- | :-------------------------------- | :-------------------- | -------- |
 | ALPHA_D.COM	 |  41c74f363e70864fb15579ba171731bf | german version        | ignored  | 
-| ALPHA_E.COM	 |  7e165fc5fd1aec1482bc915ab4053d36 | english version       | 80%      |
+| ALPHA_E.COM	 |  7e165fc5fd1aec1482bc915ab4053d36 | english version       | 100%      |
 | ALPHA_F.COM	 |  682d26aec9512a4002d9aef271df0b23 | french version        | ignored  |
 | CONFIG.TAT	 |  8b3de28f7feebc33e70b36c64061ab1f | gfx/game code offsets | 100% [see](read_some_file_sub_4/types.hpp)    |
 | GRAPHS.CC1	 |  91d542578b974910ad30db6297bc8c0a | graphics data         | 5%       |
