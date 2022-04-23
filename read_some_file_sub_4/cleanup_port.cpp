@@ -110,21 +110,18 @@ namespace cleanup
 
                 //src-offsets that are multiple used
                 //0 ?
-                uint8_t* src_0x000 = &src_buffer_[0x000]; //1 byte
-                uint8_t* src_0x001 = &src_buffer_[0x001]; //[0x001-[0x100 255 bytes (0-254)
-                uint8_t* src_0x100 = &src_buffer_[0x100]; //[0x100-[0x101 1 byte
-                uint8_t* src_0x101 = &src_buffer_[0x101]; //[0x101-[0x200 255 bytes (0-254)
-                uint8_t* src_0x200 = &src_buffer_[0x200]; //[0x200-[0x201 1 byte
-                uint8_t* src_0x201 = &src_buffer_[0x201]; //[0x201-[0x301 256 bytes (0-255)
-                uint8_t* src_0x301 = &src_buffer_[0x301]; //[0x301-[0x402 257 bytes (0-256)
-                uint8_t* src_0x402 = &src_buffer_[0x402]; //[0x402-...
+                uint8_t* table0 = &src_buffer_[0x000]; //1 byte
+                uint8_t* table1 = &src_buffer_[0x100]; //[0x100-[0x101 1 byte
+                uint8_t* table2 = &src_buffer_[0x200]; //[0x200-[0x201 1 byte
+                uint8_t* table3 = &src_buffer_[0x301]; //[0x301-[0x402 257 bytes (0-256)
+                uint8_t* table4 = &src_buffer_[0x402]; //[0x402-...
 
                 // overwrite with 0xDD "dirty" value - start-value seems only relevant for src_0x301 block
-                ::memset( src_0x001, 0xDD, 255 + 1 + 255 + 1 + 256 + 257 ); // = 1025
+                ::memset( table0 + 1, 0xDD, 255 + 1 + 255 + 1 + 256 + 257 ); // = 1025
 
                 // only used for compressed blocks
-                ::memset( src_0x301, 0, 256 ); // clean 256 bytes, [0x301-[0x401
-                                               // 0 means unused or something - can't be any value
+                ::memset( table3, 0, 256 ); // clean 256 bytes, [0x301-[0x401
+                                            // 0 means unused or something - can't be any value
 
                 printf( "init #1\n" );
 
@@ -137,15 +134,15 @@ namespace cleanup
                         hex_string( another_pointer2_ + 2 * pack_block.packed_size, pack_block.packed_size ).c_str() );
 
                 assert( pack_block.packed_size <= 255 );
-                ::memcpy( src_0x201, another_pointer2_, pack_block.packed_size );
+                ::memcpy( table2 + 1, another_pointer2_, pack_block.packed_size );
                 another_pointer2_ += pack_block.packed_size;
 
                 assert( pack_block.packed_size <= 254 );
-                ::memcpy( src_0x001, another_pointer2_, pack_block.packed_size );
+                ::memcpy( table0 + 1, another_pointer2_, pack_block.packed_size );
                 another_pointer2_ += pack_block.packed_size;
 
                 assert( pack_block.packed_size <= 254 );
-                ::memcpy( src_0x101, another_pointer2_, pack_block.packed_size );
+                ::memcpy( table1 + 1, another_pointer2_, pack_block.packed_size );
                 another_pointer2_ += pack_block.packed_size;
 
                 //src_0x301 complete filled with 0
@@ -155,17 +152,17 @@ namespace cleanup
                     const uint8_t ofs2 = i + 1;
 
                     // packed_size 0-255 => ofs2 => 1-256
-                    const uint8_t ofs = src_0x200[ofs2];
+                    const uint8_t ofs = table2[ofs2];
                     assert( ( ofs > 0 ) && ( ofs <= 255 ) );
 
                     assert( ofs2 <= pack_block.packed_size ); // packed_size+1
-                    src_0x402[ofs2] = src_0x301[ofs];
-                    assert( ( src_0x402[ofs2] >= 0 ) && ( src_0x402[ofs2] < pack_block.packed_size ) );
-                    src_0x301[ofs] = ofs2;
+                    table4[ofs2] = table3[ofs];
+                    assert( ( table4[ofs2] >= 0 ) && ( table4[ofs2] < pack_block.packed_size ) );
+                    table3[ofs] = ofs2;
                 }
 
-                printf( "init #2 after: src_0x301:\n%s\n", hexdump( src_0x301, 256, 64 ).c_str() );
-                printf( "init #2 after: src_0x402:\n%s\n", hexdump( src_0x402, 256, 64 ).c_str() );
+                printf( "init #2 after: src_0x301:\n%s\n", hexdump( table3, 256, 64 ).c_str() );
+                printf( "init #2 after: src_0x402:\n%s\n", hexdump( table4, 256, 64 ).c_str() );
 
                 struct stack_vals_t
                 {
@@ -177,12 +174,12 @@ namespace cleanup
                 uint8_t val_3 = 0;
                 uint8_t val_4 = 0;
 
-                auto loc_128_block = [src_buffer_, &stack, &val_3, &val_4, &src_0x100, &src_0x000, &pack_block]() {
+                auto loc_128_block = [src_buffer_, &stack, &val_3, &val_4, &table1, &table0, &pack_block]() {
                     assert( ( val_3 > 0 ) && ( val_3 <= pack_block.packed_size ) ); // packed_size+1
-                    const uint8_t val_5 = src_0x100[val_3];
+                    const uint8_t val_5 = table1[val_3];
                     assert( ( val_5 >= 0 ) && ( val_5 <= 255 ) );
                     stack.push( { val_3, val_5 } );
-                    val_4 = src_0x000[val_3];
+                    val_4 = table0[val_3];
                     assert( ( val_4 >= 0 ) && ( val_4 <= 255 ) );
                 };
 
@@ -207,7 +204,7 @@ namespace cleanup
                     val_3 = *another_pointer2_++;
                     assert( ( val_3 >= 0 ) && ( val_3 <= 255 ) );
 
-                    const uint8_t val301_0 = src_0x301[val_3];
+                    const uint8_t val301_0 = table3[val_3];
                     assert( ( val301_0 >= 0 ) && ( val301_0 <= pack_block.packed_size ) );
 
                     if( val301_0 == 0 )
@@ -227,7 +224,7 @@ namespace cleanup
                         {
                             const uint8_t ofs1 = val_4;
 
-                            const uint8_t val301_1 = src_0x301[ofs1];
+                            const uint8_t val301_1 = table3[ofs1];
 
                             if( val301_1 == 0 )
                             {
@@ -251,7 +248,7 @@ namespace cleanup
                                 while( true )
                                 {
                                     assert( val_3 <= pack_block.packed_size ); // packed_size+1
-                                    val_3 = src_0x402[val_3];
+                                    val_3 = table4[val_3];
                                     assert( ( val_3 >= 0 ) && ( val_3 < pack_block.packed_size ) );
 
                                     if( val_3 == 0 )
