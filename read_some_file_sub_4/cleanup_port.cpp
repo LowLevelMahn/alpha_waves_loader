@@ -78,14 +78,8 @@ namespace cleanup
                 for( uint16_t i = 0; i < pack_block.packed_size; ++i )
                 {
                     const uint8_t ofs2 = i + 1;
-
-                    // packed_size 0-255 => ofs2 => 1-256
                     const uint8_t ofs = table2[ofs2];
-                    assert( ( ofs > 0 ) && ( ofs <= 255 ) );
-
-                    assert( ofs2 <= pack_block.packed_size ); // packed_size+1
                     table4[ofs2] = table3[ofs];
-                    assert( ( table4[ofs2] >= 0 ) && ( table4[ofs2] < pack_block.packed_size ) );
                     table3[ofs] = ofs2;
                 }
 
@@ -100,12 +94,9 @@ namespace cleanup
                 uint8_t val_4 = 0;
 
                 auto loc_128_block = [&stack, &val_3, &val_4, &table1, &table0, &pack_block]() {
-                    assert( ( val_3 > 0 ) && ( val_3 <= pack_block.packed_size ) ); // packed_size+1
                     const uint8_t val_5 = table1[val_3];
-                    assert( ( val_5 >= 0 ) && ( val_5 <= 255 ) );
                     stack.push( { val_3, val_5 } );
                     val_4 = table0[val_3];
-                    assert( ( val_4 >= 0 ) && ( val_4 <= 255 ) );
                 };
 
                 auto loc_572_block = [&uncompressed, &stack, &val_3, &val_4]() {
@@ -127,10 +118,8 @@ namespace cleanup
                 for( size_t i = 0; i < data.size(); ++i ) // just loop n times
                 {
                     val_3 = data[i];
-                    assert( ( val_3 >= 0 ) && ( val_3 <= 255 ) );
 
                     const uint8_t val301_0 = table3[val_3];
-                    assert( ( val301_0 >= 0 ) && ( val301_0 <= pack_block.packed_size ) );
 
                     if( val301_0 == 0 )
                     {
@@ -172,9 +161,7 @@ namespace cleanup
 
                                 while( true )
                                 {
-                                    assert( val_3 <= pack_block.packed_size ); // packed_size+1
                                     val_3 = table4[val_3];
-                                    assert( ( val_3 >= 0 ) && ( val_3 < pack_block.packed_size ) );
 
                                     if( val_3 == 0 )
                                     {
