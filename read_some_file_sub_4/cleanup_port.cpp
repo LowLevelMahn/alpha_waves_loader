@@ -91,32 +91,26 @@ namespace cleanup
                 }
 
                 std::array<uint8_t, 256> data_301{};
-                std::array<uint8_t, 256> data_402{};
+                std::vector<uint8_t> data_402( pack_block.packed_size + 1 );
 
                 for( uint16_t i = 0; i < pack_block.packed_size; ++i )
                 {
-                    const uint8_t ofs2 = data_block[0][i];
+                    // packed_size 0-255 => ofs2 => 1-256
+                    const uint8_t ofs = data_block[0][i];
 
-                    // offset could be only 0-255 - written as uint8_t in data_301
+                    // ofs2 could only become 0-255 - written as uint8_t in data_301
                     assert( i < 255 );
-                    const uint8_t offset = i + 1;
+                    const uint8_t ofs2 = i + 1;
 
-                    data_402[offset] = data_301[ofs2];
-                    data_301[ofs2] = offset;
-                }
-
-                for( const auto& val : data_block[3] )
-                {
-                    uint8_t v = data_301[val];
-                    if( v == 0 )
-                    {
-                        // just store value
-                    }
+                    assert( ofs2 <= pack_block.packed_size ); // packed_size+1
+                    data_402[ofs2] = data_301[ofs];
+                    data_301[ofs] = ofs2;
                 }
                 //}
 
                 //src-offsets that are multiple used
                 //0 ?
+                uint8_t* src_0x000 = &src_buffer_[0x000]; //1 byte
                 uint8_t* src_0x001 = &src_buffer_[0x001]; //[0x001-[0x100 255 bytes (0-254)
                 uint8_t* src_0x100 = &src_buffer_[0x100]; //[0x100-[0x101 1 byte
                 uint8_t* src_0x101 = &src_buffer_[0x101]; //[0x101-[0x200 255 bytes (0-254)
@@ -158,11 +152,16 @@ namespace cleanup
 
                 for( uint16_t i = 0; i < pack_block.packed_size; ++i )
                 {
-                    // packed_size 0-255 => i+1 => 1-256
-                    const uint8_t ofs2 = src_0x201[i];
+                    const uint8_t ofs2 = i + 1;
 
-                    src_0x402[i + 1] = src_0x301[ofs2];
-                    src_0x301[ofs2] = i + 1;
+                    // packed_size 0-255 => ofs2 => 1-256
+                    const uint8_t ofs = src_0x200[ofs2];
+                    assert( ( ofs > 0 ) && ( ofs <= 255 ) );
+
+                    assert( ofs2 <= pack_block.packed_size ); // packed_size+1
+                    src_0x402[ofs2] = src_0x301[ofs];
+                    assert( ( src_0x402[ofs2] >= 0 ) && ( src_0x402[ofs2] < pack_block.packed_size ) );
+                    src_0x301[ofs] = ofs2;
                 }
 
                 printf( "init #2 after: src_0x301:\n%s\n", hexdump( src_0x301, 256, 64 ).c_str() );
@@ -178,9 +177,13 @@ namespace cleanup
                 uint8_t val_3 = 0;
                 uint8_t val_4 = 0;
 
-                auto loc_128_block = [src_buffer_, &stack, &val_3, &val_4, &src_0x100]() {
-                    stack.push( { val_3, src_0x100[val_3] } );
-                    val_4 = src_buffer_[val_3];
+                auto loc_128_block = [src_buffer_, &stack, &val_3, &val_4, &src_0x100, &src_0x000, &pack_block]() {
+                    assert( ( val_3 > 0 ) && ( val_3 <= pack_block.packed_size ) ); // packed_size+1
+                    const uint8_t val_5 = src_0x100[val_3];
+                    assert( ( val_5 >= 0 ) && ( val_5 <= 255 ) );
+                    stack.push( { val_3, val_5 } );
+                    val_4 = src_0x000[val_3];
+                    assert( ( val_4 >= 0 ) && ( val_4 <= 255 ) );
                 };
 
                 auto loc_572_block = [&dest_buffer_, &stack, &val_3, &val_4]() {
@@ -202,8 +205,10 @@ namespace cleanup
                 for( uint16_t i = 0; i < pack_block.data_len; ++i ) // just loop n times
                 {
                     val_3 = *another_pointer2_++;
+                    assert( ( val_3 >= 0 ) && ( val_3 <= 255 ) );
 
                     const uint8_t val301_0 = src_0x301[val_3];
+                    assert( ( val301_0 >= 0 ) && ( val301_0 <= pack_block.packed_size ) );
 
                     if( val301_0 == 0 )
                     {
@@ -245,7 +250,9 @@ namespace cleanup
 
                                 while( true )
                                 {
+                                    assert( val_3 <= pack_block.packed_size ); // packed_size+1
                                     val_3 = src_0x402[val_3];
+                                    assert( ( val_3 >= 0 ) && ( val_3 < pack_block.packed_size ) );
 
                                     if( val_3 == 0 )
                                     {
