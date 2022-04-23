@@ -17,13 +17,13 @@ Loader menu | Game intro
 | ALPHA_D.COM	 |  41c74f363e70864fb15579ba171731bf | german version        | ignored  | 
 | ALPHA_E.COM	 |  7e165fc5fd1aec1482bc915ab4053d36 | english version       | 80%      |
 | ALPHA_F.COM	 |  682d26aec9512a4002d9aef271df0b23 | french version        | ignored  |
-| CONFIG.TAT	 |  8b3de28f7feebc33e70b36c64061ab1f | gfx/game code offsets | 100%     |
+| CONFIG.TAT	 |  8b3de28f7feebc33e70b36c64061ab1f | gfx/game code offsets | 100% [see](read_some_file_sub_4/types.hpp)    |
 | GRAPHS.CC1	 |  91d542578b974910ad30db6297bc8c0a | graphics data         | 5%       |
 | HIGHSCOR.QB	 |  6fd61f2a03225192b7ac5a1dce5c96ea | highscores            | 100%     |
 | MUSIC_A.CC1	 |  ab4eb457f274d7b28b6985662a1dc3b6 | adlib music           | 0%       |
 | MUSIC_B.CC1	 |  cd968b9d80712830e1c2fa1cba170900 | buzer pc music        | 0%       |
 | MUSIC_T.CC1	 |  8827fbc74d9053ff6363387a99be2f16 | tandy music           | 0%       |
-| PROGS.CC1	   |  d529022d120dcd7bafedde05acd467c7 | gfx/game code         | 1%       |
+| PROGS.CC1	   |  d529022d120dcd7bafedde05acd467c7 | gfx/game code         | 100% [see](read_some_file_sub_4/types.hpp)  |
 | TATOU.BAT	   |  4a748577227640cbfd26874fe08c6d7c | simple starter        | ignored  |
 | TESTFKEY.COM |	964a23b53713cfc666fbc081a72bf77b | ?                     | ignored  |
 | TEXTES.CC1	 |  54393dca30917561ac33e4093096cc75 | multilang texts       | 1%       |
@@ -42,8 +42,7 @@ my reduced loader
 | tools_howto.txt   | how to get the needed build tools (UASM, WLink) - very easy to install                                 |
 | exeload.asm       | small loader runs the extracted game exe and sound com TSR + set needed interrupts                     |
 | build_exeload.bat | batch builder for the small loader                                                                     |
-| tools_howto.txt   | how to get the needed build tools (UASM, WLink) - very easy to install                                 |
-| ./read_some_file_sub_4   | C++ port of the game data loading routines                                |
+| ./read_some_file_sub_4   | C++ port of the game data loading routines                                                      |
 
  **tools_dir** variable in build.bat needs to be set to suits your environment
  
