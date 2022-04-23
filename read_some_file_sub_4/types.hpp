@@ -30,6 +30,11 @@ constexpr size_t GFX_COUNT = 5; // 0=CGA, 1=EGA, 2=Tandy, 3=Hercules, 4=VGA
 
 #pragma pack( push, 1 )
 
+// i don't like file-layouts as packed structs
+// buts its easier to document findings with them :)
+
+// CONFIG.TAT file layout
+
 struct config_tat_t
 {
     struct executable_info_t
@@ -89,6 +94,8 @@ struct config_tat_t
 };
 static_assert( sizeof( config_tat_t ) == 0x233, "wrong size" );
 
+// PROGS.CC1 file layout
+
 //000000: uint16_t = 6
 //
 //uint32_t[6]
@@ -120,19 +127,19 @@ static_assert( sizeof( config_tat_t ) == 0x233, "wrong size" );
 template <size_t Size>
 struct exec_data_t
 {
-    uint32_t unknown1;
-    uint32_t unknown2;
-    uint8_t data[Size];
+    uint32_t data_size;
+    uint32_t unpacked_data_size; // maybe
+    std::array<uint8_t, Size> data;
 };
 
 struct progs_cc1_t
 {
     //0:
-    uint16_t unknown0;
+    uint16_t exec_table_count;
     //2:
-    std::array<uint32_t, 6> unknown1;
+    std::array<uint32_t, 6> execs_offset_table;
     //26
-    //26 + unknown1[n] offset
+    //26 + execs_offset_table[n] offset
     struct sound_t
     {
         exec_data_t<2422> pc_buz;
@@ -152,8 +159,8 @@ struct progs_cc1_t
 };
 
 static_assert( sizeof( progs_cc1_t ) == 161823, "wrong size" );
-static_assert( offsetof( progs_cc1_t, unknown0 ) == 0, "wrong offset" );
-static_assert( offsetof( progs_cc1_t, unknown1 ) == 2, "wrong offset" );
+static_assert( offsetof( progs_cc1_t, exec_table_count ) == 0, "wrong offset" );
+static_assert( offsetof( progs_cc1_t, execs_offset_table ) == 2, "wrong offset" );
 static_assert( offsetof( progs_cc1_t, sound.pc_buz ) == 26, "wrong offset" );
 static_assert( offsetof( progs_cc1_t, sound.tandy ) == 2456, "wrong offset" );
 static_assert( offsetof( progs_cc1_t, sound.adlib ) == 5349, "wrong offset" );

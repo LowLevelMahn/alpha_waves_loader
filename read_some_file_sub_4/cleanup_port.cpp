@@ -5,47 +5,68 @@
 namespace cleanup
 {
 #pragma pack( push, 1 )
-    struct something_t
+    struct pack_block_t
     {
-        uint8_t len1{};
-        uint8_t unknown1{};
-        uint16_t len2{};
+        uint8_t packed_size{};
+        uint8_t flag{};      // 1 = more data to uncompress, 0 = end
+        uint16_t data_len{}; // (un)compressed data
     };
 #pragma pack( pop )
-    static_assert( sizeof( something_t ) == 4, "wrong size" );
+    static_assert( sizeof( pack_block_t ) == 4, "wrong size" );
 
     void emu_GAME_START_sub_3( uint8_t* src_buffer_, uint8_t* dest_buffer_, uint8_t* another_pointer2_ )
     {
+        // tests
+        uint8_t* org_src_buffer = src_buffer_;
+        uint8_t* org_dest_buffer = dest_buffer_;
+        uint8_t* org_another_pointer2 = another_pointer2_;
+
         while( true )
         {
-            ::memset( &src_buffer_[0x301], 0, 128 * sizeof( uint16_t ) ); // clean 256 bytes
-
-            const something_t something = *reinterpret_cast<something_t*>( another_pointer2_ );
-            another_pointer2_ += sizeof( something );
-
-            if( something.len1 == 0 )
             {
-                ::memcpy( dest_buffer_, another_pointer2_, something.len2 );
-                dest_buffer_ += something.len2;
-                another_pointer2_ += something.len2;
+                // src_buffer ptr does not change
+                assert( src_buffer_ == org_src_buffer );
+                // dest_buffer_ and another_pointer2_ do only grow
+                assert( dest_buffer_ >= org_dest_buffer );
+                assert( another_pointer2_ >= org_another_pointer2 );
+            }
+
+            ::memset( &src_buffer_[0x301], 0, 128 * sizeof( uint16_t ) ); // clean 256 bytes
+                                                                          //[0x301-]0x401
+
+            const pack_block_t pack_block = *reinterpret_cast<pack_block_t*>( another_pointer2_ );
+            another_pointer2_ += sizeof( pack_block );
+
+            printf( "pack_block: packed_size: 0x%02X, flag: 0x%02X, data_len: 0x%04X\n", pack_block.packed_size,
+                    pack_block.flag, pack_block.data_len );
+
+            assert( pack_block.flag == 0 || pack_block.flag == 1 );
+
+            if( pack_block.packed_size == 0 )
+            {
+                // uncompressed (just append the data)
+                ::memcpy( dest_buffer_, another_pointer2_, pack_block.data_len );
+                dest_buffer_ += pack_block.data_len;
+                another_pointer2_ += pack_block.data_len;
             }
             else
             {
-                ::memcpy( &src_buffer_[0x201], another_pointer2_, something.len1 );
-                another_pointer2_ += something.len1;
+                // compressed
+                ::memcpy( &src_buffer_[0x201], another_pointer2_, pack_block.packed_size );
+                another_pointer2_ += pack_block.packed_size;
 
-                ::memcpy( &src_buffer_[0x001], another_pointer2_, something.len1 );
-                another_pointer2_ += something.len1;
+                ::memcpy( &src_buffer_[0x001], another_pointer2_, pack_block.packed_size );
+                another_pointer2_ += pack_block.packed_size;
 
-                ::memcpy( &src_buffer_[0x101], another_pointer2_, something.len1 );
-                another_pointer2_ += something.len1;
+                ::memcpy( &src_buffer_[0x101], another_pointer2_, pack_block.packed_size );
+                another_pointer2_ += pack_block.packed_size;
 
-                for( uint16_t i = 0; i < something.len1; ++i )
+                for( uint16_t i = 0; i < pack_block.packed_size; ++i )
                 {
                     const uint8_t ofs = i + 1;
-                    uint8_t* at0x301 = &src_buffer_[src_buffer_[ofs + 0x200] + 0x301];
-                    src_buffer_[ofs + 0x402] = *at0x301;
-                    *at0x301 = ofs;
+                    uint8_t* val_ptr = &src_buffer_[0x301 + src_buffer_[0x200 + ofs]];
+                    src_buffer_[0x402 + ofs] = *val_ptr;
+                    *val_ptr = ofs;
                 }
 
                 struct stack_vals_t
@@ -59,7 +80,7 @@ namespace cleanup
                 uint8_t val_4 = 0;
 
                 auto loc_128_block = [src_buffer_, &stack, &val_3, &val_4]() {
-                    stack.push( { val_3, src_buffer_[val_3 + 0x100] } );
+                    stack.push( { val_3, src_buffer_[0x100 + val_3] } );
                     val_4 = src_buffer_[val_3];
                 };
 
@@ -79,11 +100,12 @@ namespace cleanup
                     return false;
                 };
 
-                for( uint16_t i = something.len2; i > 0; --i ) // just loop n times
+                for( uint16_t i = pack_block.data_len; i > 0; --i ) // just loop n times
                 {
                     val_3 = *another_pointer2_++;
 
-                    const uint8_t val301_0 = src_buffer_[val_3 + 0x301];
+                    const uint8_t val301_0 = src_buffer_[0x301 + val_3];
+
                     if( val301_0 == 0 )
                     {
                         *dest_buffer_++ = val_3;
@@ -101,7 +123,7 @@ namespace cleanup
                         {
                             const uint8_t ofs1 = val_4;
 
-                            const uint8_t val301_1 = src_buffer_[ofs1 + 0x301];
+                            const uint8_t val301_1 = src_buffer_[0x301 + ofs1];
 
                             if( val301_1 == 0 )
                             {
@@ -124,7 +146,7 @@ namespace cleanup
 
                                 while( true )
                                 {
-                                    val_3 = src_buffer_[val_3 + 0x402];
+                                    val_3 = src_buffer_[0x402 + val_3];
 
                                     if( val_3 == 0 )
                                     {
@@ -152,7 +174,7 @@ namespace cleanup
                     }
                 }
 
-                if( something.unknown1 == 0 )
+                if( pack_block.flag == 0 )
                 {
                     return;
                 }
@@ -170,10 +192,63 @@ namespace cleanup
         const std::string game_dir = R"(F:\projects\fun\dos_games_rev\alpha_waves_dev\tests\alpha)";
         const std::string file_path = game_dir + "\\" + filename;
 
+#if 1
         const std::vector<uint8_t> prog_cc1_content = read_binary_file( file_path );
         assert( prog_cc1_content.size() == sizeof( progs_cc1_t ) );
         const progs_cc1_t* progs_cc1 = reinterpret_cast<const progs_cc1_t*>( prog_cc1_content.data() );
 
+        struct exec_data_slice_t
+        {
+            uint32_t data_size{};
+            uint32_t unpacked_data_size{};
+            const uint8_t* data{};
+        };
+
+        auto get_slice = []( const auto& exec_data_ ) {
+            return exec_data_slice_t{ swap( exec_data_.data_size ), swap( exec_data_.unpacked_data_size ),
+                                      exec_data_.data.data() };
+        };
+
+        const exec_data_slice_t slice = [&]( size_t exec_type_ ) {
+            switch( exec_info_->byte_12h )
+            {
+                case 0:
+                    return get_slice( progs_cc1->sound.pc_buz );
+                case 1:
+                    return get_slice( progs_cc1->sound.tandy );
+                case 2:
+                    return get_slice( progs_cc1->sound.adlib );
+                case 3:
+                    return get_slice( progs_cc1->gfx.cga_hercules );
+                case 4:
+                    return get_slice( progs_cc1->gfx.tandy );
+                case 5:
+                    return get_slice( progs_cc1->gfx.ega_vga );
+                default:
+                    assert( false );
+                    break;
+            }
+            return exec_data_slice_t{};
+        }( exec_info_->byte_12h );
+
+        const size_t another_pointer2_ofs = ( slice.unpacked_data_size - slice.data_size ) + 16;
+        uint8_t* another_pointer2 = executable_buffer + another_pointer2_ofs;
+
+        ::memcpy( another_pointer2, slice.data, slice.data_size );
+
+        const size_t result_executable_buffer_ofs = slice.unpacked_data_size + 16;
+        executable_buffer_ = e.ptr_to_ptr16( executable_buffer + result_executable_buffer_ofs );
+
+        const size_t src_buffer_ofs = ( ( result_executable_buffer_ofs / 16 ) + 1 ) *
+                                      16; // align to segment adress (keep it 100% exact to original code)
+        uint8_t* src_buffer = executable_buffer + src_buffer_ofs;
+        uint8_t* dest_buffer = executable_buffer;
+
+    #if 0
+        printf( "another_pointer2_ofs: %u, result_executable_buffer_ofs: %u, src_buffer_ofs: %u, dest_buffer_ofs: %u\n",
+                another_pointer2_ofs, result_executable_buffer_ofs, src_buffer_ofs, 0 );
+    #endif
+#else
         FILE* fp = fopen( file_path.c_str(), "rb" );
         assert( fp );
 
@@ -224,13 +299,14 @@ namespace cleanup
         const size_t ofs4 = ( ( ofs3 / 16 ) + 1 ) * 16; // align to segment adress
         uint8_t* src_buffer = executable_buffer + ofs4;
         uint8_t* dest_buffer = executable_buffer;
-        //---
 
         // ofs4, ofs3 or ofs2 = encoded size?
         // ofs2 = exact ae_vga.exe size or the possible size of adlib.com
+#endif
 
-        // some sort of uncompression, after that the executable is +sizeof(PSP) behind executable_buffer_begin
-        emu_GAME_START_sub_3( src_buffer, executable_buffer, another_pointer2 );
+        // some sort of uncompression, after that the executable is at executable_buffer[0] with size = slice.unpacked_data_size
+        emu_GAME_START_sub_3( src_buffer, dest_buffer, another_pointer2 );
+        printf( "---------\n" );
     }
 
 } // namespace cleanup
