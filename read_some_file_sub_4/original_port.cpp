@@ -239,9 +239,9 @@ namespace original
         goto loc_577;
     }
 
-    void emu_read_some_file_sub_4( emu_t& e,
-                                   config_tat_t::executable_info_t* exec_info_,
-                                   emu_t::ptr16_t& executable_buffer_ )
+    size_t emu_read_some_file_sub_4( emu_t& e,
+                                     config_tat_t::executable_info_t* exec_info_,
+                                     emu_t::ptr16_t& executable_buffer_ )
     {
         uint16_t word_44{};
         uint16_t word_45{};
@@ -384,6 +384,9 @@ namespace original
         e.cx = *e.word_ptr( e.ds, e.bp + 6 );
         e.xchg( e.al, e.ah );
         e.xchg( e.cl, e.ch );
+
+        uint32_t unpacked_size = ( e.ax << 16 ) + e.cx;
+
         some_game_ptr.offset = e.cx;
         some_game_ptr.segment = e.ax;
         e.si = e.cx;
@@ -508,7 +511,7 @@ namespace original
         emu_GAME_START_sub_3( e, another_pointer2 );
 
         e.clc();
-        return;
+        return unpacked_size;
 
     loc_587:
         assert( false );

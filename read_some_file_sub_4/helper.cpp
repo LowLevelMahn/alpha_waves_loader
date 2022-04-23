@@ -53,3 +53,31 @@ void write_binary_file( const std::string& file_path_, const void* const data_, 
     assert( written = size_ );
     fclose( fp );
 }
+
+std::string hex_string( const void* const buffer_, const size_t& size_, bool as_stream_ )
+{
+    if( size_ == 0 )
+    {
+        return {};
+    }
+
+    std::string tmp;
+    const size_t byte_width = as_stream_ ? 2 : 3;
+
+    const size_t string_size = ( size_ * byte_width ) - ( as_stream_ ? 0 : 1 );
+    tmp.resize( string_size, ' ' );
+
+    const uint8_t* const in_buffer = reinterpret_cast<const uint8_t*>( buffer_ );
+    char* const out_buffer = &tmp[0];
+
+    for( size_t i = 0; i < size_; ++i )
+    {
+        const char hex_digits[] = "0123456789ABCDEF";
+        const uint8_t value = in_buffer[i];
+        char* chr = &out_buffer[i * byte_width];
+        chr[0] = hex_digits[value >> 4];
+        chr[1] = hex_digits[value & 0xF];
+    }
+
+    return tmp;
+}

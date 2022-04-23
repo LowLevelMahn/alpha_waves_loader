@@ -11,16 +11,16 @@
 
 namespace original
 {
-    void emu_read_some_file_sub_4( emu_t& e,
-                                   config_tat_t::executable_info_t* exec_info_,
-                                   emu_t::ptr16_t& executable_buffer_ );
+    size_t emu_read_some_file_sub_4( emu_t& e,
+                                     config_tat_t::executable_info_t* exec_info_,
+                                     emu_t::ptr16_t& executable_buffer_ );
 }
 
 namespace cleanup
 {
-    void emu_read_some_file_sub_4( emu_t& e,
-                                   config_tat_t::executable_info_t* exec_info_,
-                                   emu_t::ptr16_t& executable_buffer_ );
+    size_t emu_read_some_file_sub_4( emu_t& e,
+                                     config_tat_t::executable_info_t* exec_info_,
+                                     emu_t::ptr16_t& executable_buffer_ );
 }
 
 void emu_GAME_START_sub_6( emu_t& e, emu_t::ptr16_t& executable_buffer_ )
@@ -56,7 +56,7 @@ void emu_GAME_START_sub_6( emu_t& e, emu_t::ptr16_t& executable_buffer_ )
 //   rewrite exeload.asm to 16bit C code
 
 using Test_func_t =
-    std::function<void( emu_t& e, config_tat_t::executable_info_t* exec_info_, emu_t::ptr16_t& executable_buffer_ )>;
+    std::function<size_t( emu_t& e, config_tat_t::executable_info_t* exec_info_, emu_t::ptr16_t& executable_buffer_ )>;
 
 std::vector<uint8_t> extract_executable( const std::string& current_dir_,
                                          config_tat_t::gfx_infos_t& gfx_infos_,
@@ -91,13 +91,14 @@ std::vector<uint8_t> extract_executable( const std::string& current_dir_,
 
     emu_GAME_START_sub_6( e, executable_buffer_ptr16 );
 
-    test_func_( e, e.memory<config_tat_t::executable_info_t>( e.cs, e.bx ), executable_buffer_ptr16 );
+    size_t unpacked_size =
+        test_func_( e, e.memory<config_tat_t::executable_info_t>( e.cs, e.bx ), executable_buffer_ptr16 );
 
     const size_t distance =
         emu_t::offset32( executable_buffer_ptr16 ) - emu_t::offset32( executable_buffer_begin_ptr16 );
 
     auto executable_begin = e.byte_ptr( executable_buffer_begin ) + 0x100;
-    auto executable_end = executable_begin + ( executable_buffer_size - 0x100 );
+    auto executable_end = executable_begin + unpacked_size;
     return { executable_begin, executable_end };
 }
 
@@ -152,11 +153,21 @@ int main()
         }
     }
 
+#define TEST_FULL() ( false )
+
+#if TEST_FULL
     for( size_t gfx_nr = 0; gfx_nr < GFX_COUNT; ++gfx_nr )
+#else
+    size_t gfx_nr = 0;
+#endif
     {
         auto& blocks = config_tat->gfx_info[gfx_nr].executable_info;
 
+#if TEST_FULL
         for( int exec_nr = 0; exec_nr < config_tat_t::gfx_info_t::EXECUTABLE_COUNT; ++exec_nr )
+#else
+        int exec_nr = 2;
+#endif
         {
             std::vector<uint8_t> org_executable =
                 original_extract_executable( alpha_waves_filepath, config_tat->gfx_info, gfx_nr, exec_nr );

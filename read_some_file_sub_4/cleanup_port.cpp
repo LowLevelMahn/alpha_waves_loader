@@ -31,9 +31,6 @@ namespace cleanup
                 assert( another_pointer2_ >= org_another_pointer2 );
             }
 
-            ::memset( &src_buffer_[0x301], 0, 128 * sizeof( uint16_t ) ); // clean 256 bytes
-                                                                          //[0x301-]0x401
-
             const pack_block_t pack_block = *reinterpret_cast<pack_block_t*>( another_pointer2_ );
             another_pointer2_ += sizeof( pack_block );
 
@@ -45,29 +42,131 @@ namespace cleanup
             if( pack_block.packed_size == 0 )
             {
                 // uncompressed (just append the data)
+
+                printf( " uncompressed data\n" );
+
                 ::memcpy( dest_buffer_, another_pointer2_, pack_block.data_len );
                 dest_buffer_ += pack_block.data_len;
                 another_pointer2_ += pack_block.data_len;
             }
             else
             {
-                // compressed
-                ::memcpy( &src_buffer_[0x201], another_pointer2_, pack_block.packed_size );
-                another_pointer2_ += pack_block.packed_size;
+                // compressed - unpack
 
-                ::memcpy( &src_buffer_[0x001], another_pointer2_, pack_block.packed_size );
-                another_pointer2_ += pack_block.packed_size;
+                /*
+				pack_block 0
+				    uint8_t packed_size
+					uint8_t flag
+					uint16_t data_len
+				
+				uint8_t data1[pack_block.packed_size] -> src[0x201]
+				uint8_t data2[pack_block.packed_size] -> src[0x001]
+				uint8_t data3[pack_block.packed_size] -> src[0x101]
+				uint8_t data4[pack_block.packed_size] -> im loop "just loop n times" verarbeitet
 
-                ::memcpy( &src_buffer_[0x101], another_pointer2_, pack_block.packed_size );
-                another_pointer2_ += pack_block.packed_size;
+				pack_block 1
+					uint8_t packed_size
+					uint8_t flag
+					uint16_t data_len
+
+				uint8_t data1[pack_block.packed_size] -> src[0x201]
+				uint8_t data2[pack_block.packed_size] -> src[0x001]
+				uint8_t data3[pack_block.packed_size] -> src[0x101]
+				uint8_t data4[pack_block.packed_size] -> im loop "just loop n times" verarbeitet
+
+				pack_block 2
+				...
+				*/
+
+                //{
+
+                // some sort of offset/value maps
+
+                std::vector<std::vector<uint8_t>> data_block( 4 );
+                for( size_t d = 0; d < 4; ++d )
+                {
+                    auto& data = data_block[d];
+                    data.resize( pack_block.packed_size );
+                    ::memcpy( data.data(), another_pointer2_ + d * pack_block.packed_size, pack_block.packed_size );
+                }
+
+                std::array<uint8_t, 256> data_301{};
+                std::array<uint8_t, 256> data_402{};
 
                 for( uint16_t i = 0; i < pack_block.packed_size; ++i )
                 {
-                    const uint8_t ofs = i + 1;
-                    uint8_t* val_ptr = &src_buffer_[0x301 + src_buffer_[0x200 + ofs]];
-                    src_buffer_[0x402 + ofs] = *val_ptr;
-                    *val_ptr = ofs;
+                    const uint8_t ofs2 = data_block[0][i];
+
+                    // offset could be only 0-255 - written as uint8_t in data_301
+                    assert( i < 255 );
+                    const uint8_t offset = i + 1;
+
+                    data_402[offset] = data_301[ofs2];
+                    data_301[ofs2] = offset;
                 }
+
+                for( const auto& val : data_block[3] )
+                {
+                    uint8_t v = data_301[val];
+                    if( v == 0 )
+                    {
+                        // just store value
+                    }
+                }
+                //}
+
+                //src-offsets that are multiple used
+                //0 ?
+                uint8_t* src_0x001 = &src_buffer_[0x001]; //[0x001-[0x100 255 bytes (0-254)
+                uint8_t* src_0x100 = &src_buffer_[0x100]; //[0x100-[0x101 1 byte
+                uint8_t* src_0x101 = &src_buffer_[0x101]; //[0x101-[0x200 255 bytes (0-254)
+                uint8_t* src_0x200 = &src_buffer_[0x200]; //[0x200-[0x201 1 byte
+                uint8_t* src_0x201 = &src_buffer_[0x201]; //[0x201-[0x301 256 bytes (0-255)
+                uint8_t* src_0x301 = &src_buffer_[0x301]; //[0x301-[0x402 257 bytes (0-256)
+                uint8_t* src_0x402 = &src_buffer_[0x402]; //[0x402-...
+
+                // overwrite with 0xDD "dirty" value - start-value seems only relevant for src_0x301 block
+                ::memset( src_0x001, 0xDD, 255 + 1 + 255 + 1 + 256 + 257 ); // = 1025
+
+                // only used for compressed blocks
+                ::memset( src_0x301, 0, 256 ); // clean 256 bytes, [0x301-[0x401
+                                               // 0 means unused or something - can't be any value
+
+                printf( "init #1\n" );
+
+                printf( " compressed data\n" );
+                printf( "   src_0x201: %s\n",
+                        hex_string( another_pointer2_ + 0 * pack_block.packed_size, pack_block.packed_size ).c_str() );
+                printf( "   src_0x001: %s\n",
+                        hex_string( another_pointer2_ + 1 * pack_block.packed_size, pack_block.packed_size ).c_str() );
+                printf( "   src_0x101: %s\n",
+                        hex_string( another_pointer2_ + 2 * pack_block.packed_size, pack_block.packed_size ).c_str() );
+
+                assert( pack_block.packed_size <= 255 );
+                ::memcpy( src_0x201, another_pointer2_, pack_block.packed_size );
+                another_pointer2_ += pack_block.packed_size;
+
+                assert( pack_block.packed_size <= 254 );
+                ::memcpy( src_0x001, another_pointer2_, pack_block.packed_size );
+                another_pointer2_ += pack_block.packed_size;
+
+                assert( pack_block.packed_size <= 254 );
+                ::memcpy( src_0x101, another_pointer2_, pack_block.packed_size );
+                another_pointer2_ += pack_block.packed_size;
+
+                //src_0x301 complete filled with 0
+
+                for( uint16_t i = 0; i < pack_block.packed_size; ++i )
+                {
+                    // packed_size 0-255 => i+1 => 1-256
+                    const uint8_t ofs2 = src_0x201[i];
+
+                    src_0x402[i + 1] = src_0x301[ofs2];
+                    src_0x301[ofs2] = i + 1;
+                }
+
+                printf( "init #2 after: src_0x301:\n%s\n", hexdump( src_0x301, 256, 64 ).c_str() );
+                printf( "init #2 after: src_0x402:\n%s\n", hexdump( src_0x402, 256, 64 ).c_str() );
 
                 struct stack_vals_t
                 {
@@ -79,8 +178,8 @@ namespace cleanup
                 uint8_t val_3 = 0;
                 uint8_t val_4 = 0;
 
-                auto loc_128_block = [src_buffer_, &stack, &val_3, &val_4]() {
-                    stack.push( { val_3, src_buffer_[0x100 + val_3] } );
+                auto loc_128_block = [src_buffer_, &stack, &val_3, &val_4, &src_0x100]() {
+                    stack.push( { val_3, src_0x100[val_3] } );
                     val_4 = src_buffer_[val_3];
                 };
 
@@ -100,11 +199,11 @@ namespace cleanup
                     return false;
                 };
 
-                for( uint16_t i = pack_block.data_len; i > 0; --i ) // just loop n times
+                for( uint16_t i = 0; i < pack_block.data_len; ++i ) // just loop n times
                 {
                     val_3 = *another_pointer2_++;
 
-                    const uint8_t val301_0 = src_buffer_[0x301 + val_3];
+                    const uint8_t val301_0 = src_0x301[val_3];
 
                     if( val301_0 == 0 )
                     {
@@ -116,18 +215,18 @@ namespace cleanup
 
                         stack.push( { 0, 0 } ); // end mark
 
-                        loc_128_block(); // also stack push
+                        loc_128_block(); // stack push
 
                         bool end_inner_loop = false;
                         while( true )
                         {
                             const uint8_t ofs1 = val_4;
 
-                            const uint8_t val301_1 = src_buffer_[0x301 + ofs1];
+                            const uint8_t val301_1 = src_0x301[ofs1];
 
                             if( val301_1 == 0 )
                             {
-                                if( loc_572_block() )
+                                if( loc_572_block() ) // stack pop
                                 {
                                     end_inner_loop = true;
                                     break;
@@ -137,7 +236,7 @@ namespace cleanup
                             {
                                 val_3 = val301_1;
 
-                                loc_128_block();
+                                loc_128_block(); // stack push
                             }
                             else
                             {
@@ -146,12 +245,12 @@ namespace cleanup
 
                                 while( true )
                                 {
-                                    val_3 = src_buffer_[0x402 + val_3];
+                                    val_3 = src_0x402[val_3];
 
                                     if( val_3 == 0 )
                                     {
                                         val_4 = ofs1;
-                                        if( loc_572_block() )
+                                        if( loc_572_block() ) // stack pop
                                         {
                                             end_inner_loop = true;
                                         }
@@ -159,7 +258,7 @@ namespace cleanup
                                     }
                                     else if( val_3 < val_4 )
                                     {
-                                        loc_128_block();
+                                        loc_128_block(); // stack push
                                         break;
                                     }
 
@@ -182,9 +281,9 @@ namespace cleanup
         }
     }
 
-    void emu_read_some_file_sub_4( emu_t& e,
-                                   config_tat_t::executable_info_t* exec_info_,
-                                   emu_t::ptr16_t& executable_buffer_ )
+    size_t emu_read_some_file_sub_4( emu_t& e,
+                                     config_tat_t::executable_info_t* exec_info_,
+                                     emu_t::ptr16_t& executable_buffer_ )
     {
         uint8_t* executable_buffer = e.byte_ptr( executable_buffer_ );
 
@@ -307,6 +406,8 @@ namespace cleanup
         // some sort of uncompression, after that the executable is at executable_buffer[0] with size = slice.unpacked_data_size
         emu_GAME_START_sub_3( src_buffer, dest_buffer, another_pointer2 );
         printf( "---------\n" );
+
+        return slice.unpacked_data_size;
     }
 
 } // namespace cleanup
