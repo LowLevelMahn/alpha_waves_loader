@@ -27,7 +27,7 @@ namespace cleanup
         while( true )
         {
             {
-                // dest_buffer_ and another_pointer2_ do only grow
+                // uncompressed and compressed do only grow
                 assert( org_uncompressed >= org_uncompressed );
                 assert( compressed >= org_compressed );
             }
