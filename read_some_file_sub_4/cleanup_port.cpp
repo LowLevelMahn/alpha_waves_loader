@@ -54,33 +54,6 @@ namespace cleanup
             {
                 // compressed - unpack
 
-                /*
-				pack_block 0
-				    uint8_t packed_size
-					uint8_t flag
-					uint16_t data_len
-				
-				uint8_t data1[1 + pack_block.packed_size]
-				uint8_t data2[1 + pack_block.packed_size]
-				uint8_t data3[1 + pack_block.packed_size]
-				uint8_t data4[1 + pack_block.packed_size]
-
-				pack_block 1
-					uint8_t packed_size
-					uint8_t flag
-					uint16_t data_len
-
-				uint8_t data1[1 + pack_block.packed_size]
-				uint8_t data2[1 + pack_block.packed_size]
-				uint8_t data3[1 + pack_block.packed_size]
-				uint8_t data4[1 + pack_block.packed_size]
-
-				pack_block 2
-				...
-				*/
-
-                //{
-
                 // some sort of offset/value maps
 
                 std::vector<uint8_t> table0( 1 + pack_block.packed_size );
@@ -88,6 +61,7 @@ namespace cleanup
                 std::vector<uint8_t> table2( 1 + pack_block.packed_size );
                 std::array<uint8_t, 256> table3{}; // needs to be 0 filled
                 std::vector<uint8_t> table4( 1 + pack_block.packed_size );
+                std::vector<uint8_t> data( pack_block.data_len );
 
                 ::memcpy( &table2[1], compressed, pack_block.packed_size );
                 compressed += pack_block.packed_size;
@@ -97,6 +71,9 @@ namespace cleanup
 
                 ::memcpy( &table1[1], compressed, pack_block.packed_size );
                 compressed += pack_block.packed_size;
+
+                ::memcpy( data.data(), compressed, pack_block.data_len );
+                compressed += pack_block.data_len;
 
                 for( uint16_t i = 0; i < pack_block.packed_size; ++i )
                 {
@@ -147,9 +124,9 @@ namespace cleanup
                     return false;
                 };
 
-                for( uint16_t i = 0; i < pack_block.data_len; ++i ) // just loop n times
+                for( size_t i = 0; i < data.size(); ++i ) // just loop n times
                 {
-                    val_3 = *compressed++;
+                    val_3 = data[i];
                     assert( ( val_3 >= 0 ) && ( val_3 <= 255 ) );
 
                     const uint8_t val301_0 = table3[val_3];
