@@ -126,9 +126,7 @@ namespace cleanup
 
                     if( val_7 == 0 )
                     {
-                        val_4 = val_5;
-
-                        *uncompressed++ = val_4;
+                        *uncompressed++ = val_5;
                         if( stack.empty() )
                         {
                             return;
