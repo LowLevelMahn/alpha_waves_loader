@@ -67,11 +67,8 @@ namespace cleanup
         return tables;
     }
 
-    void val_3_non_0( uint8_t*& uncompressed, const tables_t& tables, const uint8_t val_3_ )
+    void val_3_non_0( uint8_t*& uncompressed_, const tables_t& tables_, const uint8_t val_3_ )
     {
-        uint8_t val_4 = 0;
-        uint8_t val_7 = val_3_;
-
         struct stack_vals_t
         {
             uint8_t val_0{};
@@ -80,14 +77,12 @@ namespace cleanup
 
         std::stack<stack_vals_t> stack;
 
-        auto helper1 = [&stack, &tables]( const uint8_t val_7_ ) {
-            stack.push( { val_7_, tables.table2[val_7_] } );
-            return tables.table1[val_7_];
+        auto helper1 = [&stack, &tables_]( const uint8_t val_7_ ) {
+            stack.push( { val_7_, tables_.table2[val_7_] } );
+            return tables_.table1[val_7_];
         };
 
-        auto helper2 = [&]( const uint8_t value_, uint8_t* val_7_, uint8_t* val_4_ ) {
-            *uncompressed++ = value_;
-
+        auto helper2 = [&stack]( uint8_t* val_7_, uint8_t* val_4_ ) {
             if( stack.empty() )
             {
                 return true;
@@ -101,16 +96,18 @@ namespace cleanup
             return false;
         };
 
-        val_4 = helper1( val_7 );
+        uint8_t val_7 = val_3_;
+        uint8_t val_4 = helper1( val_7 );
 
         while( true )
         {
             const uint8_t val_5 = val_4;
-            const uint8_t val_6 = tables.table3[val_5];
+            const uint8_t val_6 = tables_.table3[val_5];
 
             if( val_6 == 0 )
             {
-                if( helper2( val_4, &val_7, &val_4 ) )
+                *uncompressed_++ = val_4;
+                if( helper2( &val_7, &val_4 ) )
                 {
                     return;
                 }
@@ -125,13 +122,15 @@ namespace cleanup
                 val_4 = val_7;
                 val_7 = val_6;
 
+                assert( stack.size() >= 0 );
                 while( true )
                 {
-                    val_7 = tables.table4[val_7];
+                    val_7 = tables_.table4[val_7];
 
                     if( val_7 == 0 )
                     {
-                        if( helper2( val_5, &val_7, &val_4 ) )
+                        *uncompressed_++ = val_5;
+                        if( helper2( &val_7, &val_4 ) )
                         {
                             return;
                         }
