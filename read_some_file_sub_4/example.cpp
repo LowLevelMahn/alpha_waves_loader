@@ -4,6 +4,7 @@
 #include <array>
 #include <cstring>
 #include <cassert>
+#include <cstdio>
 
 const uint8_t compressed_example[] = {
     0x04, 0x01, 0xBA, 0x01, 0x0C, 0x15, 0x19, 0x15, 0x00, 0x0C, 0x15, 0x19, 0x00, 0x0C, 0x15, 0x19, 0xE9, 0x10, 0x0A,
@@ -478,7 +479,7 @@ void emu_GAME_START_sub_3( std::vector<uint8_t>& uncompressed_buffer_, const std
     }
 }
 
-int example_main()
+int main()
 {
     const std::vector<uint8_t> uncompressed_reference( uncompressed_example,
                                                        uncompressed_example + sizeof( uncompressed_example ) );
