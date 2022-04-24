@@ -80,40 +80,45 @@ namespace cleanup
 
         std::stack<stack_vals_t> stack;
 
-        auto loc_128_block = [&tables]( std::stack<stack_vals_t>& stack_, const uint8_t val_7_ ) {
-            stack_.push( { val_7_, tables.table2[val_7_] } );
+        auto helper1 = [&stack, &tables]( const uint8_t val_7_ ) {
+            stack.push( { val_7_, tables.table2[val_7_] } );
             return tables.table1[val_7_];
         };
 
-        auto loc_572_block = []( std::stack<stack_vals_t>& stack_, uint8_t* val_7_, uint8_t* val_4_ ) {
-            const stack_vals_t stack_val = stack_.top();
-            stack_.pop();
+        auto helper2 = [&]( const uint8_t value_, uint8_t* val_7_, uint8_t* val_4_ ) {
+            *uncompressed++ = value_;
 
+            if( stack.empty() )
+            {
+                return true;
+            }
+
+            const stack_vals_t stack_val = stack.top();
+            stack.pop();
             *val_7_ = stack_val.val_0;
             *val_4_ = stack_val.val_1;
+
+            return false;
         };
 
-        val_4 = loc_128_block( stack, val_7 ); // stack push
+        val_4 = helper1( val_7 );
 
         while( true )
         {
             const uint8_t val_5 = val_4;
-
             const uint8_t val_6 = tables.table3[val_5];
 
             if( val_6 == 0 )
             {
-                *uncompressed++ = val_4;
-                if( stack.empty() )
+                if( helper2( val_4, &val_7, &val_4 ) )
                 {
                     return;
                 }
-                loc_572_block( stack, &val_7, &val_4 );
             }
             else if( val_7 > val_6 )
             {
                 val_7 = val_6;
-                val_4 = loc_128_block( stack, val_7 ); // stack push
+                val_4 = helper1( val_7 );
             }
             else
             {
@@ -126,19 +131,18 @@ namespace cleanup
 
                     if( val_7 == 0 )
                     {
-                        *uncompressed++ = val_5;
-                        if( stack.empty() )
+                        if( helper2( val_5, &val_7, &val_4 ) )
                         {
                             return;
                         }
-                        loc_572_block( stack, &val_7, &val_4 );
                         break;
                     }
                     else if( val_7 < val_4 )
                     {
-                        val_4 = loc_128_block( stack, val_7 ); // stack push
+                        val_4 = helper1( val_7 );
                         break;
                     }
+
                     // another run
                 }
             }
