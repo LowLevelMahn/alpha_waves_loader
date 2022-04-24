@@ -457,9 +457,8 @@ void emu_GAME_START_sub_3( std::vector<uint8_t>& uncompressed_buffer_, const std
         // some sort of offset/value maps
         tables_t tables = prepare_tables( compressed, pack_block.packed_size, pack_block.data_len );
 
-        for( size_t i = 0; i < tables.data.size(); ++i )
+        for( const uint8_t val_2 : tables.data )
         {
-            const uint8_t val_2 = tables.data[i];
             const uint8_t val_3 = tables.table3[val_2];
 
             if( val_3 == 0 )
