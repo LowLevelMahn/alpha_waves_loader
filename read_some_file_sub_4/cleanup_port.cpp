@@ -10,9 +10,29 @@ namespace cleanup
         uint8_t packed_size{};
         uint8_t flag{};      // 1 = more data to uncompress, 0 = end
         uint16_t data_len{}; // (un)compressed data
+        /*
+		if packed_size != 0
+            table0[ 1 + pack_block.packed_size ]
+		    table1[ 1 + pack_block.packed_size ]
+		    table2[ 1 + pack_block.packed_size ]
+		data[ pack_block.data_len ]
+		*/
     };
 #pragma pack( pop )
     static_assert( sizeof( pack_block_t ) == 4, "wrong size" );
+
+    struct tables_t
+    {
+        // from file
+        std::vector<uint8_t> table0;
+        std::vector<uint8_t> table1;
+        std::vector<uint8_t> table2;
+        std::vector<uint8_t> data;
+
+        //prepared
+        std::array<uint8_t, 256> table3{}; // needs to be 0 filled
+        std::vector<uint8_t> table4;
+    };
 
     void emu_GAME_START_sub_3( std::vector<uint8_t>& uncompressed_buffer_,
                                const std::vector<uint8_t>& compressed_buffer_ )
@@ -20,25 +40,14 @@ namespace cleanup
         uint8_t* uncompressed = uncompressed_buffer_.data();
         const uint8_t* compressed = compressed_buffer_.data();
 
-        // tests
-        uint8_t* org_uncompressed = uncompressed;
-        const uint8_t* org_compressed = compressed;
-
         while( true )
         {
-            {
-                // uncompressed and compressed do only grow
-                assert( org_uncompressed >= org_uncompressed );
-                assert( compressed >= org_compressed );
-            }
-
             const pack_block_t pack_block = *reinterpret_cast<const pack_block_t*>( compressed );
             compressed += sizeof( pack_block );
+            assert( pack_block.flag == 0 || pack_block.flag == 1 );
 
             printf( "pack_block: packed_size: 0x%02X, flag: 0x%02X, data_len: 0x%04X\n", pack_block.packed_size,
                     pack_block.flag, pack_block.data_len );
-
-            assert( pack_block.flag == 0 || pack_block.flag == 1 );
 
             if( pack_block.packed_size == 0 )
             {
@@ -49,150 +58,155 @@ namespace cleanup
                 ::memcpy( uncompressed, compressed, pack_block.data_len );
                 uncompressed += pack_block.data_len;
                 compressed += pack_block.data_len;
+                continue;
             }
-            else
+
+            // compressed - unpack
+
+            // some sort of offset/value maps
+
+            tables_t tables;
+            // from uncompressed data right after packed_block
+            std::vector<uint8_t> table0( 1 + pack_block.packed_size );
+            std::vector<uint8_t> table1( 1 + pack_block.packed_size );
+            std::vector<uint8_t> table2( 1 + pack_block.packed_size );
+            std::vector<uint8_t> data( pack_block.data_len );
+
+            ::memcpy( &table0[1], compressed, pack_block.packed_size );
+            compressed += pack_block.packed_size;
+
+            ::memcpy( &table1[1], compressed, pack_block.packed_size );
+            compressed += pack_block.packed_size;
+
+            ::memcpy( &table2[1], compressed, pack_block.packed_size );
+            compressed += pack_block.packed_size;
+
+            ::memcpy( data.data(), compressed, pack_block.data_len );
+            compressed += pack_block.data_len;
+
+            // runtime filled
+            std::array<uint8_t, 256> table3{}; // needs to be 0 filled
+            std::vector<uint8_t> table4( 1 + pack_block.packed_size );
+
+            for( uint16_t i = 0; i < pack_block.packed_size; ++i )
             {
-                // compressed - unpack
+                const uint8_t ofs_0 = i + 1;
+                const uint8_t ofs_1 = table0[ofs_0];
+                table4[ofs_0] = table3[ofs_1];
+                table3[ofs_1] = ofs_0;
+            }
 
-                // some sort of offset/value maps
-
-                std::vector<uint8_t> table0( 1 + pack_block.packed_size );
-                std::vector<uint8_t> table1( 1 + pack_block.packed_size );
-                std::vector<uint8_t> table2( 1 + pack_block.packed_size );
-                std::array<uint8_t, 256> table3{}; // needs to be 0 filled
-                std::vector<uint8_t> table4( 1 + pack_block.packed_size );
-                std::vector<uint8_t> data( pack_block.data_len );
-
-                ::memcpy( &table2[1], compressed, pack_block.packed_size );
-                compressed += pack_block.packed_size;
-
-                ::memcpy( &table0[1], compressed, pack_block.packed_size );
-                compressed += pack_block.packed_size;
-
-                ::memcpy( &table1[1], compressed, pack_block.packed_size );
-                compressed += pack_block.packed_size;
-
-                ::memcpy( data.data(), compressed, pack_block.data_len );
-                compressed += pack_block.data_len;
-
-                for( uint16_t i = 0; i < pack_block.packed_size; ++i )
-                {
-                    const uint8_t ofs2 = i + 1;
-                    const uint8_t ofs = table2[ofs2];
-                    table4[ofs2] = table3[ofs];
-                    table3[ofs] = ofs2;
-                }
+            auto val_3_non_0 = [&table1, &table2, &table3, &table4]( uint8_t*& uncompressed, const uint8_t val_3_ ) {
+                uint8_t val_4 = 0;
+                uint8_t val_7 = 0;
 
                 struct stack_vals_t
                 {
-                    uint8_t val0{};
-                    uint8_t val1{};
+                    uint8_t val_0{};
+                    uint8_t val_1{};
                 };
-
                 std::stack<stack_vals_t> stack;
-                uint8_t val_3 = 0;
-                uint8_t val_4 = 0;
 
-                auto loc_128_block = [&stack, &val_3, &val_4, &table1, &table0, &pack_block]() {
-                    const uint8_t val_5 = table1[val_3];
-                    stack.push( { val_3, val_5 } );
-                    val_4 = table0[val_3];
+                auto loc_128_block = [&]() {
+                    stack.push( { val_7, table2[val_7] } );
+                    val_4 = table1[val_7];
                 };
 
-                auto loc_572_block = [&uncompressed, &stack, &val_3, &val_4]() {
+                auto loc_572_block = [&]() {
                     *uncompressed++ = val_4;
 
                     const stack_vals_t stack_val = stack.top();
                     stack.pop();
 
-                    if( ( stack_val.val0 == 0 ) && ( stack_val.val1 == 0 ) )
+                    if( ( stack_val.val_0 == 0 ) && ( stack_val.val_1 == 0 ) )
                     {
                         return true; // goto loc_124;
                     }
 
-                    val_3 = stack_val.val0;
-                    val_4 = stack_val.val1;
+                    val_7 = stack_val.val_0;
+                    val_4 = stack_val.val_1;
                     return false;
                 };
 
-                for( size_t i = 0; i < data.size(); ++i ) // just loop n times
+                val_7 = val_3_;
+
+                stack.push( { 0, 0 } ); // end mark
+
+                loc_128_block(); // stack push
+
+                bool end_inner_loop = false;
+                while( true )
                 {
-                    val_3 = data[i];
+                    const uint8_t val_5 = val_4;
 
-                    const uint8_t val301_0 = table3[val_3];
+                    const uint8_t val_6 = table3[val_5];
 
-                    if( val301_0 == 0 )
+                    if( val_6 == 0 )
                     {
-                        *uncompressed++ = val_3;
+                        if( loc_572_block() ) // stack pop
+                        {
+                            end_inner_loop = true;
+                            break;
+                        }
+                    }
+                    else if( val_7 > val_6 )
+                    {
+                        val_7 = val_6;
+
+                        loc_128_block(); // stack push
                     }
                     else
                     {
-                        val_3 = val301_0;
+                        val_4 = val_7;
+                        val_7 = val_6;
 
-                        stack.push( { 0, 0 } ); // end mark
-
-                        loc_128_block(); // stack push
-
-                        bool end_inner_loop = false;
                         while( true )
                         {
-                            const uint8_t ofs1 = val_4;
+                            val_7 = table4[val_7];
 
-                            const uint8_t val301_1 = table3[ofs1];
-
-                            if( val301_1 == 0 )
+                            if( val_7 == 0 )
                             {
+                                val_4 = val_5;
                                 if( loc_572_block() ) // stack pop
                                 {
                                     end_inner_loop = true;
-                                    break;
                                 }
-                            }
-                            else if( val_3 > val301_1 )
-                            {
-                                val_3 = val301_1;
-
-                                loc_128_block(); // stack push
-                            }
-                            else
-                            {
-                                val_4 = val_3;
-                                val_3 = val301_1;
-
-                                while( true )
-                                {
-                                    val_3 = table4[val_3];
-
-                                    if( val_3 == 0 )
-                                    {
-                                        val_4 = ofs1;
-                                        if( loc_572_block() ) // stack pop
-                                        {
-                                            end_inner_loop = true;
-                                        }
-                                        break;
-                                    }
-                                    else if( val_3 < val_4 )
-                                    {
-                                        loc_128_block(); // stack push
-                                        break;
-                                    }
-
-                                    // another run
-                                }
-                            }
-                            if( end_inner_loop )
-                            {
                                 break;
                             }
+                            else if( val_7 < val_4 )
+                            {
+                                loc_128_block(); // stack push
+                                break;
+                            }
+
+                            // another run
                         }
                     }
+                    if( end_inner_loop )
+                    {
+                        break;
+                    }
                 }
+            };
 
-                if( pack_block.flag == 0 )
+            for( size_t i = 0; i < data.size(); ++i )
+            {
+                const uint8_t val_2 = data[i];
+                const uint8_t val_3 = table3[val_2];
+
+                if( val_3 == 0 )
                 {
-                    return;
+                    *uncompressed++ = val_2;
                 }
+                else
+                {
+                    val_3_non_0( uncompressed, val_3 );
+                }
+            }
+
+            if( pack_block.flag == 0 )
+            {
+                return;
             }
         }
     }
