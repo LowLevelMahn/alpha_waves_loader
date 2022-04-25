@@ -102,4 +102,4 @@ sets some interrupts and starts the game
  - maybe reverse AlphaWaves itself - its a Turbo C 2.x exe
  
  # Findings
- - VGA is not real VGA Mode - its EGA 0dh mode with lighter colors :)
+ - VGA is not real VGA Mode but EGA 0dh mode - its the same as game started with EGA but with lighter colors :)
