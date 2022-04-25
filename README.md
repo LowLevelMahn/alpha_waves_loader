@@ -60,11 +60,11 @@ progs.cc1 contains the compressed executeable for:
     * ega/vga
     
 config.tat maps the gfx selection in the loader to the gfx executables in prog.cc1
-   0 ---> cga/hercules (mode 0)
-   1 ---> ega/vga (mode 1)
-   2 ---> tandy
-   3 ---> cga/hercules (mode 3)
-   4 ---> ega/vga (mode 4)   
+   0. cga/hercules (mode 0)
+   1. ega/vga (mode 1)
+   2. tandy
+   3. cga/hercules (mode 3)
+   4. ega/vga (mode 4)   
 
 all sound TSRs are loaded and excecuted in the order 
 1. adlib
