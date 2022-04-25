@@ -46,7 +46,37 @@ my reduced loader
 | read_some_file_sub_4/cleanup_port.cpp   | cleanup of the original port (mostly pure C/C++)                                 |
 
  **tools_dir** variable in build.bat needs to be set to suits your environment
- 
+
+# Loading process
+
+progs.cc1 contains the compressed executeable for:
+  * sound com TSR (installed at interrupt 0xF0)
+    * adlib
+    * tandy
+    * pc-buz
+  * gfx exe
+    * cga/hercules
+    * tandy
+    * ega/vga
+    
+config.tat maps the gfx selection in the loader to the gfx executables in prog.cc1
+   0 ---> cga/hercules (mode 0)
+   1 ---> ega/vga (mode 1)
+   2 ---> tandy
+   3 ---> cga/hercules (mode 3)
+   4 ---> ega/vga (mode 4)   
+
+all sound TSRs are loaded and excecuted in the order 
+1. adlib
+2. tandy
+3. pc-buz
+
+(the first TSR that hooks Interrupt 0xF0 keeps the others from installing)
+   
+the loader loads the executable that fits the gfx mode selection base on config.tat and progs.cc1
+sets some interrupts and starts the game 
+
+
  # using IDA
  1. add more information to the IDB
  2. produce ASM file in IDA (called ALPHA_E.asm)
@@ -65,7 +95,6 @@ my reduced loader
  - added a ultra-simple x86 "emulator" (based on inline-asm) that allows me to port loader code nearly 1:1 to C++, result: the game executables are load and uncompress-able in 32bit :)
 
  # TODOs
- - game-starting analyse is in the very beginning: so far: an exe gets created from parts of progs1.cc in ram and executed 
  - rewrite the loader in C and write a tool that directly creates a full game exe that can be directly started (i know i can just memdump, but thats not my goal)
  - maybe reverse AlphaWaves itself - its a Turbo C 2.x exe
  
