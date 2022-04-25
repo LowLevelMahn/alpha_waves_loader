@@ -101,3 +101,5 @@ sets some interrupts and starts the game
  - rewrite the loader in C and write a tool that directly creates a full game exe that can be directly started (i know i can just memdump, but thats not my goal)
  - maybe reverse AlphaWaves itself - its a Turbo C 2.x exe
  
+ # Findings
+ - VGA is not real VGA Mode - its EGA 0dh mode with lighter colors :)
