@@ -74,7 +74,7 @@ all sound TSRs are loaded and excecuted in the order
 2. tandy
 3. pc-buz
 
-(the first TSR that hooks Interrupt 0xF0 keeps the others from installing)
+(the first TSR that successfully hooks Interrupt 0xF0 keeps the others from installing)
    
 the loader loads the executable that fits the gfx mode selection base on config.tat and progs.cc1
 sets some interrupts and starts the game 
