@@ -33,6 +33,21 @@ constexpr size_t GFX_COUNT = 5; // 0=CGA, 1=EGA, 2=Tandy, 3=Hercules, 4=VGA
 // i don't like file-layouts as packed structs
 // buts its easier to document findings with them :)
 
+// HIGHSCOR.QB file layout
+
+struct highscore_line_t
+{
+    char name[30]; // filled with 0x20
+    char value[8];
+    uint8_t end; // 0 byte as end mark
+};
+
+struct highscor_qb_t
+{
+    highscore_line_t line[14];
+};
+static_assert( sizeof( highscor_qb_t ) == 546, "wrong size" );
+
 // CONFIG.TAT file layout
 
 struct config_tat_t
