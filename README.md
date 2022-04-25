@@ -61,11 +61,11 @@ progs.cc1 contains the compressed executeable for:
     
 config.tat maps the gfx selection in the loader to the gfx executables in prog.cc1
 
-| Mode  | Gfx         |                                                                                                   |
-| :---: | :---------: |
-|  0    |CGA/Hercules |
-|  1    |EGA/VGA      |
-|  2    |Tandy        |
+| Mode         | Gfx                               | 
+| :----------: | :-------------------------------- | 
+|  0         	 | CGA/Hercules                      | 
+|  1           |EGA/VGA      |
+|  2          |Tandy        |
 |  3    |CGA/Hercules |
 |  4    |EGA/VGA      |
 
