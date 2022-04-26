@@ -118,8 +118,9 @@ starter.exe starter [cga|ega|tandy|herc|vga] [adlib|tandy|pc|none]
  - executable-extractor and starter
 
  # TODOs
- - document the Copy-Protection code stuff in the game
  - reverse the sound driver TSRs
+ - document the file format of TEXTES.CC1, MUSIC_(A|T|B).CC1
+ - document the Copy-Protection code stuff in the game
  - maybe reverse AlphaWaves itself - its a Turbo C 2.x exe
  
  # Findings
