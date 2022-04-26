@@ -19,7 +19,7 @@ Loader menu | Game intro
 | ALPHA_F.COM	 |  682d26aec9512a4002d9aef271df0b23 | french version        | ignored  |
 | CONFIG.TAT	 |  8b3de28f7feebc33e70b36c64061ab1f | gfx/game code offsets | 100% [see](read_some_file_sub_4/types.hpp)    |
 | GRAPHS.CC1	 |  91d542578b974910ad30db6297bc8c0a | graphics data         | 5%       |
-| HIGHSCOR.QB	 |  6fd61f2a03225192b7ac5a1dce5c96ea | highscores            | 100%     |
+| HIGHSCOR.QB	 |  6fd61f2a03225192b7ac5a1dce5c96ea | highscores            | 100% [see](read_some_file_sub_4/types.hpp)    |
 | MUSIC_A.CC1	 |  ab4eb457f274d7b28b6985662a1dc3b6 | adlib music           | 0%       |
 | MUSIC_B.CC1	 |  cd968b9d80712830e1c2fa1cba170900 | buzer pc music        | 0%       |
 | MUSIC_T.CC1	 |  8827fbc74d9053ff6363387a99be2f16 | tandy music           | 0%       |
@@ -101,3 +101,5 @@ sets some interrupts and starts the game
  - rewrite the loader in C and write a tool that directly creates a full game exe that can be directly started (i know i can just memdump, but thats not my goal)
  - maybe reverse AlphaWaves itself - its a Turbo C 2.x exe
  
+ # Findings
+ - VGA is not real VGA Mode but EGA 0dh mode - its the same as game started with EGA but with lighter colors :)
