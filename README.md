@@ -1,6 +1,8 @@
 # alpha_waves_loader
 
-This is the reverse engineered, english-language text menu game loader ALPHA_E.COM of the DOS game Alpha Waves aka Continuum and tools for extracting and uncompressing the game executables and starting the game skipping the original loader
+This is the reverse engineered, english-language text menu game loader ALPHA_E.COM of the 1990 DOS game Alpha Waves aka Continuum by Christophe de Dinechin
+
+and tools for extracting and uncompressing the game executables and starting the game skipping the original loader
 
 Due to super tiny floppy and memory sizes of that time most games used "loaders" that mostly combine graphics/sound/etc. code into in-memory build executables, ALPHA_E.COM is the english version of such a "loader" for AlphaWaves
 
@@ -125,3 +127,6 @@ starter.exe starter [cga|ega|tandy|herc|vga] [adlib|tandy|pc|none]
  
  # Findings
  - VGA is not real VGA Mode but EGA 0dh mode - its the same as game started with EGA but with lighter colors :)
+
+ # Releated
+ github https://github.com/c3d and [blog](https://c3d.github.io/) and page of Christophe de Dinechin
