@@ -7,8 +7,8 @@ ptr16 struc ; sizeof=0x4
 ptr16 ends
 
 dseg segment 'DATA'
-  game_exe db 'ae_vga.exe',0
-  adlib_com db 'adlib.com',0
+  game_exe db 'ega_vga.exe',0
+  adlib_com db 's_adlib.com',0
   commandline db ' ',0dh
   
 params:
