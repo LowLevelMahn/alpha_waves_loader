@@ -9,14 +9,16 @@ Due to super tiny floppy and memory sizes of that time most games used "loaders"
 Loader menu | Game intro
 --- | ---
 ![](./images/menu.png "Menu") | ![](./images/intro.png "Intro")
- 
+
 - Youtube: https://www.youtube.com/watch?v=jN9KKnfwoNY
 - AlphaWaves on Moby Games: https://www.mobygames.com/game/dos/continuum
 - Archive.org Floppy-Image download: https://archive.org/details/002297-AlphaWaves (my work bases on this floppy image, unpack disk image with 7zip)
+- A bit of history on the game: https://grenouillebouillie.wordpress.com/2007/11/09/the-dawn-of-3d-games/
+- Wikipedia entry: https://en.wikipedia.org/wiki/Alpha_Waves
 
-| File         | MD5                               | Info                  | Analysed |                                                  
+| File         | MD5                               | Info                  | Analysed |
 | :----------- | :-------------------------------- | :-------------------- | -------- |
-| ALPHA_D.COM	 |  41c74f363e70864fb15579ba171731bf | german version        | ignored  | 
+| ALPHA_D.COM	 |  41c74f363e70864fb15579ba171731bf | german version        | ignored  |
 | ALPHA_E.COM	 |  7e165fc5fd1aec1482bc915ab4053d36 | english version       | 100%      |
 | ALPHA_F.COM	 |  682d26aec9512a4002d9aef271df0b23 | french version        | ignored  |
 | CONFIG.TAT	 |  8b3de28f7feebc33e70b36c64061ab1f | gfx/game code offsets | 100% [see](read_some_file_sub_4/types.hpp)    |
@@ -60,26 +62,26 @@ progs.cc1 contains the compressed executeable for:
     * cga/hercules
     * tandy
     * ega/vga
-    
+
 config.tat maps the gfx selection in the loader to the gfx executables in prog.cc1
 
-| Mode         | Gfx                               | 
-| :----------: | :-------------------------------- | 
-|  0         	 | CGA/Hercules                      | 
+| Mode         | Gfx                               |
+| :----------: | :-------------------------------- |
+|  0         	 | CGA/Hercules                      |
 |  1           |EGA/VGA      |
 |  2          |Tandy        |
 |  3    |CGA/Hercules |
 |  4    |EGA/VGA      |
 
-all sound TSRs are loaded and excecuted in the order 
+all sound TSRs are loaded and excecuted in the order
 1. adlib
 2. tandy
 3. pc-buz
 
 (the first TSR that successfully hooks Interrupt 0xF0 keeps the others from installing)
-   
+
 the loader loads the executable that fits the gfx mode selection base on config.tat and progs.cc1
-sets some interrupts and starts the game 
+sets some interrupts and starts the game
 
 # Extractor & Starter
 
@@ -106,7 +108,7 @@ starter.exe starter [cga|ega|tandy|herc|vga] [adlib|tandy|pc|none]
  2. produce ASM file in IDA (called ALPHA_E.asm)
  3. merge changes of ALPHA_E.asm into ae.asm
  4. test if resulting ae_org.com is equal to ALPHA_E.COM using build.bat
- 
+
  # DONE
  - reverse/reassemble to binary equal com program
  - analysed the config.tat and HIGHSCOR.QB fully
@@ -124,9 +126,9 @@ starter.exe starter [cga|ega|tandy|herc|vga] [adlib|tandy|pc|none]
  - document the file format of TEXTES.CC1, MUSIC_(A|B|T).CC1 and GRAPHS.CC1
  - document the Copy-Protection code stuff in the game
  - maybe reverse AlphaWaves itself - its a Turbo C 2.x exe
- 
+
  # Findings
  - VGA is not real VGA Mode but EGA 0dh mode - its the same as game started with EGA but with lighter colors :)
 
- # Releated
- [github](https://github.com/c3d) and [blog](https://c3d.github.io/) and page of Christophe de Dinechin
+ # Related
+ [GitHub account](https://github.com/c3d) and [GitHub page](https://c3d.github.io/) of Christophe de Dinechin
