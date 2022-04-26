@@ -203,6 +203,41 @@ namespace cleanup
         }
     }
 
+    struct exec_data_slice_t
+    {
+        uint32_t data_size{};
+        uint32_t unpacked_data_size{};
+        const uint8_t* data{};
+    };
+
+    exec_data_slice_t get_exec( const progs_cc1_t* progs_cc1_, size_t exec_type_ )
+    {
+        auto get_slice = []( const auto& exec_data_ ) {
+            return exec_data_slice_t{ swap( exec_data_.data_size ), swap( exec_data_.unpacked_data_size ),
+                                      exec_data_.data.data() };
+        };
+
+        switch( exec_type_ )
+        {
+            case 0:
+                return get_slice( progs_cc1_->sound.pc_buz );
+            case 1:
+                return get_slice( progs_cc1_->sound.tandy );
+            case 2:
+                return get_slice( progs_cc1_->sound.adlib );
+            case 3:
+                return get_slice( progs_cc1_->gfx.cga_hercules );
+            case 4:
+                return get_slice( progs_cc1_->gfx.ega_vga );
+            case 5:
+                return get_slice( progs_cc1_->gfx.tandy );
+            default:
+                assert( false );
+                break;
+        }
+        return exec_data_slice_t{};
+    };
+
     size_t emu_read_some_file_sub_4( emu_t& e,
                                      config_tat_t::executable_info_t* exec_info_,
                                      emu_t::ptr16_t& executable_buffer_ )
@@ -217,39 +252,7 @@ namespace cleanup
         assert( prog_cc1_content.size() == sizeof( progs_cc1_t ) );
         const progs_cc1_t* progs_cc1 = reinterpret_cast<const progs_cc1_t*>( prog_cc1_content.data() );
 
-        struct exec_data_slice_t
-        {
-            uint32_t data_size{};
-            uint32_t unpacked_data_size{};
-            const uint8_t* data{};
-        };
-
-        auto get_slice = []( const auto& exec_data_ ) {
-            return exec_data_slice_t{ swap( exec_data_.data_size ), swap( exec_data_.unpacked_data_size ),
-                                      exec_data_.data.data() };
-        };
-
-        const exec_data_slice_t slice = [&]( size_t exec_type_ ) {
-            switch( exec_info_->byte_12h )
-            {
-                case 0:
-                    return get_slice( progs_cc1->sound.pc_buz );
-                case 1:
-                    return get_slice( progs_cc1->sound.tandy );
-                case 2:
-                    return get_slice( progs_cc1->sound.adlib );
-                case 3:
-                    return get_slice( progs_cc1->gfx.cga_hercules );
-                case 4:
-                    return get_slice( progs_cc1->gfx.tandy );
-                case 5:
-                    return get_slice( progs_cc1->gfx.ega_vga );
-                default:
-                    assert( false );
-                    break;
-            }
-            return exec_data_slice_t{};
-        }( exec_info_->byte_12h );
+        const auto slice = get_exec( progs_cc1, exec_info_->byte_12h );
 
         std::vector<uint8_t> compress_data( slice.data, slice.data + slice.data_size );
         std::vector<uint8_t> uncompressed_data( slice.unpacked_data_size );

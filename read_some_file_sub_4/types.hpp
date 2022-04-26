@@ -167,8 +167,8 @@ struct progs_cc1_t
     struct gfx_t
     {
         exec_data_t<51265> cga_hercules;
-        exec_data_t<51720> tandy;
-        exec_data_t<50404> ega_vga;
+        exec_data_t<51720> ega_vga;
+        exec_data_t<50404> tandy;
     };
     gfx_t gfx;
 };
@@ -180,7 +180,7 @@ static_assert( offsetof( progs_cc1_t, sound.pc_buz ) == 26, "wrong offset" );
 static_assert( offsetof( progs_cc1_t, sound.tandy ) == 2456, "wrong offset" );
 static_assert( offsetof( progs_cc1_t, sound.adlib ) == 5349, "wrong offset" );
 static_assert( offsetof( progs_cc1_t, gfx.cga_hercules ) == 8410, "wrong offset" );
-static_assert( offsetof( progs_cc1_t, gfx.tandy ) == 59683, "wrong offset" );
-static_assert( offsetof( progs_cc1_t, gfx.ega_vga ) == 111411, "wrong offset" );
+static_assert( offsetof( progs_cc1_t, gfx.ega_vga ) == 59683, "wrong offset" );
+static_assert( offsetof( progs_cc1_t, gfx.tandy ) == 111411, "wrong offset" );
 
 #pragma pack( pop )
