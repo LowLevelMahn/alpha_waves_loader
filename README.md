@@ -1,6 +1,6 @@
 # alpha_waves_loader
 
-This is the reverse engineered, english-language text menu game loader ALPHA_E.COM of the DOS game Alpha Waves aka Continuum
+This is the reverse engineered, english-language text menu game loader ALPHA_E.COM of the DOS game Alpha Waves aka Continuum and tools for extracting and uncompressing the game executables and starting the game skipping the original loader
 
 Due to super tiny floppy and memory sizes of that time most games used "loaders" that mostly combine graphics/sound/etc. code into in-memory build executables, ALPHA_E.COM is the english version of such a "loader" for AlphaWaves
 
@@ -79,6 +79,25 @@ all sound TSRs are loaded and excecuted in the order
 the loader loads the executable that fits the gfx mode selection base on config.tat and progs.cc1
 sets some interrupts and starts the game 
 
+# Extractor & Starter
+
+with Release-0.0.3 there is a extractor and starter under tools that directly extracts the several game executables from the progs.cc1
+
+extractor.exe path-to-progs.cc1
+
+extracts these executables
+  * sound com TSR
+    * adlib -> s_adlib.com
+    * tandy -> s_tandy.com
+    * pc-buz -> s_pc_buz.com
+  * game gfx exe
+    * cga/hercules -> cga_herc.exe
+    * tandy -> tandy.exe
+    * ega/vga -> ega_vga.exe
+
+the 16bit dos starter.exe creates the needed environment for the executables and starts the game
+
+starter.exe starter [cga|ega|tandy|herc|vga] [adlib|tandy|pc|none]
 
  # using IDA
  1. add more information to the IDB
@@ -96,9 +115,9 @@ sets some interrupts and starts the game
  - extracted the adlib TSR com program from the loading process (pre-loaded for adlib sound)
  - minimal loader for the adlib com TSR + game exe + setting of interrupts to configure the game (only GRAPHS.CC1, HIGHSCOR.QB, MUSIC_A.CC1, TEXTES.CC1 needed)
  - added a ultra-simple x86 "emulator" (based on inline-asm) that allows me to port loader code nearly 1:1 to C++, result: the game executables are load and uncompress-able in 32bit :)
+ - executable-extractor and starter
 
  # TODOs
- - rewrite the loader in C and write a tool that directly creates a full game exe that can be directly started (i know i can just memdump, but thats not my goal)
  - maybe reverse AlphaWaves itself - its a Turbo C 2.x exe
  
  # Findings
