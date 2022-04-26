@@ -86,11 +86,11 @@ with Release-0.0.3 there is a extractor and starter under tools that directly ex
 extractor.exe path-to-progs.cc1
 
 extracts these executables
-  * sound com TSR (installed at interrupt 0xF0)
+  * sound com TSR
     * adlib -> s_adlib.com
     * tandy -> s_tandy.com
     * pc-buz -> s_pc_buz.com
-  * gfx exe
+  * game gfx exe
     * cga/hercules -> cga_herc.exe
     * tandy -> tandy.exe
     * ega/vga -> ega_vga.exe
