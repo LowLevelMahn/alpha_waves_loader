@@ -1,6 +1,6 @@
 # alpha_waves_loader
 
-This is the reverse engineered, english-language text menu game loader ALPHA_E.COM of the 1990 DOS game Alpha Waves aka Continuum by Christophe de Dinechin
+This is the reverse engineered, english-language text menu game loader ALPHA_E.COM of the 1990 DOS game Alpha Waves aka Continuum DOS Version by Frederick Raynal's (original Ataris ST-Version by Christophe de Dinechin)
 
 and tools for extracting and uncompressing the game executables and starting the game skipping the original loader
 
@@ -132,3 +132,4 @@ starter.exe starter [cga|ega|tandy|herc|vga] [adlib|tandy|pc|none]
 
  # Related
  [GitHub account](https://github.com/c3d) and [GitHub page](https://c3d.github.io/) of Christophe de Dinechin
+ [Facebook Page](https://www.facebook.com/ludoid.raynal/) of Frederick Raynal's company
