@@ -2,11 +2,17 @@
 
 This is the reverse engineered, english-language text menu game loader ALPHA_E.COM of the 1990 DOS game Alpha Waves (aka Continuum) 
 
-Frederick Raynal did the DOS port im using here, the inital Ataris ST-Version of the game was created by Christophe de Dinechin
+## What is a loader?
 
 Due to super tiny floppy and memory sizes of that time most games used "loaders" that mostly combine graphics/sound/etc. code into in-memory build executables, ALPHA_E.COM is the english version of such a "loader" for AlphaWaves
 
+## What else?
+
 I've also developed a 32/64Bit tool for extracting and uncompressing the game executables and a 16Bit DOS starter program to skip the original loader
+
+## Creators
+
+Frederick Raynal did the DOS port im using here, the inital Ataris ST-Version of the game was created by Christophe de Dinechin
 
 Loader menu | Game intro
 --- | ---
