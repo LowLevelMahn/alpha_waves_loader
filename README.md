@@ -1,6 +1,6 @@
 # alpha_waves_loader
 
-This is the reverse engineered, english-language text menu game loader ALPHA_E.COM of the 1990 DOS game Alpha Waves aka Continuum DOS Version by Frederick Raynal's (original Ataris ST-Version by Christophe de Dinechin)
+This is the reverse engineered, english-language text menu game loader ALPHA_E.COM of the 1990 DOS game Alpha Waves aka Continuum DOS Version by Frederick Raynal (original Ataris ST-Version by Christophe de Dinechin)
 
 and tools for extracting and uncompressing the game executables and starting the game skipping the original loader
 
@@ -10,7 +10,8 @@ Loader menu | Game intro
 --- | ---
 ![](./images/menu.png "Menu") | ![](./images/intro.png "Intro")
 
-- Youtube: https://www.youtube.com/watch?v=jN9KKnfwoNY
+- Youtube video of the Atari-ST Vesion: https://www.youtube.com/watch?v=qwFPV855sI4
+- Youtube video of the DOS Version: https://www.youtube.com/watch?v=jN9KKnfwoNY
 - AlphaWaves on Moby Games: https://www.mobygames.com/game/dos/continuum
 - Archive.org Floppy-Image download: https://archive.org/details/002297-AlphaWaves (my work bases on this floppy image, unpack disk image with 7zip)
 - A bit of history on the game: https://grenouillebouillie.wordpress.com/2007/11/09/the-dawn-of-3d-games/
