@@ -1,6 +1,7 @@
 # alpha_waves_loader
 
-This is the reverse engineered, english-language text menu game loader ALPHA_E.COM of the 1990 DOS game Alpha Waves aka Continuum DOS Version by Frederick Raynal (original Ataris ST-Version by Christophe de Dinechin)
+This is the reverse engineered, english-language text menu game loader ALPHA_E.COM of the 1990 DOS game Alpha Waves (aka Continuum) by Frederick Raynal
+(original Ataris ST-Version by Christophe de Dinechin)
 
 and tools for extracting and uncompressing the game executables and starting the game skipping the original loader
 
