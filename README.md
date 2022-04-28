@@ -57,6 +57,8 @@ my reduced loader
 | build_exeload.bat | batch builder for the small loader                                                                     |
 | read_some_file_sub_4/original_port.cpp  | C++ port of file loading routines based on a simple x86 emulator                 |
 | read_some_file_sub_4/cleanup_port.cpp   | cleanup of the original port (mostly pure C/C++)                                 |
+| tools/extractor.cpp  | standalone extractor for the game executables                                                       |
+| tools/starter.cpp   | standalone 16Bit DOS starter for the extracted game executables                                      |
 
  **tools_dir** variable in build.bat needs to be set to suits your environment
 
