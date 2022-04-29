@@ -143,6 +143,7 @@ starter.exe starter [cga|ega|tandy|herc|vga] [adlib|tandy|pc|none]
  - VGA is not real VGA Mode but EGA 0dh mode - its the same as game started with EGA but with lighter colors :)
 
  # Related
+ - [Alpha Waves, the first 3D platformer ever How 3D graphics worked when there were no graphic cards](https://www.youtube.com/watch?v=XMZj4WQ7Rt0)
  - [Full Atari ST source](http://cc3d.free.fr/Alpha-Waves.zip) - Build-environment: Devpac from [HiSoft Systems](https://en.wikipedia.org/wiki/HiSoft_Systems)
  - [GitHub account](https://github.com/c3d) and [GitHub page](https://c3d.github.io/) of Christophe de Dinechin
  - [Facebook Page](https://www.facebook.com/ludoid.raynal/) of Frederick Raynal's company
