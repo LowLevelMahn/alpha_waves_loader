@@ -1,20 +1,33 @@
 # alpha_waves_loader
 
-This is the reverse engineered, english-language text menu game loader ALPHA_E.COM of the DOS game Alpha Waves aka Continuum and tools for extracting and uncompressing the game executables and starting the game skipping the original loader
+This is the reverse engineered, english-language text menu game loader ALPHA_E.COM of the 1990 DOS game Alpha Waves (aka Continuum) 
+
+## What is a loader?
 
 Due to super tiny floppy and memory sizes of that time most games used "loaders" that mostly combine graphics/sound/etc. code into in-memory build executables, ALPHA_E.COM is the english version of such a "loader" for AlphaWaves
+
+## What else?
+
+I've also developed a 32/64Bit tool for extracting and uncompressing the game executables and a 16Bit DOS starter program to skip the original loader
+
+## Creators
+
+Frederick Raynal did the DOS port im using here, the inital Ataris ST-Version of the game was created by Christophe de Dinechin
 
 Loader menu | Game intro
 --- | ---
 ![](./images/menu.png "Menu") | ![](./images/intro.png "Intro")
- 
-- Youtube: https://www.youtube.com/watch?v=jN9KKnfwoNY
+
+- Youtube video of the Atari-ST Vesion: https://www.youtube.com/watch?v=qwFPV855sI4
+- Youtube video of the DOS Version: https://www.youtube.com/watch?v=jN9KKnfwoNY
 - AlphaWaves on Moby Games: https://www.mobygames.com/game/dos/continuum
 - Archive.org Floppy-Image download: https://archive.org/details/002297-AlphaWaves (my work bases on this floppy image, unpack disk image with 7zip)
+- A bit of history on the game: https://grenouillebouillie.wordpress.com/2007/11/09/the-dawn-of-3d-games/
+- Wikipedia entry: https://en.wikipedia.org/wiki/Alpha_Waves
 
-| File         | MD5                               | Info                  | Analysed |                                                  
+| File         | MD5                               | Info                  | Analysed |
 | :----------- | :-------------------------------- | :-------------------- | -------- |
-| ALPHA_D.COM	 |  41c74f363e70864fb15579ba171731bf | german version        | ignored  | 
+| ALPHA_D.COM	 |  41c74f363e70864fb15579ba171731bf | german version        | ignored  |
 | ALPHA_E.COM	 |  7e165fc5fd1aec1482bc915ab4053d36 | english version       | 100%      |
 | ALPHA_F.COM	 |  682d26aec9512a4002d9aef271df0b23 | french version        | ignored  |
 | CONFIG.TAT	 |  8b3de28f7feebc33e70b36c64061ab1f | gfx/game code offsets | 100% [see](read_some_file_sub_4/types.hpp)    |
@@ -44,6 +57,8 @@ my reduced loader
 | build_exeload.bat | batch builder for the small loader                                                                     |
 | read_some_file_sub_4/original_port.cpp  | C++ port of file loading routines based on a simple x86 emulator                 |
 | read_some_file_sub_4/cleanup_port.cpp   | cleanup of the original port (mostly pure C/C++)                                 |
+| tools/extractor.cpp  | standalone extractor for the game executables                                                       |
+| tools/starter.cpp   | standalone 16Bit DOS starter for the extracted game executables                                      |
 
  **tools_dir** variable in build.bat needs to be set to suits your environment
 
@@ -58,26 +73,26 @@ progs.cc1 contains the compressed executeable for:
     * cga/hercules
     * tandy
     * ega/vga
-    
+
 config.tat maps the gfx selection in the loader to the gfx executables in prog.cc1
 
-| Mode         | Gfx                               | 
-| :----------: | :-------------------------------- | 
-|  0         	 | CGA/Hercules                      | 
+| Mode         | Gfx                               |
+| :----------: | :-------------------------------- |
+|  0         	 | CGA/Hercules                      |
 |  1           |EGA/VGA      |
 |  2          |Tandy        |
 |  3    |CGA/Hercules |
 |  4    |EGA/VGA      |
 
-all sound TSRs are loaded and excecuted in the order 
+all sound TSRs are loaded and excecuted in the order
 1. adlib
 2. tandy
 3. pc-buz
 
 (the first TSR that successfully hooks Interrupt 0xF0 keeps the others from installing)
-   
+
 the loader loads the executable that fits the gfx mode selection base on config.tat and progs.cc1
-sets some interrupts and starts the game 
+sets some interrupts and starts the game
 
 # Extractor & Starter
 
@@ -104,7 +119,7 @@ starter.exe starter [cga|ega|tandy|herc|vga] [adlib|tandy|pc|none]
  2. produce ASM file in IDA (called ALPHA_E.asm)
  3. merge changes of ALPHA_E.asm into ae.asm
  4. test if resulting ae_org.com is equal to ALPHA_E.COM using build.bat
- 
+
  # DONE
  - reverse/reassemble to binary equal com program
  - analysed the config.tat and HIGHSCOR.QB fully
@@ -118,7 +133,17 @@ starter.exe starter [cga|ega|tandy|herc|vga] [adlib|tandy|pc|none]
  - executable-extractor and starter
 
  # TODOs
+ - reverse the sound driver TSRs
+ - document the file format of TEXTES.CC1, MUSIC_(A|B|T).CC1 and GRAPHS.CC1
+ - patch port (03D0h as mirror of 03D4h) access to be more compatible with dosbox: https://github.com/dosbox-staging/dosbox-staging/issues/1448
+ - document the Copy-Protection code stuff in the game
  - maybe reverse AlphaWaves itself - its a Turbo C 2.x exe
- 
+
  # Findings
  - VGA is not real VGA Mode but EGA 0dh mode - its the same as game started with EGA but with lighter colors :)
+
+ # Related
+ - [Alpha Waves, the first 3D platformer ever How 3D graphics worked when there were no graphic cards](https://www.youtube.com/watch?v=XMZj4WQ7Rt0)
+ - [Full Atari ST source](http://cc3d.free.fr/Alpha-Waves.zip) - Build-environment: Devpac from [HiSoft Systems](https://en.wikipedia.org/wiki/HiSoft_Systems)
+ - [GitHub account](https://github.com/c3d) and [GitHub page](https://c3d.github.io/) of Christophe de Dinechin
+ - [Facebook Page](https://www.facebook.com/ludoid.raynal/) of Frederick Raynal's company
