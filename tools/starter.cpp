@@ -108,7 +108,7 @@ int main(int argc_, char* argv_[])
   
   // interrupt vector table
   far_ptr_t __far * ivt = 0;
-
+  
   _disable();
   ivt[0x9F].offs = gfx_mode; // some sort of global variable :)
   _enable();
@@ -133,23 +133,23 @@ int main(int argc_, char* argv_[])
   // restore interrupts
   
   // sound driver active?
-  uint8_t far* int_f0 = (uint8_t far*)MK_FP(ivt[0xF0].segm, ivt[0xF0].offs);
-  char blub[4];
-  _fmemcpy(blub, int_f0+2, 4);
-  printf("%.4s\n", blub);
-  
-  if(_fmemcmp(int_f0+2, "IFGM", 4) == 0)
+  if(old_int_0xF0 != _dos_getvect( 0xF0 ))
   {
-    // uninstall sound TSR
-    REGS inregs;
-    inregs.h.ah = 0xE;
-    int86(0xF0,&inregs,&inregs);   
+    uint8_t far* int_f0 = (uint8_t far*)MK_FP(ivt[0xF0].segm, ivt[0xF0].offs);
+    
+    if( _fmemcmp(int_f0+2, "IFGM", 4) == 0 )
+    {
+      printf("uninstall sound TSR\n");
+      REGS inregs;
+      inregs.h.ah = 0xE;
+      int86(0xF0,&inregs,&inregs);   
+    }
+    _dos_setvect( 0xF0, old_int_0xF0 );
   }
   
   _dos_setvect( 0x24, old_int_0x24 );
   _dos_setvect( 0x97, old_int_0x97 );
   _dos_setvect( 0x9F, old_int_0x9F );
-  _dos_setvect( 0xF0, old_int_0xF0 );
 
   return 0;
 }
