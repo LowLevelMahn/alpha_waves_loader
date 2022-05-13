@@ -12,6 +12,20 @@ struct far_ptr_t
   uint16_t segm;
 };
 
+static bool string_index(const char* str_, const char* list_[], int list_size_, uint16_t* str_index_)
+{
+  *str_index_ = -1;
+  for(int i = 0; i < list_size_; ++i)
+  {
+    if(strcmp(list_[i], str_) == 0)
+    {
+      *str_index_ = i;
+      return true;
+    }
+  }
+  return false;
+}
+
 bool parse_cmd(int argc_, char* argv_[], uint16_t* gfx_mode_, uint16_t* sound_type_)
 {
   if( argc_ < 3)
@@ -21,38 +35,18 @@ bool parse_cmd(int argc_, char* argv_[], uint16_t* gfx_mode_, uint16_t* sound_ty
 
   *gfx_mode_ = 0;
   static const char* gfx_str[5] = {"cga","ega","tandy","herc","vga"};
-  bool found = false;
-  for(int i = 0; i < 5; ++i)
-  {
-    if(strcmp(gfx_str[i], argv_[1]) == 0)
-    {
-      *gfx_mode_ = i;
-      found = true;
-      break;
-    }
-  }
-  if(!found)
+  if(!string_index(argv_[1], gfx_str, sizeof(gfx_str), gfx_mode_))
   {
     printf("unknown gfx: %s\n", argv_[1]);
-    return false;
+    return false;    
   }
   
   *sound_type_ = 0;
   static const char* sound_str[4] = {"adlib","tandy","pc","none"};
-  found = false;
-  for(int i = 0; i < 5; ++i)
-  {
-    if(strcmp(sound_str[i], argv_[2]) == 0)
-    {
-      *sound_type_ = i;
-      found = true;
-      break;
-    }
-  }
-  if(!found)
+  if(!string_index(argv_[2], sound_str, sizeof(sound_str), sound_type_))
   {
     printf("unknown sound: %s\n", argv_[2]);
-    return false;
+    return false;    
   }
   
   return true;
@@ -66,6 +60,29 @@ const char* game_exec[5] = {CGA_HERC, EGA_VGA, TANDY, CGA_HERC, EGA_VGA};
 const char* sound_exec[3] = {"s_adlib.com","s_tandy.com","s_pc_buz_com"};
 
 const uint16_t feature_flags = 0xC001;
+/*
+feature_flags
+  bit[ 0] = 1 ???
+  bit[ 1] = 0
+  bit[ 2] = 0
+  bit[ 3] = 0
+  bit[ 4] = 0
+  bit[ 5] = 0
+  bit[ 6] = 0
+  bit[ 7] = 0
+  bit[ 8] = 0
+  bit[ 9] = 0
+  bit[ 10] = 0
+  bit[ 11] = 0
+  bit[ 12] = joystick detected (not supported currently)
+  bit[ 13] = currency == franc
+  bit[14+15] = free memory on game start
+    = 0b00 = 0 ( < 0x4000 free paragraphs)
+    = 0b01 = 1 (>= 0x4000 free paragraphs)
+    = 0b10 = 2 (>= 0x6000 free paragraphs)
+    = 0b11 = 3 (>= 0x8000 free paragraphs)
+*/
+
 const uint8_t dos_version = 5;
 
 void __interrupt __far interrupt_24h(INTPACK regs_)
