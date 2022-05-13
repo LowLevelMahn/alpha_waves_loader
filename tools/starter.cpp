@@ -26,6 +26,8 @@ bool get_string_index(const char* str_, const char* list_[], int list_size_, uin
   return false;
 }
 
+#define COUNTOF(ARRAY) (sizeof(ARRAY) / sizeof(ARRAY[0]))
+
 bool parse_cmd(int argc_, char* argv_[], uint16_t* gfx_mode_, uint16_t* sound_type_)
 {
   if( argc_ < 3)
@@ -35,7 +37,7 @@ bool parse_cmd(int argc_, char* argv_[], uint16_t* gfx_mode_, uint16_t* sound_ty
 
   *gfx_mode_ = 0;
   static const char* gfx_str[5] = {"cga","ega","tandy","herc","vga"};
-  if(!get_string_index(argv_[1], gfx_str, sizeof(gfx_str), gfx_mode_))
+  if(!get_string_index(argv_[1], gfx_str, COUNTOF(gfx_str), gfx_mode_))
   {
     printf("unknown gfx: %s\n", argv_[1]);
     return false;    
@@ -43,7 +45,7 @@ bool parse_cmd(int argc_, char* argv_[], uint16_t* gfx_mode_, uint16_t* sound_ty
   
   *sound_type_ = 0;
   static const char* sound_str[4] = {"adlib","tandy","pc","none"};
-  if(!get_string_index(argv_[2], sound_str, sizeof(sound_str), sound_type_))
+  if(!get_string_index(argv_[2], sound_str, COUNTOF(sound_str), sound_type_))
   {
     printf("unknown sound: %s\n", argv_[2]);
     return false;    
