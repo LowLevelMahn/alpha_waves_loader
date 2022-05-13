@@ -12,7 +12,7 @@ struct far_ptr_t
   uint16_t segm;
 };
 
-static bool string_index(const char* str_, const char* list_[], int list_size_, uint16_t* str_index_)
+bool get_string_index(const char* str_, const char* list_[], int list_size_, uint16_t* str_index_)
 {
   *str_index_ = -1;
   for(int i = 0; i < list_size_; ++i)
@@ -35,7 +35,7 @@ bool parse_cmd(int argc_, char* argv_[], uint16_t* gfx_mode_, uint16_t* sound_ty
 
   *gfx_mode_ = 0;
   static const char* gfx_str[5] = {"cga","ega","tandy","herc","vga"};
-  if(!string_index(argv_[1], gfx_str, sizeof(gfx_str), gfx_mode_))
+  if(!get_string_index(argv_[1], gfx_str, sizeof(gfx_str), gfx_mode_))
   {
     printf("unknown gfx: %s\n", argv_[1]);
     return false;    
@@ -43,7 +43,7 @@ bool parse_cmd(int argc_, char* argv_[], uint16_t* gfx_mode_, uint16_t* sound_ty
   
   *sound_type_ = 0;
   static const char* sound_str[4] = {"adlib","tandy","pc","none"};
-  if(!string_index(argv_[2], sound_str, sizeof(sound_str), sound_type_))
+  if(!get_string_index(argv_[2], sound_str, sizeof(sound_str), sound_type_))
   {
     printf("unknown sound: %s\n", argv_[2]);
     return false;    
@@ -59,7 +59,13 @@ const char* game_exec[5] = {CGA_HERC, EGA_VGA, TANDY, CGA_HERC, EGA_VGA};
 
 const char* sound_exec[3] = {"s_adlib.com","s_tandy.com","s_pc_buz_com"};
 
-const uint16_t feature_flags = 0xC001;
+uint8_t bool_as_int(bool value_)
+{
+  return value_ ? 1 : 0;
+}
+
+uint16_t get_feature_flags( bool unknown_, bool joystick_support_, bool currency_franc_, uint8_t free_memory_type_ )
+{
 /*
 feature_flags
   bit[ 0] = 1 ???
@@ -82,6 +88,16 @@ feature_flags
     = 0b10 = 2 (>= 0x6000 free paragraphs)
     = 0b11 = 3 (>= 0x8000 free paragraphs)
 */
+  uint16_t feature_flags = 
+    (free_memory_type_ << 14) 
+    + (bool_as_int(currency_franc_) << 13) 
+    + (bool_as_int(joystick_support_) << 12) 
+    + bool_as_int(unknown_);
+    
+  return feature_flags;
+}
+
+uint16_t feature_flags = 0;
 
 const uint8_t dos_version = 5;
 
@@ -99,6 +115,8 @@ typedef void __interrupt __far (*interrupt_func)();
 
 int main(int argc_, char* argv_[])
 {
+  feature_flags = get_feature_flags(true, false, false, 3);
+
   uint16_t gfx_mode = 0;
   uint16_t sound_type = 0;
   
