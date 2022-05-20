@@ -176,12 +176,20 @@ int main(int argc_, char* argv_[])
     
     if( _fmemcmp(int_f0+2, "IFGM", 4) == 0 )
     {
-      printf("uninstall sound TSR\n");
+      printf("uninstall sound TSR...\n");
       REGS inregs;
       inregs.h.ah = 0xE;
       int86(0xF0,&inregs,&inregs);   
+
+      if(old_int_0xF0 == _dos_getvect( 0xF0 ))
+      {
+        printf("sound driver uninstalled!\n");
+      }
+      else
+      {
+        printf("sound driver uninstall failed!\n");
+      }
     }
-    _dos_setvect( 0xF0, old_int_0xF0 );
   }
   
   _dos_setvect( 0x24, old_int_0x24 );
