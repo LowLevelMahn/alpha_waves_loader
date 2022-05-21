@@ -39,7 +39,10 @@ int main(int argc, char* argv[])
 	const std::string exe_path = argv[1];
 
 	const std::string in_path = exe_path + "/ega_vga.exe";
-	const std::string out_path = exe_path + "/vga.exe";
+
+	bool output_vga = true;
+
+	const std::string out_path = exe_path + "/" + (output_vga ? "vga.exe" : "ega.exe");
 
 	//read file complete
 	std::vector<uint8_t> content;
@@ -128,10 +131,22 @@ int main(int argc, char* argv[])
 		// NOP the complete function
 		::memset(&content[0x2B1B], 0x90, org_code.size());
 			
-		std::vector<uint8_t> new_code{ 0xB8, 0xFF, 0xFF, 0xC3 };
-		//     B8 FF FF : mov ax, 0FFFFh
-		//     C3       : retn
-		// 
+		// the only code difference between ega and vga
+		std::vector<uint8_t> new_code;
+		if (output_vga)
+		{
+			// VGA
+			new_code = { 0xB8, 0xFF, 0xFF, 0xC3 };
+			//     B8 FF FF : mov ax, 0FFFFh
+			//     C3       : retn
+		}
+		else
+		{
+			// EGA
+			new_code = { 0x33, 0xC0, 0xC3 };
+			//     33 C0    : xor ax, ax
+			//     C3       : retn
+		}
 		::memcpy(&content[0x2B1B],new_code.data(), new_code.size());
 	}
 
