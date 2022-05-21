@@ -99,15 +99,23 @@ feature_flags
   return feature_flags;
 }
 
-uint16_t feature_flags = 0;
+//#define SET_INT_24h
+
+#if SET_INT_24h
 
 const uint8_t dos_version = 5;
 
+// never called?
 void __interrupt __far interrupt_24h(INTPACK regs_)
 {
   regs_.h.al = dos_version;
 }
 
+#endif
+
+uint16_t feature_flags = 0;
+
+// called in ega_vga.exe from file offset: 0x57DA
 void __interrupt __far interrupt_97h(INTPACK regs_)
 {
   regs_.x.ax = feature_flags;
@@ -138,7 +146,9 @@ int main(int argc_, char* argv_[])
 
   // save&set interrupts
 
+#if SET_INT_24h
   interrupt_func old_int_0x24 = _dos_getvect( 0x24 );  
+#endif  
   interrupt_func old_int_0x97 = _dos_getvect( 0x97 );
   interrupt_func old_int_0x9F = _dos_getvect( 0x9F );
   interrupt_func old_int_0xF0 = _dos_getvect( 0xF0 );
@@ -148,10 +158,16 @@ int main(int argc_, char* argv_[])
   
   _disable();
   ivt[0x9F].offs = gfx_mode; // some sort of global variable :)
+  
+  // in function at file offset: 0x2B1B
+  //   checked at file offset 0x2B23 in ega_vga.exe
+  
   _enable();
 
   // new interrupt routines
+#if SET_INT_24h  
   _dos_setvect( 0x24, (interrupt_func)interrupt_24h );
+#endif  
   _dos_setvect( 0x97, (interrupt_func)interrupt_97h );
  
   // load sound TSR
@@ -192,7 +208,9 @@ int main(int argc_, char* argv_[])
     }
   }
   
+#if SET_INT_24h  
   _dos_setvect( 0x24, old_int_0x24 );
+#endif  
   _dos_setvect( 0x97, old_int_0x97 );
   _dos_setvect( 0x9F, old_int_0x9F );
 
