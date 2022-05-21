@@ -57,8 +57,9 @@ my reduced loader
 | build_exeload.bat | batch builder for the small loader                                                                     |
 | read_some_file_sub_4/original_port.cpp  | C++ port of file loading routines based on a simple x86 emulator                 |
 | read_some_file_sub_4/cleanup_port.cpp   | cleanup of the original port (mostly pure C/C++)                                 |
-| tools/extractor.cpp  | standalone extractor for the game executables                                                       |
-| tools/starter.cpp   | standalone 16Bit DOS starter for the extracted game executables                                      |
+| tools/extractor/extractor.cpp  | standalone extractor for the game executables                                             |
+| tools/starter/starter.cpp   | standalone 16Bit DOS starter for the extracted game executables                              |
+| tools/create_static_exes/create_static_exes.cpp   | patches the ega_vga.exe to a vga.exe that starts without starter       |
 
  **tools_dir** variable in build.bat needs to be set to suits your environment
 
@@ -114,6 +115,8 @@ the 16bit dos starter.exe creates the needed environment for the executables and
 
 starter.exe starter [cga|ega|tandy|herc|vga] [adlib|tandy|pc|none]
 
+create_static_exes.exe path-to-extracted-exes
+
  # using IDA
  1. add more information to the IDB
  2. produce ASM file in IDA (called ALPHA_E.asm)
@@ -131,6 +134,7 @@ starter.exe starter [cga|ega|tandy|herc|vga] [adlib|tandy|pc|none]
  - minimal loader for the adlib com TSR + game exe + setting of interrupts to configure the game (only GRAPHS.CC1, HIGHSCOR.QB, MUSIC_A.CC1, TEXTES.CC1 needed)
  - added a ultra-simple x86 "emulator" (based on inline-asm) that allows me to port loader code nearly 1:1 to C++, result: the game executables are load and uncompress-able in 32bit :)
  - executable-extractor and starter
+ - create static vga.exe from extracted ega_vga.exe that does not need the starter to run
 
  # TODOs
  - reverse the sound driver TSRs
