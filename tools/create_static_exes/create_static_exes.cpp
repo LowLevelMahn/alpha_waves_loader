@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
 
 		if (::memcmp(org_code.data(), &content[0x2B1B], org_code.size()) != 0)
 		{
-			printf("wrong original code for interrupt 9Fh call\n");
+			printf("wrong original code for interrupt 9Fh offset use\n");
 			return 5;
 		}
 

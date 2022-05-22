@@ -105,7 +105,7 @@ feature_flags
 
 const uint8_t dos_version = 5;
 
-// never called?
+// never called? in Sound-Driver?
 void __interrupt __far interrupt_24h(INTPACK regs_)
 {
   regs_.h.al = dos_version;
