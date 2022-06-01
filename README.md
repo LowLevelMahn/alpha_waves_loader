@@ -135,7 +135,7 @@ create_static_exes.exe path-to-extracted-exes
  - added a ultra-simple x86 "emulator" (based on inline-asm) that allows me to port loader code nearly 1:1 to C++, result: the game executables are load and uncompress-able in 32bit :)
  - executable-extractor and starter
  - create static vga.exe from extracted ega_vga.exe that does not need the starter to run
- - disable copy protection
+ - disabled copy protection - just press enter on code question
 
  # TODOs
  - reverse the sound driver TSRs
