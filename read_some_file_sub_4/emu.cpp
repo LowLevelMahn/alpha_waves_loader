@@ -208,6 +208,11 @@ void emu_t::sub( uint8_t& op1_, uint8_t op2_ )
     ASM_OP8_2_RES( sub, op1_, op2_ )
 }
 
+void emu_t::shl( uint8_t& op1_, uint8_t op2_ )
+{
+    ASM_OP_2_RES( shl, op1_, op2_, al, cl )
+}
+
 void emu_t::add( uint16_t& op1_, uint16_t op2_ )
 {
     ASM_OP16_2_RES( add, op1_, op2_ )

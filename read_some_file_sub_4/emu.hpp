@@ -94,6 +94,7 @@ public:
 
     void add( uint8_t& op1_, uint8_t op2_ );
     void sub( uint8_t& op1_, uint8_t op2_ );
+    void shl( uint8_t& op1_, uint8_t op2_ );
 
     void add( uint16_t& op1_, uint16_t op2_ );
     void and_w( uint16_t& op1_, uint16_t op2_ );
