@@ -106,6 +106,12 @@ feature_flags
 const uint8_t dos_version = 5;
 
 // never called? in Sound-Driver?
+// dosbox debugger bpint 24 does not stop anywhere
+// no 0xCD 0x24 opcode in executables (only as data)
+// gets overrwritten by the game (interrupt-table changes from start to end at interrupt 24h)
+// bpint 21 4c
+// at file offset 0x5802 in ega_vga.exe get set with offset/segment
+// same routine that calls interrupt 97h
 void __interrupt __far interrupt_24h(INTPACK regs_)
 {
   regs_.h.al = dos_version;
@@ -119,6 +125,10 @@ uint16_t feature_flags = 0;
 void __interrupt __far interrupt_97h(INTPACK regs_)
 {
   regs_.x.ax = feature_flags;
+  
+  //word_24F76 = ax & 0xC000 (0b1100000000000000)  // free memory type
+  //word_24F70 = ax & 0x2000 (0b0010000000000000)  // franc is currency
+  //word_24F72 = ax & 0x1000 (0b0001000000000000)  // joystick
 }
 
 typedef void __interrupt __far (*interrupt_func)();
