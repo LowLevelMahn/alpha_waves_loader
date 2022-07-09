@@ -284,9 +284,10 @@ const uint8_t uncompressed_example[] = {
 struct pack_block_t
 {
     uint8_t packed_size{};
-    uint8_t flag{};      // 1 = more data to uncompress, 0 = end
+    uint8_t flag{};      // 1 = more data to uncompress, 0 = last
     uint16_t data_len{}; // (un)compressed data
-                         /*
+
+    /*
 	if packed_size != 0
 		table0[ 1 + pack_block.packed_size ]
 		table1[ 1 + pack_block.packed_size ]
@@ -311,10 +312,11 @@ struct tables_t
 tables_t prepare_tables( const uint8_t*& compressed, const uint8_t packed_size, const uint16_t data_len_ )
 {
     tables_t tables;
+    const size_t table_size = 1 + (size_t)packed_size;
     // from uncompressed data right after packed_block
-    std::vector<uint8_t> table0( 1 + packed_size ); // only for initialization
-    tables.table1.resize( 1 + packed_size );
-    tables.table2.resize( 1 + packed_size );
+    std::vector<uint8_t> table0( table_size ); // only for initialization
+    tables.table1.resize( table_size );
+    tables.table2.resize( table_size );
     tables.data.resize( data_len_ );
 
     ::memcpy( &table0[1], compressed, packed_size );
@@ -330,14 +332,13 @@ tables_t prepare_tables( const uint8_t*& compressed, const uint8_t packed_size, 
     compressed += data_len_;
 
     // runtime filled
-    tables.table4.resize( 1 + packed_size );
+    tables.table4.resize( table_size );
 
-    for( uint16_t i = 0; i < packed_size; ++i )
+    for( uint8_t i = 1; i < table_size; ++i )
     {
-        const uint8_t ofs_0 = i + 1;
-        const uint8_t ofs_1 = table0[ofs_0];
-        tables.table4[ofs_0] = tables.table3[ofs_1];
-        tables.table3[ofs_1] = ofs_0;
+        const uint8_t ofs_1 = table0[i];
+        tables.table4[i] = tables.table3[ofs_1];
+        tables.table3[ofs_1] = i;
     }
 
     return tables;
@@ -353,12 +354,12 @@ void val_3_non_0( uint8_t*& uncompressed_, const tables_t& tables_, const uint8_
 
     std::stack<stack_vals_t> stack;
 
-    auto helper1 = [&stack, &tables_]( const uint8_t val_7_ ) {
+    auto pushing = [&stack, &tables_]( const uint8_t val_7_ ) {
         stack.push( { val_7_, tables_.table2[val_7_] } );
         return tables_.table1[val_7_];
     };
 
-    auto helper2 = [&stack]( uint8_t* val_7_, uint8_t* val_4_ ) {
+    auto popping = [&stack]( uint8_t* val_7_, uint8_t* val_4_ ) {
         if( stack.empty() )
         {
             return true;
@@ -373,7 +374,7 @@ void val_3_non_0( uint8_t*& uncompressed_, const tables_t& tables_, const uint8_
     };
 
     uint8_t val_7 = val_3_;
-    uint8_t val_4 = helper1( val_7 );
+    uint8_t val_4 = pushing( val_7 );
 
     while( true )
     {
@@ -383,7 +384,7 @@ void val_3_non_0( uint8_t*& uncompressed_, const tables_t& tables_, const uint8_
         if( val_6 == 0 )
         {
             *uncompressed_++ = val_4;
-            if( helper2( &val_7, &val_4 ) )
+            if( popping( &val_7, &val_4 ) )
             {
                 return;
             }
@@ -391,7 +392,7 @@ void val_3_non_0( uint8_t*& uncompressed_, const tables_t& tables_, const uint8_
         else if( val_7 > val_6 )
         {
             val_7 = val_6;
-            val_4 = helper1( val_7 );
+            val_4 = pushing( val_7 );
         }
         else
         {
@@ -406,7 +407,7 @@ void val_3_non_0( uint8_t*& uncompressed_, const tables_t& tables_, const uint8_
                 if( val_7 == 0 )
                 {
                     *uncompressed_++ = val_5;
-                    if( helper2( &val_7, &val_4 ) )
+                    if( popping( &val_7, &val_4 ) )
                     {
                         return;
                     }
@@ -414,7 +415,7 @@ void val_3_non_0( uint8_t*& uncompressed_, const tables_t& tables_, const uint8_
                 }
                 else if( val_7 < val_4 )
                 {
-                    val_4 = helper1( val_7 );
+                    val_4 = pushing( val_7 );
                     break;
                 }
 
