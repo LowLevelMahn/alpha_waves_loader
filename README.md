@@ -135,7 +135,7 @@ create_static_exes.exe path-to-extracted-exes
  - added a ultra-simple x86 "emulator" (based on inline-asm) that allows me to port loader code nearly 1:1 to C++, result: the game executables are load and uncompress-able in 32bit :)
  - executable-extractor and starter
  - create static vga.exe from extracted ega_vga.exe that does not need the starter to run
- - disabled copy protection - just press enter on code question
+ - disabled copy protection - just press enter on code question when using ega.exe or vga.exe
 
  # TODOs
  - reverse the sound driver TSRs
@@ -143,7 +143,7 @@ create_static_exes.exe path-to-extracted-exes
  - patch port (03D0h as mirror of 03D4h) access to be more compatible with dosbox: https://github.com/dosbox-staging/dosbox-staging/issues/1448
  - document the Copy-Protection code stuff in the game (based on self modifying code)
  - maybe reverse AlphaWaves itself - its a Turbo C 2.x exe
- - remove copy protection code, replace self-modified code parts with static result
+ - remove copy protection code, replace self-modified code parts with static result - better for static analysis :)
 
  # Findings
  - VGA is not real VGA Mode but EGA 0dh mode - its the same as game started with EGA but with lighter colors :)
