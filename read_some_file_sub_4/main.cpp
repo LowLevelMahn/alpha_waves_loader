@@ -127,8 +127,21 @@ namespace port
                                              std::vector<uint8_t>& before_game_sub_3_ );
 }
 
+void protection_tests();
+int example_main();
+void cc1_read_test();
+
 int main()
 {
+#if 1
+    cc1_read_test();
+    return 0;
+
+    return example_main();
+    protection_tests();
+    return 0;
+#endif
+
     const std::string alpha_waves_filepath = R"(F:\projects\fun\dos_games_rev\alpha_waves_dev\tests\alpha)";
 
     // read config.tat
