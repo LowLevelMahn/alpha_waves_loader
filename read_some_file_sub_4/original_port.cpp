@@ -310,6 +310,7 @@ namespace original
         e.xchg( e.cl, e.ch );
         e.di = e.cx;
         e.al = e.memory<config_tat_t::executable_info_t>( e.cs, e.si )->byte_12h;
+        // e.al = block-nr
         e.xor_b( e.ah, e.ah );
         e.shl( e.ax, 1 );
         e.shl( e.ax, 1 );
@@ -380,12 +381,14 @@ namespace original
         e.xchg( e.cl, e.ch );
         word_44 = e.cx;
         word_45 = e.ax;
+        const uint32_t packed_size = ( word_45 << 16 ) + word_44;
+
         e.ax = *e.word_ptr( e.ds, e.bp + 4 );
         e.cx = *e.word_ptr( e.ds, e.bp + 6 );
         e.xchg( e.al, e.ah );
         e.xchg( e.cl, e.ch );
 
-        uint32_t unpacked_size = ( e.ax << 16 ) + e.cx;
+        const uint32_t unpacked_size = ( e.ax << 16 ) + e.cx;
 
         some_game_ptr.offset = e.cx;
         some_game_ptr.segment = e.ax;
