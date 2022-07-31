@@ -142,7 +142,7 @@ create_static_exes.exe path-to-extracted-exes
  - document the file format of TEXTES.CC1, MUSIC_(A|B|T).CC1 and GRAPHS.CC1
  - patch port (03D0h as mirror of 03D4h) access to be more compatible with dosbox: https://github.com/dosbox-staging/dosbox-staging/issues/1448
  - document the Copy-Protection code stuff in the game (based on self modifying code)
- - maybe reverse AlphaWaves itself - its a Turbo C 2.x exe (Small memory model, 1 code segment, 1 data segment)
+ - maybe reverse AlphaWaves itself - its a Turbo C 2.x exe (Small memory model, 1 code segment, 1 data segment, the code-modifying protection makes it a litte hard to reverse)
  - remove copy protection code, replace self-modified code parts with static result - better for static analysis :)
 
  # Findings
