@@ -146,7 +146,7 @@ create_static_exes.exe path-to-extracted-exes
  - remove copy protection code, replace self-modified code parts with static result - better for static analysis :)
 
  # Findings
- - VGA is not real VGA Mode but EGA 0dh mode - its the same as game started with EGA but with lighter colors :)
+ - VGA is not real VGA Mode but EGA 0dh (320x200x16) mode - its the same as game started with EGA but VGA color table change ability is used to lighten the colors (thanks @Mysterioso)
 
  # Related
  - [Alpha Waves, the first 3D platformer ever How 3D graphics worked when there were no graphic cards](https://www.youtube.com/watch?v=XMZj4WQ7Rt0)
