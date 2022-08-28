@@ -638,23 +638,19 @@ void cc1_read_test()
 {
     const std::string game_root = R"(F:\projects\fun\dos_games_rev\alpha_waves_dev\tests\alpha)";
 
-    //const std::vector<std::string> files{ "PROGS.CC1" };
-
-    // asserting (port not done correctly?)
-    //const std::vector<std::string> files{ "GRAPHS.CC1" };
-
-    // uncompressable
-    //const std::vector<std::string> files{ "PROGS.CC1", "MUSIC_A.CC1", "MUSIC_B.CC1", "MUSIC_T.CC1", "TEXTES.CC1" };
-
-    // uncompressable
+#if 1
     const std::vector<std::string> files{ "PROGS.CC1",   "GRAPHS.CC1",  "MUSIC_A.CC1",
                                           "MUSIC_B.CC1", "MUSIC_T.CC1", "TEXTES.CC1" };
+#else
+    const std::vector<std::string> files{ "TEXTES.CC1" };
+#endif
 
     for( const auto& file : files )
     {
-        const std::string filepath = game_root + "\\" + file;
-        printf( "%s\n", filepath.c_str() );
-        std::vector<data_block_t> data_blocks = read_cc1_file( filepath );
+        const std::string in_filepath = game_root + "\\" + file;
+        const std::string out_filepath = game_root + "\\cc1_extract\\" + file;
+        printf( "%s\n", in_filepath.c_str() );
+        std::vector<data_block_t> data_blocks = read_cc1_file( in_filepath );
 
 #if 1
         //print info
@@ -664,17 +660,294 @@ void cc1_read_test()
             auto& db = data_blocks[i];
             printf( "  [%u] packed_size: %u, unpacked_size: %u\n", i, db.packed_size, db.unpacked_size );
 
-            std::vector<uint8_t> unpacked = unpack( game_root, file, i );
-            assert( unpacked.size() == db.unpacked_size );
+            //if( file == "TEXTES.CC1" && i == 0 )
+            //{
+            //    int brk = 1;
+            //}
+
+
+            //std::vector<uint8_t> unpacked = unpack( game_root, file, i );
+            //assert( unpacked.size() == db.unpacked_size );
+
+            // ???
+            // my pure C++ Port works sometimes BETTER then my emulated original Version (wrong setup in this test?)
+            // but my C++ Port fails with most of GRAPHS.CC1
+            // ???
+
+            //if( file == "TEXTES.CC1" )
+            //{
+            std::vector<uint8_t> unpacked2( db.unpacked_size );
+            //std::fill( unpacked2.begin(), unpacked2.end(), 0xBB );
+            emu_GAME_START_sub_3( unpacked2, db.data );
+            int bd = 1;
+            //}
 
     #if 1
             char filename[100]{};
-            sprintf( filename, "%s_block%u.bin", filepath.c_str(), i );
-            write_binary_file( filename, unpacked.data(), unpacked.size() );
+            sprintf( filename, "%s_block%u.bin", out_filepath.c_str(), i );
+            write_binary_file( filename, unpacked2.data(), unpacked2.size() );
     #endif
         }
 #endif
     }
 
     int brk = 1;
+}
+
+uint16_t* to_uint16_ptr( uint32_t& value_ )
+{
+    return reinterpret_cast<uint16_t*>( value_ );
+}
+
+struct dword_t : emu_t
+{
+    dword_t( uint32_t& value_ ) : value( value_ ), lo( to_uint16_ptr( value_ )[0] ), hi( to_uint16_ptr( value_ )[1] )
+    {
+    }
+
+    uint32_t& value;
+    uint16_t& lo;
+    uint16_t& hi;
+};
+
+void another_test_emu( emu_t& e )
+{
+    uint16_t& word_1BAA2 = *e.word_ptr( e.cs, 0xBAA2 );
+    dword_t dword_1BAA4{ *e.dword_ptr( e.cs, 0xBAA4 ) };
+    uint16_t& word_1BA9C = *e.word_ptr( e.cs, 0xBA9C );
+    uint8_t& byte_1BA9A = *e.byte_ptr( e.cs, 0xBA9A );
+    uint8_t& byte_1BA9B = *e.byte_ptr( e.cs, 0xBA9B );
+
+begin:
+    e.push( e.es );
+    e.push( e.di );
+    e.cx = 0x80;
+    e.ax = e.ds;
+    e.es = e.ax;
+    e.di = 0x301;
+    e.xor_w( e.ax, e.ax );
+    e.rep_stosw();
+    e.pop( e.di );
+    e.pop( e.es );
+    e.sub( e.di, word_1BAA2 );
+    e.ax = e.di;
+    e.shr( e.ax, 1 );
+    e.shr( e.ax, 1 );
+    e.shr( e.ax, 1 );
+    e.shr( e.ax, 1 );
+    e.cx = e.es;
+    e.add( e.cx, e.ax );
+    e.es = e.cx;
+    e.and_w( e.di, 0x0F );
+    e.add( e.di, word_1BAA2 );
+    e.push( e.ds );
+    e.push( e.es );
+    e.push( e.si );
+    e.push( e.di );
+    e.cx = 4;
+    e.di = 0xBA9A; // cs:BA94
+    e.ax = e.cs;   // seg seg000
+    e.es = e.ax;
+    e.lds( e.si, dword_1BAA4.value );
+    e.ax = e.si;
+    e.shr( e.ax, 1 );
+    e.shr( e.ax, 1 );
+    e.shr( e.ax, 1 );
+    e.shr( e.ax, 1 );
+    e.dx = e.ds;
+    e.add( e.ax, e.dx );
+    e.ds = e.ax;
+    e.and_w( e.si, 0x0F );
+    dword_1BAA4.lo = e.si;
+    dword_1BAA4.hi = e.ds;
+    e.add( dword_1BAA4.lo, e.cx );
+    e.rep_movsb();
+    e.pop( e.di );
+    e.pop( e.si );
+    e.pop( e.es );
+    e.pop( e.ds );
+    e.dx = word_1BA9C;
+    e.inc( e.dx );
+    e.cmp( byte_1BA9A, 0 );
+    if( e.jnz() )
+    {
+        goto loc_1BB63;
+    }
+    goto loc_1BC52;
+
+loc_1BB63:
+    e.push( e.ds );
+    e.push( e.es );
+    e.push( e.di );
+    e.xor_b( e.ch, e.ch );
+    e.cl = byte_1BA9A;
+    e.di = 0x201;
+    e.ax = e.ds;
+    e.es = e.ax;
+    e.ds = dword_1BAA4.hi;
+    e.si = dword_1BAA4.lo;
+    e.add( dword_1BAA4.lo, e.cx );
+    e.rep_movsb();
+    e.cl = byte_1BA9A;
+    e.xor_b( e.ch, e.ch );
+    e.di = 1;
+    e.add( dword_1BAA4.lo, e.cx );
+    e.rep_movsb();
+    e.cl = byte_1BA9A;
+    e.di = 0x101;
+    e.add( dword_1BAA4.lo, e.cx );
+    e.rep_movsb();
+    e.pop( e.di );
+    e.pop( e.es );
+    e.pop( e.ds );
+    e.xor_b( e.ch, e.ch );
+    e.cl = byte_1BA9A;
+    e.xor_b( e.ah, e.ah );
+    e.bx = 1;
+
+loc_1BBB4:
+    e.al = *e.byte_ptr( e.ds, e.bx + 0x200 );
+    e.si = e.ax;
+    e.dl = *e.byte_ptr( e.ds, e.si + 0x301 );
+    *e.byte_ptr( e.ds, e.bx + 0x402 ) = e.dl;
+    *e.byte_ptr( e.ds, e.si + 0x301 ) = e.bl;
+    e.inc( e.bx );
+    if( e.loop() )
+    {
+        goto loc_1BBB4;
+    }
+    e.dx = word_1BA9C;
+    e.inc( e.dx );
+    e.cx = 1;
+
+loc_1BBD2:
+
+    e.dec( e.dx );
+    if( e.jnz() )
+        goto loc_1BBE1;
+
+loc_1BBD5:
+    e.cmp( byte_1BA9B, 0 );
+    if( e.jz() )
+    {
+        goto locret_1BBE0;
+    }
+    goto begin;
+
+locret_1BBE0:
+    return;
+
+loc_1BBE1:
+    e.push( e.ds );
+    e.si = dword_1BAA4.hi;
+    e.ds = e.si;
+    e.si = dword_1BAA4.lo;
+    e.lodsb();
+    dword_1BAA4.lo = e.si;
+    e.pop( e.ds );
+    e.bx = e.ax;
+    e.cmp( *e.byte_ptr( e.ds, e.bx + 0x301 ), 0 );
+    if( e.jnz() )
+    {
+        goto loc_1BC01;
+    }
+    e.stosb();
+    goto loc_1BBD2;
+
+loc_1BC01:
+    e.bl = *e.byte_ptr( e.ds, e.bx + 0x301 );
+    e.xor_w( e.ax, e.ax );
+    e.push( e.ax );
+    goto loc_1BC35;
+
+loc_1BC0A:
+    e.bp = e.ax;
+    e.cmp( *e.byte_ptr( e.ds, e.bp + 0x301 ), 0 );
+    if( e.jz() )
+    {
+        goto loc_1BC44;
+    }
+    e.cmp( e.bl, *e.byte_ptr( e.ds, e.bp + 0x301 ) );
+    if( e.ja() )
+    {
+        goto loc_1BC30;
+    }
+    e.al = e.bl;
+    e.bl = *e.byte_ptr( e.ds, e.bp + 0x301 );
+
+loc_1BC22:
+    e.bl = *e.byte_ptr( e.ds, e.bx + 0x402 );
+    e.or_b( e.bl, e.bl );
+    if( e.jz() )
+    {
+        goto loc_1BC42;
+    }
+    e.cmp( e.bl, e.al );
+    if( e.jb() )
+    {
+        goto loc_1BC35;
+    }
+    goto loc_1BC22;
+
+loc_1BC30:
+    e.bl = *e.byte_ptr( e.ds, e.bp + 0x301 );
+
+loc_1BC35:
+    e.al = *e.byte_ptr( e.ds, e.bx + 0x100 );
+    e.ah = e.bl;
+    e.push( e.ax );
+    e.xor_b( e.ah, e.ah );
+    e.al = *e.byte_ptr( e.ds, e.bx );
+    goto loc_1BC0A;
+loc_1BC42:
+    e.ax = e.bp;
+
+loc_1BC44:
+    e.stosb();
+    e.pop( e.ax );
+    e.or_w( e.ax, e.ax );
+    if( e.jnz() )
+    {
+        goto loc_1BC4C;
+    }
+    goto loc_1BBD2;
+
+loc_1BC4C:
+    e.bl = e.ah;
+    e.xor_b( e.ah, e.ah );
+    goto loc_1BC0A;
+
+loc_1BC52:
+    e.push( e.ds );
+    e.push( e.es );
+    e.cx = word_1BA9C;
+    e.push( e.cx );
+    e.ds = dword_1BAA4.hi;
+    e.si = dword_1BAA4.lo;
+    e.add( dword_1BAA4.lo, e.cx );
+    e.rep_movsb();
+    e.pop( e.cx );
+    e.pop( e.es );
+    e.pop( e.ds );
+    goto loc_1BBD5;
+}
+
+void another_test()
+{
+    const std::string path = "D:\\temp\\alpha";
+
+    // block0
+    {
+        const std::vector<uint8_t> dump_before = read_binary_file( path + "\\block_ 0_dump_before.bin" );
+        const std::vector<uint8_t> dump_after = read_binary_file( path + "\\block_ 0_dump_after.bin" );
+
+        emu_t e;
+
+        // DS=0x184B, SI=0x000B, ES=0x1913, DI=0x0000, CS = 0x01A2
+        e.ds = 0x184B;
+        e.si = 0x000B;
+        e.es = 0x1913;
+        e.di = 0x0000;
+        e.cs = 0x01A2;
+    }
 }
