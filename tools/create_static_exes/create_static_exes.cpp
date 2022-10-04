@@ -67,6 +67,31 @@ int main(int argc, char* argv[])
 		return true;
 	};
 
+	auto patch_nops = [&content](size_t offset_, const std::vector<uint8_t> org_)
+	{
+		if (::memcmp(org_.data(), &content[offset_], org_.size()) != 0)
+		{
+			return false;
+		}
+		::memset(&content[offset_], 0x90, org_.size());
+		return true;
+	};
+	
+		auto nop_out = [&content](size_t begin_, size_t end_)
+		{
+			size_t size = end_ - begin_;
+			::memset(&content[begin_], 0x90, size);
+		}; 
+
+		auto nop_overwrite = [&content](size_t begin_, size_t end_, const std::vector<uint8_t>& new_code_)
+		{
+			size_t size = end_ - begin_;
+			assert(new_code_.size() <= size);
+
+			::memset(&content[begin_], 0x90, size);
+			::memcpy(&content[begin_], new_code_.data(), new_code_.size());
+		};  
+
 	{
 		// remove interrupt 97h dependency for feature_flag
 
@@ -272,8 +297,7 @@ int main(int argc, char* argv[])
 		// nop-overwrite code_answer_pairs table with 80*2 NOPs - not used anymore
 		::memset(&content[0x156E6], 0x90, 80 * 2);
 
-#if 1
-		// TODO: remove runtime code modification completely - seems to be always the same result
+		// TODO: remove runtime code modification completely
 
 		//first steps
 
@@ -292,15 +316,6 @@ int main(int argc, char* argv[])
 			return 5;
 		}
 
-		auto nop_overwrite = [&content](size_t begin_, size_t end_, const std::vector<uint8_t>& new_code_)
-		{
-			size_t size = end_ - begin_;
-			assert(new_code_.size() <= size);
-
-			::memset(&content[begin_], 0x90, size);
-			::memcpy(&content[begin_], new_code_.data(), new_code_.size());
-		};
-
 		//nop-overwrite code_question_two_sub_1288E with
 		// begin: seg000:288E (file-offset: 2A8E), end: seg000:291B (file-offset: 2B1B) => size = 0x8D(141 bytes)
 		//  mov ax,4 ; success
@@ -318,6 +333,130 @@ int main(int argc, char* argv[])
 		//  mov ax,1Ch ; 0+1Ch
 		//  ret
 		nop_overwrite(0x2A65, 0x2A8E, { 0xB8, 0x1C, 0x00, 0xC3 });
+
+		// disable code modification in 
+		// seg000:2AD2                         code_modifiying_sub
+
+		nop_out(0x2CD5, 0x2D11);
+
+		if (!patch(0x2DBB, { 0x34, 0x12 }, { 0x0A, 0x00 }))
+		{
+			printf("wrong original code at #2\n");
+			return 5;
+		}
+
+		if (!patch(0x2DC0, { 0x34, 0x12 }, { 0x35, 0x01 }))
+		{
+			printf("wrong original code at #2\n");
+			return 5;
+		}
+
+		if (!patch(0x2D80, { 0x34, 0x12 }, { 0x9F, 0x00 }))
+		{
+			printf("wrong original code at #2\n");
+			return 5;
+		}
+
+		if (!patch(0x2DC6, { 0x34, 0x12 }, { 0x38, 0x00 }))
+		{
+			printf("wrong original code at #2\n");
+			return 5;
+		}
+
+		if (!patch(0x2DCC, { 0x34, 0x12 }, { 0x4F, 0x00 }))
+		{
+			printf("wrong original code at #2\n");
+			return 5;
+		}
+
+		if (!patch(0x2D69, { 0x34, 0x12 }, { 0x43, 0x00 }))
+		{
+			printf("wrong original code at #2\n");
+			return 5;
+		}
+
+		if (!patch(0x5239, { 0x55, 0x8B, 0xEC, 0x8B, 0x46, 0x04, 0x2E, 0xA2, 0xE5, 0x50, 0x5D, 0xC3}, { 0xC3 }))
+		{
+			printf("wrong original code at #2\n");
+			return 5;
+		}
+
+#if 0
+		// remove modification of modifies_code_5_sub_15022
+
+		//!!!
+		// !!!!! test with and without loadfix before - the following copy protection code is load segment related !!!!!
+		//!!!
+		//! 
+
+		// the "correct" positions but the values are load segment releated
+
+		if (!patch(0x5222, {0x55, 0x8B, 0xEC, 0x1E, 0xC5, 0x46, 0x04, 0x2D, 0x20, 0x00, 0x2E, 0xA3,	0xD3, 0x50, 0x8C, 0xD8, 0x2E, 0xA3, 0xCE, 0x50, 0x1F, 0x5D, 0xC3}, 
+			{ 0xC3 }))
+		{
+			printf("wrong original code at #2\n");
+			return 5;
+		}
+
+		// im patching the code so that the code modification will be replaced by global variable use
+
+		//code segment is in dosbox currently from 01ED:0 of size 0xD770
+		//memdumpbin on main, before code-question and after shows that the code
+		//modification starts also before the question is asked
+
+/*
+seg000:50CD                         loc_150CD:                              ; DATA XREF: modifies_code_5_sub_15022+10w
+seg000:50CD BA 34 12                                mov     dx, 1234h       ; segment address for later lodsb
+seg000:50D0 8E DA                                   mov     ds, dx
+seg000:50D2                                         assume ds:nothing
+seg000:50D2
+seg000:50D2                         loc_150D2:                              ; DATA XREF: modifies_code_5_sub_15022+Aw
+seg000:50D2 BE 34 12                                mov     si, 1234h
+seg000:50D5 BA CF 03                                mov     dx, 3CFh
+seg000:50D8 D1 E0                                   shl     ax, 1
+seg000:50DA D1 E0                                   shl     ax, 1
+seg000:50DC D1 E0                                   shl     ax, 1
+seg000:50DE D1 E0                                   shl     ax, 1
+seg000:50E0 D1 E0                                   shl     ax, 1
+seg000:50E2 03 F0                                   add     si, ax 
+*/
+
+		/*
+0x0000000000000000:  BA 77 0D       mov dx, 0x0d77h ; seg dseg
+0x0000000000000003:  8E DA          mov ds, dx
+0x0000000000000005:  8B 16 68 8B    mov dx, word ptr [0x8b68] <-- global var with segment
+0x0000000000000009:  8B 36 66 8B    mov si, word ptr [0x8b66] <-- global var with offset
+0x000000000000000d:  8E DA          mov ds, dx
+0x000000000000000f:  BA CF 03       mov dx, 0x3cf
+0x0000000000000012:  C1 E0 05       shl ax, 5
+0x0000000000000015:  01 C6          add si, ax
+		*/
+
+		nop_overwrite(0x52CD, 0x52E4, {
+			0xBA, 0x77, 0x0D, 0x8E, 0xDA, 0x8B, 0x16, 0x68, 0x8B, 0x8B, 0x36, 0x66,
+			0x8B, 0x8E, 0xDA, 0xBA, 0xCF, 0x03, 0xC1, 0xE0, 0x05, 0x01, 0xC6
+		});
+
+//seg000:0000                         start           proc near
+//seg000:0000 BA 77 1D                                mov     dx, seg dseg
+
+		//dseg:0  => IDA: 1D770 = dos: 1D77*10h
+
+		//we need a relocation entry that targets the 77 0D part of the first {BA 77 0D} opcodes
+
+		// OK
+		if (!patch(0x6, { 0x3C }, { 0x3D })) // one entry more
+		{
+			printf("wrong original code at #2\n");
+			return 5;
+		}
+
+		// OK
+		if (!patch(0x110, { 0x00,0x00,0x00,0x00 }, { 0x00,0x00,0xCE,0x50 })) // one entry more
+		{
+			printf("wrong original code at #2\n");
+			return 5;
+		}
 #endif
 	}
 
