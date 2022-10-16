@@ -88,10 +88,10 @@ std::vector<data_block_t> read_cc1_file(const std::string &filepath_)
 
 	for (size_t i = 0; i < offset_count; ++i) {
 		const uint32_t packed_size = read32(current);
-
+		
 		const uint32_t unpacked_size = read32(current);
-
-		std::vector<uint8_t> packed_data(current, current+packed_size);
+        
+		const std::vector<uint8_t> packed_data(current, current+packed_size);
 		current += packed_size;
 
 		data_blocks[i] = {unpacked_size, packed_data};
@@ -198,35 +198,32 @@ tables_t prepare_tables(const block_t& block, const uint8_t *&input_ptr)
 	std::vector<uint8_t> table2(block.packed_size); // only needed for initialization, not for uncompression
 	std::vector<uint8_t> table3(256);
 	std::vector<uint8_t> table4(1 + block.packed_size);
-	{
-		::memcpy(table2.data(), input_ptr, block.packed_size);
-		input_ptr += block.packed_size;
 
-		table0[0] = 0xFF; // unused, never read
-		::memcpy(&table0[1], input_ptr, block.packed_size);
-		input_ptr += block.packed_size;
+	::memcpy(table2.data(), input_ptr, block.packed_size);
+	input_ptr += block.packed_size;
 
-		table1[0] = 0xFF; // unused, never read
-		::memcpy(&table1[1], input_ptr, block.packed_size);
-		input_ptr += block.packed_size;
+	table0[0] = 0xFF; // unused, never read
+	::memcpy(&table0[1], input_ptr, block.packed_size);
+	input_ptr += block.packed_size;
 
-		// its currently, unclear what the max-packed_size could be
-		// packed_size is uint8_t so max would be 255
+	table1[0] = 0xFF; // unused, never read
+	::memcpy(&table1[1], input_ptr, block.packed_size);
+	input_ptr += block.packed_size;
 
-		for (int i = 0; i < block.packed_size; ++i) {
-			const uint8_t ofs   = table2[i];
-			const uint8_t index = i + 1; // (0..255)+1
-			assert(ofs >= 0);
-			uint8_t *value      = &table3[ofs]; // [0] is used
-			table4[index]     = *value; //1+256  [0] ignored, [1-256]
-			*value       = index;
-		}
-		table4[0] = 0xFF; // unused, never read
+	// its currently, unclear what the max-packed_size could be
+	// packed_size is uint8_t so max would be 255
+
+	for (int i = 0; i < block.packed_size; ++i) {
+		const uint8_t ofs   = table2[i];
+		const uint8_t index = i + 1; // (0..255)+1
+		assert(ofs >= 0);
+		uint8_t *value      = &table3[ofs]; // [0] is used
+		table4[index]     = *value; //1+256  [0] ignored, [1-256]
+		*value       = index;
 	}
+	table4[0] = 0xFF; // unused, never read
 
-	const tables_t tables{table0, table1, table3, table4};
-
-	return tables;
+	return {table0, table1, table3, table4};
 }
 
 void uncompress_block(const block_t &block, const uint8_t *&input_ptr, uint8_t *&output_ptr)
@@ -253,8 +250,9 @@ std::vector<uint8_t> uncompress(const data_block_t& data_block)
 	std::vector<uint8_t> output(data_block.unpacked_size);
 	uint8_t *output_ptr = output.data();
 
-	while (true) {
-		block_t block{};
+	block_t block{};
+	do
+	{
 		::memcpy(&block, input_ptr, sizeof(block));
 		input_ptr += sizeof(block);
 		assert(block.flag == LAST_BLOCK || block.flag == NOT_LAST_BLOCK);
@@ -267,13 +265,12 @@ std::vector<uint8_t> uncompress(const data_block_t& data_block)
 			// biggest block.packed_size so far: 223
 			uncompress_block(block, input_ptr, output_ptr);
 		}
-
-		if (block.flag == LAST_BLOCK) {
-			assert(input_ptr == data_block.packed_data.data()+data_block.packed_data.size());
-			assert(output_ptr == output.data()+output.size());
-			return output; // the-end
-		}
 	}
+	while(block.flag != LAST_BLOCK);
+
+	assert(input_ptr == data_block.packed_data.data()+data_block.packed_data.size());
+	assert(output_ptr == output.data()+output.size());
+	return output; // the-end
 }
 
 void write_binary_file(const std::string &file_path_, const void *const data_, size_t size_)
