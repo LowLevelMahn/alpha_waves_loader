@@ -47,9 +47,8 @@ std::vector<uint8_t> read_binary_file(const std::string &filename_)
 }
 
 struct data_block_t {
-	uint32_t packed_size{};
 	uint32_t unpacked_size{};
-	std::vector<uint8_t> data;
+	std::vector<uint8_t> packed_data;
 };
 
 void read(const uint8_t*& current, void* into, size_t size)
@@ -78,38 +77,31 @@ std::vector<data_block_t> read_cc1_file(const std::string &filepath_)
 
 	const uint8_t *current = content.data();
 
-	uint16_t offset_count = read16(current);
+	const uint16_t offset_count = read16(current);
 
 	std::vector<uint32_t> offset_table(offset_count);
 	for (size_t i = 0; i < offset_count; ++i) {
-		uint32_t offset = 0;
-		read(current, &offset, sizeof(offset));
-		offset_table[i] = swap32(offset);
+		offset_table[i] = read32(current);
 	}
 
 	std::vector<data_block_t> data_blocks(offset_count);
 
 	for (size_t i = 0; i < offset_count; ++i) {
-		uint32_t packed_size = 0;
-		read(current, &packed_size, sizeof(packed_size));
-		packed_size = swap32(packed_size);
+		const uint32_t packed_size = read32(current);
 
-		uint32_t unpacked_size = 0;
-		read(current, &unpacked_size, sizeof(unpacked_size));
-		unpacked_size = swap32(unpacked_size);
+		const uint32_t unpacked_size = read32(current);
 
-		std::vector<uint8_t> data(packed_size);
-		::memcpy(data.data(), current, packed_size);
+		std::vector<uint8_t> packed_data(current, current+packed_size);
 		current += packed_size;
 
-		data_blocks[i] = {packed_size, unpacked_size, data};
+		data_blocks[i] = {unpacked_size, packed_data};
 	}
 
 	// size of the parts + offsets fits exact the file size? no gaps?
 	std::size_t result_size = sizeof(uint16_t) + offset_count * sizeof(uint32_t);
 	for (size_t i = 0; i < offset_count; ++i) {
 		result_size += sizeof(uint32_t) + sizeof(uint32_t) +
-		               data_blocks[i].packed_size;
+		               data_blocks[i].packed_data.size();
 	}
 	assert(result_size == content.size());
 
@@ -256,7 +248,7 @@ void uncompress_block(const block_t &block, const uint8_t *&input_ptr, uint8_t *
 
 std::vector<uint8_t> uncompress(const data_block_t& data_block)
 {
-	const uint8_t *input_ptr = data_block.data.data();
+	const uint8_t *input_ptr = data_block.packed_data.data();
 
 	std::vector<uint8_t> output(data_block.unpacked_size);
 	uint8_t *output_ptr = output.data();
@@ -277,7 +269,7 @@ std::vector<uint8_t> uncompress(const data_block_t& data_block)
 		}
 
 		if (block.flag == LAST_BLOCK) {
-			assert(input_ptr == data_block.data.data()+data_block.data.size());
+			assert(input_ptr == data_block.packed_data.data()+data_block.packed_data.size());
 			assert(output_ptr == output.data()+output.size());
 			return output; // the-end
 		}
@@ -308,7 +300,7 @@ int main(int argc, char* argv[])
 
 	for (size_t i = 0; i < data_blocks.size(); ++i) {
 		const auto &db = data_blocks[i];
-		printf("  [%lu] packed_size: %u, unpacked_size: %u\n", i, db.packed_size, db.unpacked_size);
+		printf("  [%lu] packed_size: %lu, unpacked_size: %u\n", i, db.packed_data.size(), db.unpacked_size);
 		
 		std::vector<uint8_t> uncompressed = uncompress(db);
 		char cc1_block_filepath[1024]{};
