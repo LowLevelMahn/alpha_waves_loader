@@ -172,6 +172,8 @@ outer_loop:
 			}
 		}
 
+	assert(false); // only gotos reach the store_then_end_or_loop label
+
 	store_then_end_or_loop:
 		*output_ptr++ = var1;
 
