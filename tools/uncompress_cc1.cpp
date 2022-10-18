@@ -170,6 +170,10 @@ outer_loop:
 				} else if (var2 < old_var2) {
 					goto outer_loop;
 				}
+				else
+				{
+					// get next value from table4
+				}
 			}
 		}
 
