@@ -199,25 +199,22 @@ tables_t prepare_tables(const block_t& block, const uint8_t *&input_ptr)
 	std::vector<uint8_t> table3(256);
 	std::vector<uint8_t> table4(1 + block.packed_size);
 
-	::memcpy(table2.data(), input_ptr, block.packed_size);
-	input_ptr += block.packed_size;
+	read(input_ptr, table2.data(), block.packed_size);
 
 	table0[0] = 0xFF; // unused, never read
-	::memcpy(&table0[1], input_ptr, block.packed_size);
-	input_ptr += block.packed_size;
-
+	read(input_ptr, &table0[1], block.packed_size);
+	
 	table1[0] = 0xFF; // unused, never read
-	::memcpy(&table1[1], input_ptr, block.packed_size);
-	input_ptr += block.packed_size;
+	read(input_ptr, &table1[1], block.packed_size);
 
 	// its currently, unclear what the max-packed_size could be
 	// packed_size is uint8_t so max would be 255
 
 	for (int i = 0; i < block.packed_size; ++i) {
 		const uint8_t ofs   = table2[i];
-		const uint8_t index = i + 1; // (0..255)+1
 		assert(ofs >= 0);
 		uint8_t *value      = &table3[ofs]; // [0] is used
+		const uint8_t index = i + 1; // (0..255)+1
 		table4[index]     = *value; //1+256  [0] ignored, [1-256]
 		*value       = index;
 	}
@@ -253,13 +250,11 @@ std::vector<uint8_t> uncompress(const data_block_t& data_block)
 	block_t block{};
 	do
 	{
-		::memcpy(&block, input_ptr, sizeof(block));
-		input_ptr += sizeof(block);
+		read(input_ptr, &block, sizeof(block));
 		assert(block.flag == LAST_BLOCK || block.flag == NOT_LAST_BLOCK);
 
 		if (block.packed_size == 0) { // is not packed?
-			::memcpy(output_ptr, input_ptr, block.data_len);
-			input_ptr += block.data_len;
+			read(input_ptr, output_ptr, block.data_len);
 			output_ptr += block.data_len;
 		} else {
 			// biggest block.packed_size so far: 223
