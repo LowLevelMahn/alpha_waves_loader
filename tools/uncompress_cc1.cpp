@@ -148,7 +148,6 @@ outer_loop:
 	assert(var1 >= 0);
 
 	while (true) {
-		const uint8_t old_var1 = var1;
 		const uint8_t table3_val = tables.table3[var1];
 		assert(table3_val >= 0);
 
@@ -158,6 +157,7 @@ outer_loop:
 			var2 = table3_val;
 			goto outer_loop;
 		} else {
+		        const uint8_t old_var1 = var1;
 			var1 = var2;
 			var2 = table3_val;
 			while (true) {
