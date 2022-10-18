@@ -152,31 +152,30 @@ outer_loop:
 		assert(table3_val >= 0);
 
 		if (table3_val == UNPACKED_VAL) {
-			goto store_then_end_or_loop;
+			*output_ptr++ = var1;
+			goto end_or_loop;
 		} else if (var2 > table3_val) {
 			var2 = table3_val;
 			goto outer_loop;
 		} else {
 		        const uint8_t old_var1 = var1;
-			var1 = var2;
+			const uint8_t old_var2 = var2;
 			var2 = table3_val;
 			while (true) {
 				assert(var2 > 0);
 				var2 = tables.table4[var2];
 				if (var2 == 0) { // also UNPACKED_VAL?
-					var1 = old_var1;
-					goto store_then_end_or_loop;
-				} else if (var2 < var1) {
+					*output_ptr++ = old_var1;
+					goto end_or_loop;
+				} else if (var2 < old_var2) {
 					goto outer_loop;
 				}
 			}
 		}
 
-	assert(false); // only gotos reach the store_then_end_or_loop label
+	assert(false); // only gotos reach the end_or_loop label
 
-	store_then_end_or_loop:
-		*output_ptr++ = var1;
-
+	end_or_loop:
 		if (stack.size() == 0) {
 			return;
 		}
