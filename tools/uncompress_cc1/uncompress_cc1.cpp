@@ -38,12 +38,12 @@ inline uint32_t swap32(const uint32_t value_)
 	return (swap16(lv) << 16) + swap16(hv);
 }
 
-std::vector<uint8_t> read_binary_file(const std::string &filename_)
+std::vector<uint8_t> read_binary_file(const std::string& filename_)
 {
 	std::ifstream file(filename_, std::ios::binary);
 	assert(file);
 	return std::vector<uint8_t>((std::istreambuf_iterator<char>(file)),
-	                            std::istreambuf_iterator<char>());
+		std::istreambuf_iterator<char>());
 }
 
 struct data_block_t {
@@ -71,11 +71,11 @@ uint32_t read32(const uint8_t*& current)
 	return swap32(tmp);
 }
 
-std::vector<data_block_t> read_cc1_file(const std::string &filepath_)
+std::vector<data_block_t> read_cc1_file(const std::string& filepath_)
 {
 	const std::vector<uint8_t> content = read_binary_file(filepath_);
 
-	const uint8_t *current = content.data();
+	const uint8_t* current = content.data();
 
 	const uint16_t offset_count = read16(current);
 
@@ -88,27 +88,30 @@ std::vector<data_block_t> read_cc1_file(const std::string &filepath_)
 
 	for (size_t i = 0; i < offset_count; ++i) {
 		const uint32_t packed_size = read32(current);
-		
+
 		const uint32_t unpacked_size = read32(current);
-        
-		const std::vector<uint8_t> packed_data(current, current+packed_size);
+
+		const std::vector<uint8_t> packed_data(current, current + packed_size);
 		current += packed_size;
 
-		data_blocks[i] = {unpacked_size, packed_data};
+		data_blocks[i] = { unpacked_size, packed_data };
 	}
 
 	// size of the parts + offsets fits exact the file size? no gaps?
 	std::size_t result_size = sizeof(uint16_t) + offset_count * sizeof(uint32_t);
 	for (size_t i = 0; i < offset_count; ++i) {
 		result_size += sizeof(uint32_t) + sizeof(uint32_t) +
-		               data_blocks[i].packed_data.size();
+			data_blocks[i].packed_data.size();
 	}
-	assert(result_size == content.size());
+	if (result_size == content.size())
+	{
+		printf("file contain gaps between blocks\n");
+	}
 
 	return data_blocks;
 }
 
-constexpr uint8_t LAST_BLOCK     = 0;
+constexpr uint8_t LAST_BLOCK = 0;
 constexpr uint8_t NOT_LAST_BLOCK = 1;
 
 #pragma pack(push, 1)
@@ -134,7 +137,21 @@ struct stack_item_t {
 	uint8_t b{};
 };
 
-void uncompress_part(const uint8_t start_val_, const uint8_t *&input_ptr, uint8_t *&output_ptr, const tables_t& tables)
+void print_uint8_vector(const std::string& name_, const uint8_t* data, size_t size)
+{
+	printf("std::vector<uint8_t> %s{\n", name_.c_str());
+	for (size_t i = 0; i < size; ++i)
+	{
+		printf("0x%02X", data[i]);
+		if (i < size - 1)
+		{
+			printf(", ");
+		}
+	}
+	printf("};\n");
+}
+
+void uncompress_part(const uint8_t start_val_, uint8_t*& output_ptr, const tables_t& tables)
 {
 	std::stack<stack_item_t> stack;
 
@@ -142,7 +159,7 @@ void uncompress_part(const uint8_t start_val_, const uint8_t *&input_ptr, uint8_
 
 outer_loop:
 	assert(var2 > 0);
-	stack.push({tables.table1[var2], var2});
+	stack.push({ tables.table1[var2], var2 });
 
 	uint8_t var1 = tables.table0[var2];
 	assert(var1 >= 0);
@@ -154,11 +171,13 @@ outer_loop:
 		if (table3_val == UNPACKED_VAL) {
 			*output_ptr++ = var1;
 			goto end_or_loop;
-		} else if (var2 > table3_val) {
+		}
+		else if (var2 > table3_val) {
 			var2 = table3_val;
 			goto outer_loop;
-		} else {
-		        const uint8_t old_var1 = var1;
+		}
+		else {
+			const uint8_t old_var1 = var1;
 			const uint8_t old_var2 = var2;
 			var2 = table3_val;
 			while (true) {
@@ -167,7 +186,8 @@ outer_loop:
 				if (var2 == 0) { // also UNPACKED_VAL?
 					*output_ptr++ = old_var1;
 					goto end_or_loop;
-				} else if (var2 < old_var2) {
+				}
+				else if (var2 < old_var2) {
 					goto outer_loop;
 				}
 				else
@@ -177,7 +197,7 @@ outer_loop:
 			}
 		}
 
-	assert(false); // only gotos reach the end_or_loop label
+		assert(false); // only gotos reach the end_or_loop label
 
 	end_or_loop:
 		if (stack.size() == 0) {
@@ -193,7 +213,7 @@ outer_loop:
 	}
 }
 
-tables_t prepare_tables(const block_t& block, const uint8_t *&input_ptr)
+tables_t prepare_tables(const block_t& block, const uint8_t*& input_ptr)
 {
 	assert(block.packed_size != 0);
 
@@ -208,7 +228,7 @@ tables_t prepare_tables(const block_t& block, const uint8_t *&input_ptr)
 
 	table0[0] = 0xFF; // unused, never read
 	read(input_ptr, &table0[1], block.packed_size);
-	
+
 	table1[0] = 0xFF; // unused, never read
 	read(input_ptr, &table1[1], block.packed_size);
 
@@ -216,41 +236,44 @@ tables_t prepare_tables(const block_t& block, const uint8_t *&input_ptr)
 	// packed_size is uint8_t so max would be 255
 
 	for (int i = 0; i < block.packed_size; ++i) {
-		const uint8_t ofs   = table2[i];
+		const uint8_t ofs = table2[i];
 		assert(ofs >= 0);
-		uint8_t *value      = &table3[ofs]; // [0] is used
+		uint8_t* value = &table3[ofs]; // [0] is used
 		const uint8_t index = i + 1; // (0..255)+1
-		table4[index]     = *value; //1+256  [0] ignored, [1-256]
-		*value       = index;
+		table4[index] = *value; //1+256  [0] ignored, [1-256]
+		*value = index;
 	}
 	table4[0] = 0xFF; // unused, never read
 
-	return {table0, table1, table3, table4};
+	return { table0, table1, table3, table4 };
 }
 
-void uncompress_block(const block_t &block, const uint8_t *&input_ptr, uint8_t *&output_ptr)
+void uncompress_block(const block_t& block, const uint8_t*& input_ptr, uint8_t*& output_ptr)
 {
 	const tables_t tables = prepare_tables(block, input_ptr);
 
-	for (int i = 0; i < block.data_len; ++i) 
+	for (int i = 0; i < block.data_len; ++i)
 	{
 		const uint8_t var1 = *input_ptr++;
 		const uint8_t var2 = tables.table3[var1]; // var1 0..n
 
 		if (var2 == UNPACKED_VAL) {    // uncompressed part
+			//printf("    if1 - just store: %02X\n", var1);
 			*output_ptr++ = var1; // just store value
-		} else {                      // compressed part
-			uncompress_part(var2, input_ptr, output_ptr, tables);
+		}
+		else {                      // compressed part
+			//printf("    if2 - uncompress_part: start_value: %02X\n", var2);
+			uncompress_part(var2, output_ptr, tables);
 		}
 	}
 }
 
 std::vector<uint8_t> uncompress(const data_block_t& data_block)
 {
-	const uint8_t *input_ptr = data_block.packed_data.data();
+	const uint8_t* input_ptr = data_block.packed_data.data();
 
 	std::vector<uint8_t> output(data_block.unpacked_size);
-	uint8_t *output_ptr = output.data();
+	uint8_t* output_ptr = output.data();
 
 	block_t block{};
 	do
@@ -258,24 +281,29 @@ std::vector<uint8_t> uncompress(const data_block_t& data_block)
 		read(input_ptr, &block, sizeof(block));
 		assert(block.flag == LAST_BLOCK || block.flag == NOT_LAST_BLOCK);
 
+		//printf("block: packed_size: %u, flag: %u, data_len: %u\n", block.packed_size, block.flag, block.data_len);
+
 		if (block.packed_size == 0) { // is not packed?
+			//printf("  not packed: data_len: %u\n", block.data_len);
+			// assert(block.data_len == 0); always ok in GRAPHS.CC1, not for PROGS.CC1
 			read(input_ptr, output_ptr, block.data_len);
 			output_ptr += block.data_len;
-		} else {
+		}
+		else {
+			//printf("  packed\n");
 			// biggest block.packed_size so far: 223
 			uncompress_block(block, input_ptr, output_ptr);
 		}
-	}
-	while(block.flag != LAST_BLOCK);
+	} while (block.flag != LAST_BLOCK);
 
-	assert(input_ptr == data_block.packed_data.data()+data_block.packed_data.size());
-	assert(output_ptr == output.data()+output.size());
+	assert(input_ptr == data_block.packed_data.data() + data_block.packed_data.size());
+	assert(output_ptr == output.data() + output.size());
 	return output; // the-end
 }
 
-void write_binary_file(const std::string &file_path_, const void *const data_, size_t size_)
+void write_binary_file(const std::string& file_path_, const void* const data_, size_t size_)
 {
-	FILE *fp = fopen(file_path_.c_str(), "wb+");
+	FILE* fp = fopen(file_path_.c_str(), "wb+");
 	assert(fp);
 	size_t written = fwrite(data_, 1, size_, fp);
 	assert(written = size_);
@@ -284,27 +312,27 @@ void write_binary_file(const std::string &file_path_, const void *const data_, s
 
 int main(int argc, char* argv[])
 {
-	if(argc != 2)
+	if (argc != 2)
 	{
-	  printf("uncompress_cc1 CC1-FILE\n");
-	  return 1;
+		printf("uncompress_cc1 CC1-FILE\n");
+		return 1;
 	}
-	
+
 	const std::string cc1_filepath = argv[1];
-	
+
 	printf("%s\n", cc1_filepath.c_str());
 	std::vector<data_block_t> data_blocks = read_cc1_file(cc1_filepath);
 
 	for (size_t i = 0; i < data_blocks.size(); ++i) {
-		const auto &db = data_blocks[i];
+		const auto& db = data_blocks[i];
 		printf("  [%lu] packed_size: %lu, unpacked_size: %u\n", i, db.packed_data.size(), db.unpacked_size);
-		
+
 		std::vector<uint8_t> uncompressed = uncompress(db);
 		char cc1_block_filepath[1024]{};
 		sprintf(cc1_block_filepath, "%s_block%05zu.bin", cc1_filepath.c_str(), i);
 		printf("  write: %s\n", cc1_block_filepath);
 		write_binary_file(cc1_block_filepath, uncompressed.data(), uncompressed.size());
 	}
-	
+
 	return 0;
 }
