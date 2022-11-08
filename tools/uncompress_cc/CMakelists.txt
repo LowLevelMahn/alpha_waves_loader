@@ -5,12 +5,12 @@ cmake_minimum_required(VERSION 2.20)
 
 set(CMAKE_CXX_STANDARD 14)
 
-project(uncompress_cc1)
+project(uncompress_cc)
 
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
 
-add_executable(uncompress_cc1 
-  "uncompress_cc1.cpp"
+add_executable(uncompress_cc
+  "uncompress_cc.cpp"
 )  

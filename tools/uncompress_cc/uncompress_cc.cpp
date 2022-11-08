@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string.h>
 #include <stack>
+#include <algorithm>
 
 inline uint8_t lo(uint16_t value_)
 {
@@ -69,46 +70,6 @@ uint32_t read32(const uint8_t*& current)
 	uint32_t tmp = 0;
 	read(current, &tmp, sizeof(tmp));
 	return swap32(tmp);
-}
-
-std::vector<data_block_t> read_cc1_file(const std::string& filepath_)
-{
-	const std::vector<uint8_t> content = read_binary_file(filepath_);
-
-	const uint8_t* current = content.data();
-
-	const uint16_t offset_count = read16(current);
-
-	std::vector<uint32_t> offset_table(offset_count);
-	for (size_t i = 0; i < offset_count; ++i) {
-		offset_table[i] = read32(current);
-	}
-
-	std::vector<data_block_t> data_blocks(offset_count);
-
-	for (size_t i = 0; i < offset_count; ++i) {
-		const uint32_t packed_size = read32(current);
-
-		const uint32_t unpacked_size = read32(current);
-
-		const std::vector<uint8_t> packed_data(current, current + packed_size);
-		current += packed_size;
-
-		data_blocks[i] = { unpacked_size, packed_data };
-	}
-
-	// size of the parts + offsets fits exact the file size? no gaps?
-	std::size_t result_size = sizeof(uint16_t) + offset_count * sizeof(uint32_t);
-	for (size_t i = 0; i < offset_count; ++i) {
-		result_size += sizeof(uint32_t) + sizeof(uint32_t) +
-			data_blocks[i].packed_data.size();
-	}
-	if (result_size == content.size())
-	{
-		printf("file contain gaps between blocks\n");
-	}
-
-	return data_blocks;
 }
 
 constexpr uint8_t LAST_BLOCK = 0;
@@ -312,26 +273,131 @@ void write_binary_file(const std::string& file_path_, const void* const data_, s
 
 int main(int argc, char* argv[])
 {
-	if (argc != 2)
+	if ( (argc < 2) || (argc > 3) )
 	{
-		printf("uncompress_cc1 CC1-FILE\n");
-		return 1;
+		printf("uncompress_cc1 CC-FILE [e]\n");
+		return -1;
 	}
 
-	const std::string cc1_filepath = argv[1];
+	const std::string cc_filepath = argv[1];
+	printf("%s\n", cc_filepath.c_str());
 
-	printf("%s\n", cc1_filepath.c_str());
-	std::vector<data_block_t> data_blocks = read_cc1_file(cc1_filepath);
+	bool extract = false;
+	if (argc == 3)
+	{
+		const std::string arg2 = argv[2];
+		if (arg2 != "e")
+		{
+			printf("optional second argument needs to be 'e'\n");
+			return -1;
+		}
+		extract = true;
+	}
+
+	const std::vector<uint8_t> content = read_binary_file(cc_filepath);
+	const uint8_t* current = content.data();
+
+	const uint16_t offset_count = read16(current);
+
+	if (offset_count == 0)
+	{
+		printf("info: likely CC0 format\n");
+		// compressed size?
+		const uint16_t packed_size = read16(current);
+		if (packed_size >= content.size())
+		{
+			printf("error: is not a CC0: packed size >= file size\n");
+			return -1;
+		}
+		assert(packed_size < content.size());
+
+		// uncompressed?
+		const uint32_t unpacked_size = read32(current);
+
+		const size_t data_size = content.size() - (current - content.data());
+		if (data_size != packed_size)
+		{
+			printf("error: data_size != packed_size\n");
+			return -2;
+		}
+		assert(data_size == packed_size);
+		std::vector<uint8_t> data(data_size);
+		read(current, data.data(), data_size);
+
+		data_block_t db;
+		db.unpacked_size = unpacked_size;
+		db.packed_data = data;
+
+		const std::vector<uint8_t> uncompressed = uncompress(db);
+
+		if (extract)
+		{
+			char cc0_filepath[1024]{};
+			sprintf(cc0_filepath, "%s.uncompressed.bin", cc_filepath.c_str());
+			printf("  write: %s\n", cc0_filepath);
+			write_binary_file(cc0_filepath, uncompressed.data(), uncompressed.size());
+		}
+		return 0;
+	}
+
+	printf("info: likely CC1 format\n");
+	std::vector<data_block_t> data_blocks(offset_count);
+	{
+		std::vector<uint32_t> offset_table(offset_count);
+		for (size_t i = 0; i < offset_count; ++i) {
+			offset_table[i] = read32(current);
+		}
+
+		auto sorted_table = offset_table;
+		std::sort(sorted_table.begin(), sorted_table.end());
+
+		if (sorted_table != offset_table)
+		{
+			printf("info: not ascending offsets\n");
+		}
+
+		for (size_t i = 0; i < offset_count; ++i) {
+			const uint32_t packed_size = read32(current);
+			if (packed_size >= content.size())
+			{
+				printf("error: packed size >= file size\n");
+				return -1;
+			}
+			assert(packed_size < content.size());
+
+			const uint32_t unpacked_size = read32(current);
+
+			const std::vector<uint8_t> packed_data(current, current + packed_size);
+			current += packed_size;
+
+			data_blocks[i] = { unpacked_size, packed_data };
+		}
+
+		// size of the parts + offsets fits exact the file size? no gaps?
+		std::size_t result_size = sizeof(uint16_t) + offset_count * sizeof(uint32_t);
+		for (size_t i = 0; i < offset_count; ++i) {
+			result_size += sizeof(uint32_t) + sizeof(uint32_t) +
+				data_blocks[i].packed_data.size();
+		}
+		if (result_size != content.size())
+		{
+			printf("info: gaps between blocks\n");
+		}
+	}
 
 	for (size_t i = 0; i < data_blocks.size(); ++i) {
 		const auto& db = data_blocks[i];
-		printf("  [%lu] packed_size: %lu, unpacked_size: %u\n", i, db.packed_data.size(), db.unpacked_size);
+		printf("  [%zu] packed_size: %zu, unpacked_size: %u\n", i, db.packed_data.size(), db.unpacked_size);
 
-		std::vector<uint8_t> uncompressed = uncompress(db);
-		char cc1_block_filepath[1024]{};
-		sprintf(cc1_block_filepath, "%s_block%05zu.bin", cc1_filepath.c_str(), i);
-		printf("  write: %s\n", cc1_block_filepath);
-		write_binary_file(cc1_block_filepath, uncompressed.data(), uncompressed.size());
+		const std::vector<uint8_t> uncompressed = uncompress(db);
+
+		if (extract)
+		{
+			char cc1_block_filepath[1024]{};
+			sprintf(cc1_block_filepath, "%s_block%05zu.bin", cc_filepath.c_str(), i);
+			printf("  write: %s\n", cc1_block_filepath);
+			write_binary_file(cc1_block_filepath, uncompressed.data(), uncompressed.size());
+		}
 	}
 
 	return 0;
