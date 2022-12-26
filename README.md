@@ -24,6 +24,7 @@ Loader menu | Game intro
 - Archive.org Floppy-Image download: https://archive.org/details/002297-AlphaWaves (my work bases on this floppy image, unpack disk image with 7zip)
 - A bit of history on the game: https://grenouillebouillie.wordpress.com/2007/11/09/the-dawn-of-3d-games/
 - Wikipedia entry: https://en.wikipedia.org/wiki/Alpha_Waves
+- Modding Game Wiki Page: https://moddingwiki.shikadi.net/wiki/Alpha_Waves
 
 | File         | MD5                               | Info                  | Analysed |
 | :----------- | :-------------------------------- | :-------------------- | -------- |
@@ -136,6 +137,7 @@ create_static_exes.exe path-to-extracted-exes
  - executable-extractor and starter
  - create static vga.exe from extracted ega_vga.exe that does not need the starter to run
  - disabled copy protection - just press enter on code question when using ega.exe or vga.exe
+ - reversed the CC1(CC0) compression format: https://moddingwiki.shikadi.net/wiki/CC1_Format and wrote a generic uncompress tool
 
  # TODOs
  - reverse the sound driver TSRs
