@@ -204,3 +204,11 @@ North & South
   NSPXI.1 CC1
   ECRCGA.1 CC1
   ECREGA.2 CC1
+
+Safari Guns (https://www.mobygames.com/game/14723/safari-guns/)
+  SAFARI.PXI CC1
+  SAFCGA.CC1 CC1
+  SAFEGA.CC1 CC1
+
+
+  
