@@ -224,4 +224,14 @@ Murders in Space (https://www.mobygames.com/game/4803/murders-in-space/)
   TXTANGL.CC1 CC1
   TXTITAL.CC1 CC1
 
-  
+Full Metal Planet (https://www.mobygames.com/game/6538/full-metal-planet/)
+  cadre.vc0 CC0
+  credits.vc0 CC0
+  draco.vc0 CC0
+  ecran1.vc0 CC0
+  fmpalet.vc0 CC0
+  fullvga.cc1 CC1
+  icone.vc0 CC0
+  maree.vc0 CC0
+  select3.vc0 CC0
+
