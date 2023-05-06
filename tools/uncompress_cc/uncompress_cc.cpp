@@ -93,85 +93,72 @@ struct tables_t {
 
 constexpr uint8_t UNPACKED_VAL = 0;
 
-struct stack_item_t {
-	uint8_t a{};
-	uint8_t b{};
-};
+static void func1(
+	uint8_t*& output_ptr,
+	const tables_t& tables,
+	const uint8_t index1_,
+	const uint8_t val1_,
+	const uint8_t index2_);
 
-void print_uint8_vector(const std::string& name_, const uint8_t* data, size_t size)
+static void func0(uint8_t*& output_ptr, const tables_t& tables, uint8_t table1_index_)
 {
-	printf("std::vector<uint8_t> %s{\n", name_.c_str());
-	for (size_t i = 0; i < size; ++i)
+	const uint8_t table0_val = tables.table0[table1_index_];
+	func1(output_ptr, tables, table1_index_, table0_val, table0_val);
+	func1(output_ptr, tables, table1_index_, table0_val, tables.table1[table1_index_]);
+}
+
+static void func1(
+	uint8_t*& output_ptr,
+	const tables_t& tables,
+	const uint8_t index1_,
+	const uint8_t val1_,
+	const uint8_t table3_index_
+)
+{
+	//assert(val1_ == table3_index_); // not always
+
+	const uint8_t val2 = tables.table3[table3_index_];
+
+	if (val2 == UNPACKED_VAL)
 	{
-		printf("0x%02X", data[i]);
-		if (i < size - 1)
+		*output_ptr++ = table3_index_;
+		return;
+	}
+
+	if (index1_ > val2)
+	{
+		func0(output_ptr, tables, val2);
+		return;
+	}
+
+	//else
+
+	{
+		uint8_t table4_index = val2;
+		while (true)
 		{
-			printf(", ");
+			const uint8_t table4_val = tables.table4[table4_index];
+
+			if (table4_val == UNPACKED_VAL)
+			{
+				*output_ptr++ = table3_index_;
+				return;
+			}
+
+			if (table4_val < index1_)
+			{
+				func0(output_ptr, tables, table4_val);
+				return;
+			}
+
+			table4_index = table4_val;
 		}
 	}
-	printf("};\n");
 }
 
 void uncompress_part(const uint8_t start_val_, uint8_t*& output_ptr, const tables_t& tables)
 {
-	std::stack<stack_item_t> stack;
-
-	uint8_t var2 = start_val_;
-
-outer_loop:
-	assert(var2 > 0);
-	stack.push({ tables.table1[var2], var2 });
-
-	uint8_t var1 = tables.table0[var2];
-	assert(var1 >= 0);
-
-	while (true) {
-		const uint8_t table3_val = tables.table3[var1];
-		assert(table3_val >= 0);
-
-		if (table3_val == UNPACKED_VAL) {
-			*output_ptr++ = var1;
-			goto end_or_loop;
-		}
-		else if (var2 > table3_val) {
-			var2 = table3_val;
-			goto outer_loop;
-		}
-		else {
-			const uint8_t old_var1 = var1;
-			const uint8_t old_var2 = var2;
-			var2 = table3_val;
-			while (true) {
-				assert(var2 > 0);
-				var2 = tables.table4[var2];
-				if (var2 == 0) { // also UNPACKED_VAL?
-					*output_ptr++ = old_var1;
-					goto end_or_loop;
-				}
-				else if (var2 < old_var2) {
-					goto outer_loop;
-				}
-				else
-				{
-					// get next value from table4
-				}
-			}
-		}
-
-		assert(false); // only gotos reach the end_or_loop label
-
-	end_or_loop:
-		if (stack.size() == 0) {
-			return;
-		}
-
-		const stack_item_t item = stack.top();
-		stack.pop();
-
-		// from stack
-		var1 = item.a;
-		var2 = item.b;
-	}
+	func0(output_ptr, tables, start_val_);
 }
 
 tables_t prepare_tables(const block_t& block, const uint8_t*& input_ptr)
