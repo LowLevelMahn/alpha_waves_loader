@@ -204,3 +204,34 @@ North & South
   NSPXI.1 CC1
   ECRCGA.1 CC1
   ECREGA.2 CC1
+
+Safari Guns (https://www.mobygames.com/game/14723/safari-guns/)
+  SAFARI.PXI CC1
+  SAFCGA.CC1 CC1
+  SAFEGA.CC1 CC1
+
+Murders in Space (https://www.mobygames.com/game/4803/murders-in-space/)
+  ACCOS.VC1 CC1
+  CONTROLH.VC1 CC1
+  ESPAVGA.CC1 CC1
+  HORLOGE.CC1 CC1
+  RESTE.VC1 CC1
+  TOUTGPL.VC1 CC1
+  TOUTPI1.VC1 CC1
+  TOUTSPR.VC1 CC1
+  TOUTTXT.CC1 CC1
+  TXTALLE.CC1 CC1
+  TXTANGL.CC1 CC1
+  TXTITAL.CC1 CC1
+
+Full Metal Planet (https://www.mobygames.com/game/6538/full-metal-planet/)
+  cadre.vc0 CC0
+  credits.vc0 CC0
+  draco.vc0 CC0
+  ecran1.vc0 CC0
+  fmpalet.vc0 CC0
+  fullvga.cc1 CC1
+  icone.vc0 CC0
+  maree.vc0 CC0
+  select3.vc0 CC0
+
