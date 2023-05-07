@@ -98,57 +98,52 @@ constexpr uint8_t UNPACKED_VAL = 0;
 static void func1(
     uint8_t*& output_ptr,
     const tables_t& tables,
-    const uint8_t index1_,
-    const uint8_t val1_,
-    const uint8_t index2_);
+    const uint8_t index_,
+    const std::vector<uint8_t>& table_);
 
-static void func0(uint8_t*& output_ptr, const tables_t& tables, uint8_t table1_index_)
+static void func0(uint8_t*& output_ptr, const tables_t& tables, uint8_t index_)
 {
-    const uint8_t table0_val = tables.table0[table1_index_];
-    const uint8_t table1_val = tables.table1[table1_index_];
-    func1(output_ptr, tables, table1_index_, table0_val, table0_val);
-    func1(output_ptr, tables, table1_index_, table0_val, table1_val);
+    func1(output_ptr, tables, index_, tables.table0);
+    func1(output_ptr, tables, index_, tables.table1);
 }
 
 static void func1(
     uint8_t*& output_ptr,
     const tables_t& tables,
-    const uint8_t index1_,
-    const uint8_t val1_,
-    const uint8_t table3_index_
+    const uint8_t index_,
+    const std::vector<uint8_t>& table_
 )
 {
-    //assert(val1_ == table3_index_); // not always
+    const uint8_t table3_index = table_[index_];
+    const uint8_t table3_val = tables.table3[table3_index];
 
-    const uint8_t val2 = tables.table3[table3_index_];
-
-    if (val2 == UNPACKED_VAL)
+    if (table3_val == UNPACKED_VAL)
     {
-        *output_ptr++ = table3_index_;
+        *output_ptr++ = table3_index;
         return;
     }
 
-    if (index1_ > val2)
+    if (index_ > table3_val)
     {
-        func0(output_ptr, tables, val2);
+        func0(output_ptr, tables, table3_val);
         return;
     }
 
     //else
 
     {
-        uint8_t table4_index = val2;
+        uint8_t table4_index = table3_val;
         while (true)
         {
             const uint8_t table4_val = tables.table4[table4_index];
 
             if (table4_val == UNPACKED_VAL)
             {
-                *output_ptr++ = table3_index_;
+                *output_ptr++ = table3_index;
                 return;
             }
 
-            if (table4_val < index1_)
+            if (table4_val < index_)
             {
                 func0(output_ptr, tables, table4_val);
                 return;
@@ -400,12 +395,14 @@ int main(int argc, char* argv[])
             {
                 //assert(false);
                 //throw 5; // is that ok?
+
                 // not packed block?
             }
             if (db.unpacked_size == 0)
             {
                 throw 6;
             }
+
             printf("  [%zu] packed_size: %zu, unpacked_size: %u\n", i, db.packed_data.size(), db.unpacked_size);
 
             const std::vector<uint8_t> uncompressed = uncompress(db);
@@ -420,10 +417,12 @@ int main(int argc, char* argv[])
         }
 
         return 0;
+
     }
     catch (int e)
     {
         return e;
     }
+
     return 0;
 }
