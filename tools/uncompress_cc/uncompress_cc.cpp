@@ -103,6 +103,7 @@ static void func1(
 
 static void func0(uint8_t*& output_ptr, const tables_t& tables, uint8_t index_)
 {
+    //index_ is value from table3 or table4
     func1(output_ptr, tables, index_, tables.table0);
     func1(output_ptr, tables, index_, tables.table1);
 }
@@ -114,6 +115,7 @@ static void func1(
     const std::vector<uint8_t>& table_
 )
 {
+    // table_ is table0 or table1, index_ is value from table3 or table4
     const uint8_t table3_index = table_[index_];
     const uint8_t table3_val = tables.table3[table3_index];
 
@@ -201,15 +203,13 @@ void uncompress_block(const block_t& block, const uint8_t*& input_ptr, uint8_t*&
     for (int i = 0; i < block.data_len; ++i)
     {
         const uint8_t var1 = *input_ptr++;
-        const uint8_t var2 = tables.table3[var1]; // var1 0..n
+        const uint8_t table3_val = tables.table3[var1]; // var1 0..n
 
-        if (var2 == UNPACKED_VAL) {    // uncompressed part
-            //printf("    if1 - just store: %02X\n", var1);
+        if (table3_val == UNPACKED_VAL) {    // uncompressed part
             *output_ptr++ = var1; // just store value
         }
         else {                      // compressed part
-            //printf("    if2 - uncompress_part: start_value: %02X\n", var2);
-            uncompress_part(var2, output_ptr, tables);
+            uncompress_part(table3_val, output_ptr, tables);
         }
     }
 }
@@ -262,29 +262,8 @@ void write_binary_file(const std::string& file_path_, const void* const data_, s
     fclose(fp);
 }
 
-int main(int argc, char* argv[])
+int do_extract(const std::string cc_filepath, bool extract)
 {
-    if ((argc < 2) || (argc > 3))
-    {
-        printf("uncompress_cc1 CC-FILE [e]\n");
-        return -1;
-    }
-
-    const std::string cc_filepath = argv[1];
-    printf("%s\n", cc_filepath.c_str());
-
-    bool extract = false;
-    if (argc == 3)
-    {
-        const std::string arg2 = argv[2];
-        if (arg2 != "e")
-        {
-            printf("optional second argument needs to be 'e'\n");
-            return -1;
-        }
-        extract = true;
-    }
-
     try
     {
         const std::vector<uint8_t> content = read_binary_file(cc_filepath);
@@ -425,4 +404,30 @@ int main(int argc, char* argv[])
     }
 
     return 0;
+}
+
+int main(int argc, char* argv[])
+{
+    if ((argc < 2) || (argc > 3))
+    {
+        printf("uncompress_cc1 CC-FILE [e]\n");
+        return -1;
+    }
+
+    const std::string cc_filepath = argv[1];
+    printf("%s\n", cc_filepath.c_str());
+
+    bool extract = false;
+    if (argc == 3)
+    {
+        const std::string arg2 = argv[2];
+        if (arg2 != "e")
+        {
+            printf("optional second argument needs to be 'e'\n");
+            return -1;
+        }
+        extract = true;
+    }
+
+    return do_extract(cc_filepath, extract);
 }
