@@ -95,20 +95,20 @@ struct tables_t {
 
 constexpr uint8_t UNPACKED_VAL = 0;
 
-static void func1(
+static void uncompress_part1(
     uint8_t*& output_ptr,
     const tables_t& tables,
     const uint8_t index_,
     const std::vector<uint8_t>& table_);
 
-static void func0(uint8_t*& output_ptr, const tables_t& tables, uint8_t index_)
+static void uncompress_part0(uint8_t*& output_ptr, const tables_t& tables, uint8_t index_)
 {
     //index_ is value from table3 or table4
-    func1(output_ptr, tables, index_, tables.table0);
-    func1(output_ptr, tables, index_, tables.table1);
+    uncompress_part1(output_ptr, tables, index_, tables.table0);
+    uncompress_part1(output_ptr, tables, index_, tables.table1);
 }
 
-static void func1(
+static void uncompress_part1(
     uint8_t*& output_ptr,
     const tables_t& tables,
     const uint8_t index_,
@@ -127,7 +127,7 @@ static void func1(
 
     if (index_ > table3_val)
     {
-        func0(output_ptr, tables, table3_val);
+        uncompress_part0(output_ptr, tables, table3_val);
         return;
     }
 
@@ -147,18 +147,13 @@ static void func1(
 
             if (table4_val < index_)
             {
-                func0(output_ptr, tables, table4_val);
+                uncompress_part0(output_ptr, tables, table4_val);
                 return;
             }
 
             table4_index = table4_val;
         }
     }
-}
-
-void uncompress_part(const uint8_t start_val_, uint8_t*& output_ptr, const tables_t& tables)
-{
-    func0(output_ptr, tables, start_val_);
 }
 
 tables_t prepare_tables(const uint8_t packed_size, const uint8_t*& input_ptr)
@@ -209,7 +204,7 @@ void uncompress_block(const uint8_t packed_size, uint16_t data_len, const uint8_
             *output_ptr++ = var1; // just store value
         }
         else {                      // compressed part
-            uncompress_part(table3_val, output_ptr, tables);
+            uncompress_part0(output_ptr, tables, table3_val);
         }
     }
 }
@@ -492,7 +487,7 @@ bool part_uncompress_unit_test()
     constexpr uint8_t var2 = 0x48;
     std::vector<uint8_t> output(9);
     uint8_t* output_ptr = output.data();
-    uncompress_part(var2, output_ptr, tables);
+    uncompress_part0(output_ptr, tables, var2);
     return output == output_ref;
 }
 
