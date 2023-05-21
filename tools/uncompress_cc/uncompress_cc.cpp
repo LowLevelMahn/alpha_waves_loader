@@ -7,22 +7,22 @@
 #include <stack>
 #include <algorithm>
 
-inline uint8_t lo(uint16_t value_)
+inline uint8_t lo(const uint16_t value_)
 {
     return value_ & 0xFF;
 }
 
-inline uint8_t hi(uint16_t value_)
+inline uint8_t hi(const uint16_t value_)
 {
     return value_ >> 8;
 }
 
-inline uint16_t lo(uint32_t value_)
+inline uint16_t lo(const uint32_t value_)
 {
     return value_ & 0xFFFF;
 }
 
-inline uint16_t hi(uint32_t value_)
+inline uint16_t hi(const uint32_t value_)
 {
     return value_ >> 16;
 }
@@ -54,7 +54,7 @@ struct data_block_t {
     std::vector<uint8_t> packed_data;
 };
 
-void read(const uint8_t*& current, void* into, size_t size)
+void read(const uint8_t*& current, void* into, const size_t size)
 {
     ::memcpy(into, current, size);
     current += size;
@@ -101,7 +101,7 @@ static void uncompress_part1(
     const uint8_t index_,
     const std::vector<uint8_t>& table_);
 
-static void uncompress_part0(uint8_t*& output_ptr, const tables_t& tables, uint8_t index_)
+static void uncompress_part0(uint8_t*& output_ptr, const tables_t& tables, const uint8_t index_)
 {
     //index_ is value from table3 or table4
     uncompress_part1(output_ptr, tables, index_, tables.table0);
@@ -163,11 +163,11 @@ tables_t prepare_tables(const uint8_t packed_size, const uint8_t*& input_ptr)
     // read & prepare uncompress-helper tables
     std::vector<uint8_t> table0(1 + packed_size);
     std::vector<uint8_t> table1(1 + packed_size);
-    std::vector<uint8_t> table2(packed_size); // only needed for initialization, not for uncompression
+    std::vector<uint8_t> table3_offsets(packed_size); // only needed for initialization, not for uncompression
     std::vector<uint8_t> table3(256);
     std::vector<uint8_t> table4(1 + packed_size);
 
-    read(input_ptr, table2.data(), packed_size);
+    read(input_ptr, table3_offsets.data(), packed_size);
 
     table0[0] = 0xFF; // unused, never read
     read(input_ptr, &table0[1], packed_size);
@@ -179,8 +179,7 @@ tables_t prepare_tables(const uint8_t packed_size, const uint8_t*& input_ptr)
     // packed_size is uint8_t so max would be 255
 
     for (int i = 0; i < packed_size; ++i) {
-        const uint8_t ofs = table2[i];
-        assert(ofs >= 0);
+        const uint8_t ofs = table3_offsets[i];
         uint8_t* value = &table3[ofs]; // [0] is used
         const uint8_t index = i + 1; // (0..255)+1
         table4[index] = *value; //1+256  [0] ignored, [1-256]
@@ -191,7 +190,7 @@ tables_t prepare_tables(const uint8_t packed_size, const uint8_t*& input_ptr)
     return { table0, table1, table3, table4 };
 }
 
-void uncompress_block(const uint8_t packed_size, uint16_t data_len, const uint8_t*& input_ptr, uint8_t*& output_ptr)
+void uncompress_block(const uint8_t packed_size, const uint16_t data_len, const uint8_t*& input_ptr, uint8_t*& output_ptr)
 {
     const tables_t tables = prepare_tables(packed_size, input_ptr);
 
@@ -255,7 +254,7 @@ void write_binary_file(const std::string& file_path_, const void* const data_, s
     fclose(fp);
 }
 
-int do_extract(const std::string cc_filepath, bool extract)
+int do_extract(const std::string cc_filepath, const bool extract)
 {
     try
     {
