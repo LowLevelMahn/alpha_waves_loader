@@ -220,7 +220,7 @@ std::vector<uint8_t> uncompress(const std::vector<uint8_t>& packed_data_, const 
     block_t block{};
     do
     {
-        if ((input_end_ptr - input_ptr) < sizeof(block))
+        if ((input_end_ptr - input_ptr) < static_cast<long int>(sizeof(block)))
         {
             throw 4;
         }
@@ -240,25 +240,92 @@ std::vector<uint8_t> uncompress(const std::vector<uint8_t>& packed_data_, const 
         }
     } while (block.flag != LAST_BLOCK);
 
-    assert(input_ptr == packed_data_.data() + packed_data_.size());
-    assert(output_ptr == output.data() + output.size());
+    const bool input_fully_used = input_ptr == packed_data_.data() + packed_data_.size();
+    if (!input_fully_used)
+    {
+        throw 9;
+    }
+    const bool output_fully_used = output_ptr == output.data() + output.size();
+    if (!output_fully_used)
+    {
+        throw 9;
+    }
     return output; // the-end
 }
 
 void write_binary_file(const std::string& file_path_, const void* const data_, size_t size_)
 {
     FILE* fp = fopen(file_path_.c_str(), "wb+");
-    assert(fp);
+    if (!fp)
+    {
+        throw 12;
+    }
     size_t written = fwrite(data_, 1, size_, fp);
-    assert(written = size_);
+    if (written != size_)
+    {
+        throw 13;
+    }
     fclose(fp);
 }
 
-int do_extract(const std::string cc_filepath, const bool extract)
+int cc0_uncompress(const std::string cc_filepath, const std::vector<uint8_t>& content, const bool extract)
 {
     try
     {
-        const std::vector<uint8_t> content = read_binary_file(cc_filepath);
+        const uint8_t* current = content.data();
+        const uint8_t* end = current + content.size();
+
+        if (content.size() < 8)
+        {
+            return 2;
+        }
+
+        // ---- FILE-CONTENT
+        // packed_size 
+        // unpacked_size
+        // packed_data[packed_size]
+        // -- END
+
+        const uint32_t packed_size = read32(current);
+        const uint32_t unpacked_size = read32(current);
+        if (packed_size != content.size() - 8)
+        {
+            return 3;
+        }
+
+        std::vector<uint8_t> data(packed_size);
+        read(current, data.data(), packed_size);
+        if (current != content.data() + content.size())
+        {
+            return 3;
+        }
+
+        data_block_t db;
+        db.unpacked_size = unpacked_size;
+        db.packed_data = data;
+
+        const std::vector<uint8_t> uncompressed = uncompress(db.packed_data, db.unpacked_size);
+
+        if (extract)
+        {
+            char cc0_filepath[1024]{};
+            sprintf(cc0_filepath, "%s.uncompressed.bin", cc_filepath.c_str());
+            printf("  write: %s\n", cc0_filepath);
+            write_binary_file(cc0_filepath, uncompressed.data(), uncompressed.size());
+        }
+    }
+    catch (...)
+    {
+        return 30;
+    }
+
+    return 0;
+};
+
+int cc1_uncompress(const std::string cc_filepath, const std::vector<uint8_t>& content, const bool extract)
+{
+    try
+    {
         const uint8_t* current = content.data();
         const uint8_t* end = current + content.size();
 
@@ -269,57 +336,16 @@ int do_extract(const std::string cc_filepath, const bool extract)
 
         const uint16_t offset_count = read16(current);
 
-        if (offset_count == 0)
-        {
-            printf("info: likely CC0 format\n");
-            // compressed size?
-            const uint16_t packed_size = read16(current);
-            if (packed_size >= content.size())
-            {
-                printf("error: is not a CC0: packed size >= file size\n");
-                return -1;
-            }
-            assert(packed_size < content.size());
-
-            // uncompressed?
-            const uint32_t unpacked_size = read32(current);
-
-            const size_t data_size = content.size() - (current - content.data());
-            if (data_size != packed_size)
-            {
-                printf("error: data_size != packed_size\n");
-                return -2;
-            }
-            assert(data_size == packed_size);
-            std::vector<uint8_t> data(data_size);
-            read(current, data.data(), data_size);
-
-            data_block_t db;
-            db.unpacked_size = unpacked_size;
-            db.packed_data = data;
-
-            const std::vector<uint8_t> uncompressed = uncompress(db.packed_data, db.unpacked_size);
-
-            if (extract)
-            {
-                char cc0_filepath[1024]{};
-                sprintf(cc0_filepath, "%s.uncompressed.bin", cc_filepath.c_str());
-                printf("  write: %s\n", cc0_filepath);
-                write_binary_file(cc0_filepath, uncompressed.data(), uncompressed.size());
-            }
-            return 0;
-        }
-
-        printf("info: likely CC1 format\n");
         std::vector<data_block_t> data_blocks(offset_count);
         {
             std::vector<uint32_t> offset_table(offset_count);
             for (size_t i = 0; i < offset_count; ++i) {
                 if (current + 4 > end)
                 {
-                    throw 2;
+                    return 3;
                 }
-                offset_table[i] = read32(current);
+                const auto offset = read32(current);
+                offset_table[i] = offset;
             }
 
             auto sorted_table = offset_table;
@@ -337,7 +363,10 @@ int do_extract(const std::string cc_filepath, const bool extract)
                     printf("error: packed size >= file size\n");
                     return -1;
                 }
-                assert(packed_size < content.size());
+                if (packed_size >= content.size())
+                {
+                    return 14;
+                }
 
                 const uint32_t unpacked_size = read32(current);
 
@@ -371,7 +400,7 @@ int do_extract(const std::string cc_filepath, const bool extract)
             }
             if (db.unpacked_size == 0)
             {
-                throw 6;
+                return 6;
             }
 
             printf("  [%zu] packed_size: %zu, unpacked_size: %u\n", i, db.packed_data.size(), db.unpacked_size);
@@ -388,14 +417,36 @@ int do_extract(const std::string cc_filepath, const bool extract)
         }
 
         return 0;
-
     }
-    catch (int e)
+    catch (...)
     {
-        return e;
+        return 20;
     }
 
     return 0;
+}
+
+int do_extract(const std::string cc_filepath, const bool extract)
+{
+    const std::vector<uint8_t> content = read_binary_file(cc_filepath);
+
+    printf("try extracting as CC0\n");
+    int res = cc0_uncompress(cc_filepath, content, extract);
+    if (res == 0)
+    {
+        return 0;
+    }
+    printf("not a CC0!\n");
+
+    printf("try extracting as CC1\n");
+    res = cc1_uncompress(cc_filepath, content, extract);
+    if (res == 0)
+    {
+        return 0;
+    }
+    printf("not a CC1!\n");
+
+    return 1;
 }
 
 bool part_uncompress_unit_test();
@@ -766,12 +817,12 @@ bool uncompress_unit_test()
         0x52, 0x01, 0x2E, 0x8C, 0x0E, 0x06, 0x04, 0xB8, 0xE6, 0x0A, 0x26, 0x89, 0x04, 0x26, 0x8C, 0x4C, 0x02, 0x32, 0xC0,
         0xBA, 0x13, 0x0B, 0xD1, 0xEA, 0xD1, 0xEA, 0xD1, 0xEA, 0xD1, 0xEA, 0x42, 0xB4, 0x31, 0xCD, 0x21 };
 
-        const std::vector<uint8_t> uncompressed_reference(uncompressed_example,
-            uncompressed_example + sizeof(uncompressed_example));
+    const std::vector<uint8_t> uncompressed_reference(uncompressed_example,
+        uncompressed_example + sizeof(uncompressed_example));
 
-        const std::vector<uint8_t> compressed(compressed_example, compressed_example + sizeof(compressed_example));
+    const std::vector<uint8_t> compressed(compressed_example, compressed_example + sizeof(compressed_example));
 
-        std::vector<uint8_t> uncompressed = uncompress(compressed, uncompressed_reference.size());
+    std::vector<uint8_t> uncompressed = uncompress(compressed, uncompressed_reference.size());
 
-        return uncompressed == uncompressed_reference;
+    return uncompressed == uncompressed_reference;
 }
