@@ -1,8 +1,111 @@
-Alone in the Dark
+Alone in the Dark: https://www.mobygames.com/game/325/alone-in-the-dark/, released 1992 on DOS
   INFO.CC1 CC1
   INDARK.CC1 CC1
 
-Hostage: Rescue Mission
+Eternam: https://www.mobygames.com/game/1368/eternam, release 1992 on DOS
+  AVE.CC! CC1
+  AVE.CC1 CC1
+  INFO.CC1 CC1
+  
+7 Colors: https://www.mobygames.com/game/11468/7-colors/, release 1991 on DOS
+  COLORS.CC1 CC1
+
+Advantage Tennis: https://www.mobygames.com/game/4961/advantage-tennis/, release 1991 on DOS 
+  DANDA1.DAT CC0
+  ADV_VEGA.CC1 CC1
+  DANDA2.DAT CC1
+  INFO.CC1 CC1
+  INTRO.DAT CC1
+  MENU.DAT CC1
+  MUS.CC1 CC1
+  TENNIS.DAT CC1
+  TRAD.DAT CC1
+
+Neptune: https://www.mobygames.com/game/4314/operation-neptune/, release 1991 on DOS
+  DSK1.CC1 CC1
+  DSK2.CC1 CC1
+  
+Alpha Waves: https://www.mobygames.com/game/939/continuum/, released 1990 on DOS
+  GRAPHS.CC1 CC1
+  MUSIC_A.CC1 CC1
+  MUSIC_B.CC1 CC1
+  MUSIC_T.CC1 CC1
+  PROGS.CC1 CC1
+  TEXTES.CC1 CC1
+
+Mystical: https://www.mobygames.com/game/33025/mystical/, release 1990 on DOS
+  MUSIC.1 CC1
+  MYSCGA.1 CC1
+  MYSEGA.1 CC1
+  MYSJEUCG.1 CC1
+  MYSJEUEG.2 CC1
+  MYSSON.1 CC1
+
+The Light Corridor: https://www.mobygames.com/game/6904/the-light-corridor/, release 1990 on DOS
+  CGA.COR CC0
+  EGA.COR CC0
+  HYBRIDE.COR CC0
+  VGA.COR CC0
+  ADLIB.COR CC1
+  BUZZER.COR CC1
+  CORRIFR.1 CC1
+  PAGE.1 CC1
+
+North & South: https://www.mobygames.com/game/6926/north-south/, release 1990 on DOS
+  BA1CGA.1 CC0
+  BA1EGA.2 CC0
+  BA2CGA.1 CC0
+  BA2EGA.2 CC0
+  CARCGA.1 CC0
+  CAREGA.2 CC0
+  CHOCGA.1 CC0
+  CHOEGA.2 CC0
+  FORCGA.1 CC0
+  FOREGA.2 CC0
+  GAGCGA.2 CC0
+  GAGEGA.2 CC0
+  PERCGA.2 CC0
+  PEREGA.2 CC0
+  PRECGA.1 CC0
+  PREEGA.2 CC0
+  SFOCGA.1 CC0
+  SFOEGA.2 CC0
+  TRACGA.1 CC0
+  TRAEGA.2 CC0
+  VIGCGA.1 CC0
+  VIGEGA.2 CC0
+  TATCGA.1 CC1
+  TATEGA.2 CC1
+  NSPXI.1 CC1
+  ECRCGA.1 CC1
+  ECREGA.2 CC1
+  
+Murders in Space: https://www.mobygames.com/game/4803/murders-in-space/, release 1990 on DOS
+  ACCOS.VC1 CC1
+  CONTROLH.VC1 CC1
+  ESPAVGA.CC1 CC1
+  HORLOGE.CC1 CC1
+  RESTE.VC1 CC1
+  TOUTGPL.VC1 CC1
+  TOUTPI1.VC1 CC1
+  TOUTSPR.VC1 CC1
+  TOUTTXT.CC1 CC1
+  TXTALLE.CC1 CC1
+  TXTANGL.CC1 CC1
+  TXTITAL.CC1 CC1
+
+Full Metal Planet: https://www.mobygames.com/game/6538/full-metal-planet/, release 1990 on DOS
+  cadre.vc0 CC0
+  credits.vc0 CC0
+  draco.vc0 CC0
+  ecran1.vc0 CC0
+  fmpalet.vc0 CC0
+  fullvga.cc1 CC1
+  icone.vc0 CC0
+  maree.vc0 CC0
+  select3.vc0 CC0
+  
+Hostage: Rescue Mission: https://www.mobygames.com/game/6939/hostage-rescue-mission/, released 1989 on DOS
   ETAGESC.PKB CC0
   GARDE.PKB CC0
   GIGN.PKB CC0
@@ -20,30 +123,8 @@ Hostage: Rescue Mission
   HOSTAGEE.PXI CC1
   APPREGA.PXI CC1
   HOSTAGEC.PXI CC1
-  
-Alpha Waves  
-  GRAPHS.CC1 CC1
-  MUSIC_A.CC1 CC1
-  MUSIC_B.CC1 CC1
-  MUSIC_T.CC1 CC1
-  PROGS.CC1 CC1
-  TEXTES.CC1 CC1
 
-7 Colors
-  COLORS.CC1 CC1
-
-Advantage Tennis
-  DANDA1.DAT CC0
-  ADV_VEGA.CC1 CC1
-  DANDA2.DAT CC1
-  INFO.CC1 CC1
-  INTRO.DAT CC1
-  MENU.DAT CC1
-  MUS.CC1 CC1
-  TENNIS.DAT CC1
-  TRAD.DAT CC1
-
-Drakkhen
+Drakkhen: https://www.mobygames.com/game/1969/drakkhen/, release 1989 on DOS
   INTE_CGA.1C0 CC0
   INTE_CGA.2C0 CC0
   INTE_EGA.3C0 CC0
@@ -118,34 +199,7 @@ Drakkhen
   REGF.1C1 CC1
   REGI.1C1 CC1
 
-Eternam
-  AVE.CC! CC1
-  AVE.CC1 CC1
-  INFO.CC1 CC1
-
-Mystical
-  MUSIC.1 CC1
-  MYSCGA.1 CC1
-  MYSEGA.1 CC1
-  MYSJEUCG.1 CC1
-  MYSJEUEG.2 CC1
-  MYSSON.1 CC1
-
-Neptune
-  DSK1.CC1 CC1
-  DSK2.CC1 CC1
-
-The Light Corridor
-  CGA.COR CC0
-  EGA.COR CC0
-  HYBRIDE.COR CC0
-  VGA.COR CC0
-  ADLIB.COR CC1
-  BUZZER.COR CC1
-  CORRIFR.1 CC1
-  PAGE.1 CC1
-
-The Quest for the Time-Bird
+The Quest for the Time-Bird: https://www.mobygames.com/game/6931/the-quest-for-the-time-bird/, release 1989 on DOS
   0D.CC0 CC0
   0E.CC0 CC0
   1D.CC0 CC0
@@ -173,65 +227,10 @@ The Quest for the Time-Bird
   INTRO.CC1 CC1
   MONSTRE.CC1 CC1
 
-Tintin On The Moon
+Tintin On The Moon: https://www.mobygames.com/game/9047/tintin-on-the-moon/, release 1989 on DOS
   TINTINC.1 CC1
 
-North & South
-  BA1CGA.1 CC0
-  BA1EGA.2 CC0
-  BA2CGA.1 CC0
-  BA2EGA.2 CC0
-  CARCGA.1 CC0
-  CAREGA.2 CC0
-  CHOCGA.1 CC0
-  CHOEGA.2 CC0
-  FORCGA.1 CC0
-  FOREGA.2 CC0
-  GAGCGA.2 CC0
-  GAGEGA.2 CC0
-  PERCGA.2 CC0
-  PEREGA.2 CC0
-  PRECGA.1 CC0
-  PREEGA.2 CC0
-  SFOCGA.1 CC0
-  SFOEGA.2 CC0
-  TRACGA.1 CC0
-  TRAEGA.2 CC0
-  VIGCGA.1 CC0
-  VIGEGA.2 CC0
-  TATCGA.1 CC1
-  TATEGA.2 CC1
-  NSPXI.1 CC1
-  ECRCGA.1 CC1
-  ECREGA.2 CC1
-
-Safari Guns (https://www.mobygames.com/game/14723/safari-guns/)
+Safari Guns: https://www.mobygames.com/game/14723/safari-guns/, release 1989 on DOS
   SAFARI.PXI CC1
   SAFCGA.CC1 CC1
   SAFEGA.CC1 CC1
-
-Murders in Space (https://www.mobygames.com/game/4803/murders-in-space/)
-  ACCOS.VC1 CC1
-  CONTROLH.VC1 CC1
-  ESPAVGA.CC1 CC1
-  HORLOGE.CC1 CC1
-  RESTE.VC1 CC1
-  TOUTGPL.VC1 CC1
-  TOUTPI1.VC1 CC1
-  TOUTSPR.VC1 CC1
-  TOUTTXT.CC1 CC1
-  TXTALLE.CC1 CC1
-  TXTANGL.CC1 CC1
-  TXTITAL.CC1 CC1
-
-Full Metal Planet (https://www.mobygames.com/game/6538/full-metal-planet/)
-  cadre.vc0 CC0
-  credits.vc0 CC0
-  draco.vc0 CC0
-  ecran1.vc0 CC0
-  fmpalet.vc0 CC0
-  fullvga.cc1 CC1
-  icone.vc0 CC0
-  maree.vc0 CC0
-  select3.vc0 CC0
-
