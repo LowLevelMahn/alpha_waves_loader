@@ -105,6 +105,46 @@ Full Metal Planet: https://www.mobygames.com/game/6538/full-metal-planet/, relea
   maree.vc0 CC0
   select3.vc0 CC0
   
+Wild Life: https://www.mobygames.com/game/54191/wild-life/, release 1990 on DOS
+  WILDCGA.CC1 CC1
+  WILDEGA.CC1 CC1 
+  
+Murders in Venice: https://www.mobygames.com/game/4793/murders-in-venice/, release 1990 on DOS
+  Fichese.pxi CC1
+  Fichesf.pxi CC1
+  Fichesg.pxi CC1
+  Fichesi.pxi CC1
+  Cga\Bandeau.pxi CC1
+  Cga\Carte.pxi CC1
+  Cga\Cobra.pxi CC1
+  Cga\Decors.pxi CC1
+  Cga\Maquille.pxi CC1
+  Cga\Medail.pxi CC1
+  Cga\Presente.pxi CC1
+  Cga\Souterre.pxi CC1
+  Cga\Titre.pxi CC1
+  Ega\Bandeau.pxi CC1
+  Ega\Carte.pxi CC1
+  Ega\Cobra.pxi CC1
+  Ega\Decors.pxi CC1
+  Ega\Maquille.pxi CC1
+  Ega\Medail.pxi CC1
+  Ega\Presente.pxi CC1
+  Ega\Souterre.pxi CC1
+  Ega\Titre.pxi CC1  
+
+Cool Ball: https://www.mobygames.com/game/54514/cool-ball/, release 1990 on DOS
+  fdcgt.cc1 CC1
+  fdega.cc1 CC1
+  popup.px1 CC1
+  popup.px2 CC1
+  popup.pxi CC1
+  spcgx.cc1 CC1
+  spega.cc1 CC1
+  tatou.cc1 CC1
+  tatouc.cc1 CC1
+  tatoue.cc1 CC1
+  
 Hostage: Rescue Mission: https://www.mobygames.com/game/6939/hostage-rescue-mission/, released 1989 on DOS
   ETAGESC.PKB CC0
   GARDE.PKB CC0
@@ -234,3 +274,39 @@ Safari Guns: https://www.mobygames.com/game/14723/safari-guns/, release 1989 on 
   SAFARI.PXI CC1
   SAFCGA.CC1 CC1
   SAFEGA.CC1 CC1
+  
+Shufflepuck Cafe: https://www.mobygames.com/game/3507/shufflepuck-cafe/, release 1989 on DOS
+  GRAPHUSC.CC1 CC1
+  GRAPHUSE.CC1 CC1
+  SAMPLE.CC0 CC0 
+  SHUFFLEC.PXI CC1
+  SHUFFLEE.PXI CC1
+
+Chicago 90: https://www.mobygames.com/game/1720/chicago-90/, release 1989 on DOS 
+  DH.CC1 CC1
+  DISKB.CC1 CC1
+  
+Fire!: https://www.mobygames.com/game/54100/fire/, release 1989 on DOS
+  CGA\CASTING.PIC CC1
+  CGA\FICHE0.PIC CC1
+  CGA\FICHE1.PIC CC1
+  CGA\FICHE2.PIC CC1
+  CGA\FICHE3.PIC CC1
+  CGA\FICHE4.PIC CC1
+  CGA\PORTAV.PIC CC1
+  CGA\PRESENT.PIC CC1
+  EGA\CASTING.PIC CC1
+  EGA\FICHE0.PIC CC1
+  EGA\FICHE1.PIC CC1
+  EGA\FICHE2.PIC CC1
+  EGA\FICHE3.PIC CC1
+  EGA\FICHE4.PIC CC1
+  EGA\PORTAV.PIC CC1
+  EGA\PRESENT.PIC CC1
+
+Teenage Queen: https://www.mobygames.com/game/6224/teenage-queen/, release 1988 on DOS
+  TEENAGE.PXI CC1
+
+Highway Patrol II: https://www.mobygames.com/game/14208/highway-patrol-ii/, release 1988 on DOS
+  HP2.DAT CC1
+  HP3.DAT CC1
