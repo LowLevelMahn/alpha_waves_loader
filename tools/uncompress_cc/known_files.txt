@@ -6,6 +6,10 @@ Eternam: https://www.mobygames.com/game/1368/eternam, release 1992 on DOS
   AVE.CC! CC1
   AVE.CC1 CC1
   INFO.CC1 CC1
+
+Disney's Beauty and the Beast: https://www.mobygames.com/game/46990/disneys-beauty-and-the-beast/, release 1992 on DOS  
+  bb.cc1
+  info.cc1
   
 7 Colors: https://www.mobygames.com/game/11468/7-colors/, release 1991 on DOS
   COLORS.CC1 CC1
@@ -133,7 +137,7 @@ Murders in Venice: https://www.mobygames.com/game/4793/murders-in-venice/, relea
   Ega\Souterre.pxi CC1
   Ega\Titre.pxi CC1  
 
-Cool Ball: https://www.mobygames.com/game/54514/cool-ball/, release 1990 on DOS
+Cool Ball, Pop-Up: https://www.mobygames.com/game/54514/cool-ball/, release 1990 on DOS
   fdcgt.cc1 CC1
   fdega.cc1 CC1
   popup.px1 CC1
@@ -144,8 +148,16 @@ Cool Ball: https://www.mobygames.com/game/54514/cool-ball/, release 1990 on DOS
   tatou.cc1 CC1
   tatouc.cc1 CC1
   tatoue.cc1 CC1
+
+Extase: https://www.mobygames.com/game/23277/extase/, release 1990 on DOS 
+  CRYO.BIN
+  CRYO.EGA
+  DIGIT.BIN
+  DIGIT.EGA
+  GENERIQ.BIN
+  GENERIQ.EGA
   
-Hostage: Rescue Mission: https://www.mobygames.com/game/6939/hostage-rescue-mission/, released 1989 on DOS
+Hostage: Rescue Mission, Operation Jupiter: https://www.mobygames.com/game/6939/hostage-rescue-mission/, released 1989 on DOS
   ETAGESC.PKB CC0
   GARDE.PKB CC0
   GIGN.PKB CC0
@@ -303,6 +315,11 @@ Fire!: https://www.mobygames.com/game/54100/fire/, release 1989 on DOS
   EGA\FICHE4.PIC CC1
   EGA\PORTAV.PIC CC1
   EGA\PRESENT.PIC CC1
+
+Chamber of the Sci-Mutant Priestess, KULT: The Temple of Flying Saucers, Kult: https://www.mobygames.com/game/562/chamber-of-the-sci-mutant-priestess/, released 1989 on DOS
+  fond.bin
+  kult1.pxi
+  prescga.bin
 
 Teenage Queen: https://www.mobygames.com/game/6224/teenage-queen/, release 1988 on DOS
   TEENAGE.PXI CC1
