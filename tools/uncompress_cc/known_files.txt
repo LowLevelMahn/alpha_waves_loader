@@ -1,3 +1,7 @@
+Call of Cthulhu: Shadow of the Comet (ES): https://www.mobygames.com/game/132/call-of-cthulhu-shadow-of-the-comet/, released 1994 on DOS
+  CTUS.CC1
+  INFO.CC1
+
 Alone in the Dark: https://www.mobygames.com/game/325/alone-in-the-dark/, released 1992 on DOS
   INFO.CC1 CC1
   INDARK.CC1 CC1
