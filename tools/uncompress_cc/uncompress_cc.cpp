@@ -6,6 +6,10 @@
 #include <string.h>
 #include <stack>
 #include <algorithm>
+#include <span>
+#include <filesystem>
+
+std::string hexdump(const void* const buffer, int buffer_size, int width);
 
 inline uint8_t lo(const uint16_t value_)
 {
@@ -48,11 +52,6 @@ std::vector<uint8_t> read_binary_file(const std::string& filename_)
     return std::vector<uint8_t>((std::istreambuf_iterator<char>(file)),
         std::istreambuf_iterator<char>());
 }
-
-struct data_block_t {
-    uint32_t unpacked_size{};
-    std::vector<uint8_t> packed_data;
-};
 
 void read(const uint8_t*& current, void* into, const size_t size)
 {
@@ -158,7 +157,10 @@ static void uncompress_part1(
 
 tables_t prepare_tables(const uint8_t packed_size, const uint8_t*& input_ptr)
 {
-    assert(packed_size != 0);
+    if (packed_size == 0)
+    {
+        throw 32;
+    }
 
     // read & prepare uncompress-helper tables
     std::vector<uint8_t> table0(1 + packed_size);
@@ -190,24 +192,6 @@ tables_t prepare_tables(const uint8_t packed_size, const uint8_t*& input_ptr)
     return { table0, table1, table3, table4 };
 }
 
-void uncompress_block(const uint8_t packed_size, const uint16_t data_len, const uint8_t*& input_ptr, uint8_t*& output_ptr)
-{
-    const tables_t tables = prepare_tables(packed_size, input_ptr);
-
-    for (int i = 0; i < data_len; ++i)
-    {
-        const uint8_t var1 = *input_ptr++;
-        const uint8_t table3_val = tables.table3[var1]; // var1 0..n
-
-        if (table3_val == UNPACKED_VAL) {    // uncompressed part
-            *output_ptr++ = var1; // just store value
-        }
-        else {                      // compressed part
-            uncompress_part0(output_ptr, tables, table3_val);
-        }
-    }
-}
-
 std::vector<uint8_t> uncompress(const std::vector<uint8_t>& packed_data_, const size_t unpacked_size_)
 {
     const uint8_t* input_ptr = packed_data_.data();
@@ -225,7 +209,11 @@ std::vector<uint8_t> uncompress(const std::vector<uint8_t>& packed_data_, const 
             throw 4;
         }
         read(input_ptr, &block, sizeof(block));
-        assert(block.flag == LAST_BLOCK || block.flag == NOT_LAST_BLOCK);
+        bool known_flag = block.flag == LAST_BLOCK || block.flag == NOT_LAST_BLOCK;
+        if (!known_flag)
+        {
+            throw 25;
+        }
 
         //printf("block: packed_size: %u, flag: %u, data_len: %u\n", block.packed_size, block.flag, block.data_len);
 
@@ -236,7 +224,20 @@ std::vector<uint8_t> uncompress(const std::vector<uint8_t>& packed_data_, const 
         }
         else {
             //printf("  packed\n");
-            uncompress_block(block.packed_size, block.data_len, input_ptr, output_ptr);
+            const tables_t tables = prepare_tables(block.packed_size, input_ptr);
+
+            for (int i = 0; i < block.data_len; ++i)
+            {
+                const uint8_t var1 = *input_ptr++;
+                const uint8_t table3_val = tables.table3[var1]; // var1 0..n
+
+                if (table3_val == UNPACKED_VAL) {    // uncompressed part
+                    *output_ptr++ = var1; // just store value
+                }
+                else {                      // compressed part
+                    uncompress_part0(output_ptr, tables, table3_val);
+                }
+            }
         }
     } while (block.flag != LAST_BLOCK);
 
@@ -268,43 +269,52 @@ void write_binary_file(const std::string& file_path_, const void* const data_, s
     fclose(fp);
 }
 
+size_t left(const uint8_t* const current_, const uint8_t* const end_)
+{
+    return end_ - current_;
+}
+
+struct packed_block_t {
+    uint32_t unpacked_size{};
+    std::vector<uint8_t> packed_data;
+};
+
+packed_block_t read_packed_block(const uint8_t*& current_, const uint8_t* const end_)
+{
+    auto left1 = left(current_, end_);
+    if (left(current_, end_) < 8)
+    {
+        throw 14;
+    }
+
+    const uint32_t packed_size = read32(current_);
+    const uint32_t unpacked_size = read32(current_);
+
+    auto left2 = left(current_, end_);
+    if (left(current_, end_) < packed_size)
+    {
+        throw 15;
+    }
+
+    std::vector<uint8_t> packed_data(packed_size);
+    read(current_, packed_data.data(), packed_size);
+
+    return { unpacked_size , std::move(packed_data) };
+}
+
 int cc0_uncompress(const std::string cc_filepath, const std::vector<uint8_t>& content, const bool extract)
 {
     try
     {
         const uint8_t* current = content.data();
         const uint8_t* end = current + content.size();
-
-        if (content.size() < 8)
-        {
-            return 2;
-        }
-
-        // ---- FILE-CONTENT
-        // packed_size 
-        // unpacked_size
-        // packed_data[packed_size]
-        // -- END
-
-        const uint32_t packed_size = read32(current);
-        const uint32_t unpacked_size = read32(current);
-        if (packed_size != content.size() - 8)
+        const packed_block_t packed_block = read_packed_block(current, end);
+        if (left(current, end) != 0) // no left bytes?
         {
             return 3;
         }
 
-        std::vector<uint8_t> data(packed_size);
-        read(current, data.data(), packed_size);
-        if (current != content.data() + content.size())
-        {
-            return 3;
-        }
-
-        data_block_t db;
-        db.unpacked_size = unpacked_size;
-        db.packed_data = data;
-
-        const std::vector<uint8_t> uncompressed = uncompress(db.packed_data, db.unpacked_size);
+        const std::vector<uint8_t> uncompressed = uncompress(packed_block.packed_data, packed_block.unpacked_size);
 
         if (extract)
         {
@@ -326,26 +336,61 @@ int cc1_uncompress(const std::string cc_filepath, const std::vector<uint8_t>& co
 {
     try
     {
+        /*
+        ---- header
+        uint16 offset_count
+        uint32 offset_table[offset_count]
+        ---- data
+        ...
+        data + offset_table[x]
+           packed_block
+        ...
+        data + offset_table[y]
+           packed_block
+        ...
+        data + offset_table[z]
+           packed_block
+        ...
+        */
+
         const uint8_t* current = content.data();
         const uint8_t* end = current + content.size();
 
-        if (content.size() < 2)
+        if (left(current, end) < 2)
         {
             return 2;
         }
 
         const uint16_t offset_count = read16(current);
 
-        std::vector<data_block_t> data_blocks(offset_count);
+        if (offset_count == 0)
+        {
+            printf("no offset count!!!\n");
+            return 27;
+        }
+
+        printf("offset_count: %u\n", offset_count);
+
+        std::vector<packed_block_t> data_blocks(offset_count);
         {
             std::vector<uint32_t> offset_table(offset_count);
             for (size_t i = 0; i < offset_count; ++i) {
-                if (current + 4 > end)
+
+                if (left(current, end) < 4)
                 {
                     return 3;
                 }
+
                 const auto offset = read32(current);
                 offset_table[i] = offset;
+
+                printf("offset[%u]: %u\n", i, offset);
+            }
+
+            if (offset_table.empty())
+            {
+                printf("no offsets!!!\n");
+                return 22;
             }
 
             auto sorted_table = offset_table;
@@ -353,38 +398,72 @@ int cc1_uncompress(const std::string cc_filepath, const std::vector<uint8_t>& co
 
             if (sorted_table != offset_table)
             {
-                printf("info: not ascending offsets\n");
+                // never seen with my test data
+                printf("not ascending offsets\n");
             }
 
-            for (size_t i = 0; i < offset_count; ++i) {
-                const uint32_t packed_size = read32(current);
-                if (packed_size >= content.size())
-                {
-                    printf("error: packed size >= file size\n");
-                    return -1;
-                }
-                if (packed_size >= content.size())
-                {
-                    return 14;
-                }
-
-                const uint32_t unpacked_size = read32(current);
-
-                const std::vector<uint8_t> packed_data(current, current + packed_size);
-                current += packed_size;
-
-                data_blocks[i] = { unpacked_size, packed_data };
-            }
-
-            // size of the parts + offsets fits exact the file size? no gaps?
-            std::size_t result_size = sizeof(uint16_t) + offset_count * sizeof(uint32_t);
-            for (size_t i = 0; i < offset_count; ++i) {
-                result_size += sizeof(uint32_t) + sizeof(uint32_t) +
-                    data_blocks[i].packed_data.size();
-            }
-            if (result_size != content.size())
+            // header-size + block.offset = block.begin
+            const uint8_t* const data_start = current;
+            for (size_t i = 0; i < offset_count; ++i)
             {
-                printf("info: gaps between blocks\n");
+                current = data_start + offset_table[i];
+                data_blocks[i] = read_packed_block(current, end);
+            }
+
+            {
+                int last = sorted_table[0];
+                for (int i = 1; i < sorted_table.size(); ++i)
+                {
+                    const int distance = sorted_table[i] - last;
+
+                    const int expected_distance = sizeof(uint32_t) + sizeof(uint32_t) +
+                        data_blocks[i - 1].packed_data.size();
+
+                    printf("distance: %i, expected-distance: %i\n", distance, expected_distance);
+                    if (distance != expected_distance)
+                    {
+                        printf("gap between packed blocks\n");
+                    }
+
+                    last = sorted_table[i];
+                }
+            }
+
+            {
+                // size of the parts + offsets fits exact the file size? no gaps?
+                std::size_t result_size = sizeof(uint16_t) + offset_count * sizeof(uint32_t);
+                for (size_t i = 0; i < offset_count; ++i) {
+                    result_size += sizeof(uint32_t) + sizeof(uint32_t) +
+                        data_blocks[i].packed_data.size();
+                }
+                if (result_size != content.size())
+                {
+                    int last_end = 0;
+                    for (size_t i = 0; i < offset_count; ++i)
+                    {
+                        int offset = offset_table[i];
+                        int gap = offset - last_end;
+                        assert(gap == 0);
+                        int block_size = 2 * sizeof(uint32_t) + data_blocks[i].packed_data.size();
+                        int block_end = offset + block_size;
+                        printf("gap: %i, offset: %u, block_size: %u, block_end: %i\n", gap, offset_table[i], block_size, block_end);
+                        last_end = block_end;
+                    }
+
+                    if (last_end < content.size() - sizeof(uint16_t)+offset_count*sizeof(uint32_t))
+                    {
+                        // only Mystical: MYSJEUCG.1 and MYSJEUEG.2
+
+                        printf("%u bytes remaining after last block\n", left(content.data()+last_end, end));
+
+                        const uint8_t* const begin = content.data() + last_end;
+                        size_t size = content.data() + content.size() - begin;
+                        printf("%s\n", hexdump(begin, size, 16).c_str());
+                        int brk = 1;
+                    }
+
+                    int brk = 1;
+                }
             }
         }
 
@@ -410,7 +489,7 @@ int cc1_uncompress(const std::string cc_filepath, const std::vector<uint8_t>& co
             if (extract)
             {
                 char cc1_block_filepath[1024]{};
-                sprintf(cc1_block_filepath, "%s_block%05zu.bin", cc_filepath.c_str(), i);
+                sprintf(cc1_block_filepath, "%s_uncompressed_block%05zu.bin", cc_filepath.c_str(), i);
                 printf("  write: %s\n", cc1_block_filepath);
                 write_binary_file(cc1_block_filepath, uncompressed.data(), uncompressed.size());
             }
@@ -434,6 +513,7 @@ int do_extract(const std::string cc_filepath, const bool extract)
     int res = cc0_uncompress(cc_filepath, content, extract);
     if (res == 0)
     {
+        printf("CC0 successfull uncompressed\n");
         return 0;
     }
     printf("not a CC0!\n");
@@ -442,9 +522,12 @@ int do_extract(const std::string cc_filepath, const bool extract)
     res = cc1_uncompress(cc_filepath, content, extract);
     if (res == 0)
     {
+        printf("CC1 successfull uncompressed\n");
         return 0;
     }
     printf("not a CC1!\n");
+
+    printf("unknown file format!\n");
 
     return 1;
 }
@@ -826,3 +909,109 @@ bool uncompress_unit_test()
 
     return uncompressed == uncompressed_reference;
 }
+
+std::string hexdump(const void* const buffer, int buffer_size, int width)
+{
+    assert(width > 0);
+
+    /*
+AAAAAAAA 00 11 22 33 44 55 66 77 abcdefgh\n
+    8+1        width*(2+1)       width   + 1
+    */
+
+    constexpr int address_size = 8 + 1;
+    const int hex_size = width * (2 + 1);
+    const int ascii_size = width + 1;
+
+    const int full_lines = buffer_size / width;
+    const int rest = buffer_size % width;
+    const int all_lines = (rest == 0) ? full_lines : full_lines + 1;
+    const int result_size = all_lines * (address_size + hex_size + ascii_size);
+    std::string result(result_size, ' ');
+    char* current_out = result.data();
+    const uint8_t* begin_in = static_cast<const uint8_t*>(buffer);
+    const uint8_t* current_in = begin_in;
+
+    auto line = [&result,
+        address_size,
+        hex_size,
+        ascii_size](char*& current_out_,
+            const uint8_t* const begin_in_,
+            const uint8_t*& current_in_,
+            int count_)
+    {
+        auto hex2 = [](char* const current_out_, uint8_t value_) {
+            constexpr char hex[] = "0123456789ABCDEF";
+            current_out_[0] = hex[value_ >> 4];
+            current_out_[1] = hex[value_ & 0xF];
+        };
+
+        auto hex8 = [&](char* const current_out_, int value_) {
+            hex2(&current_out_[0], static_cast<uint8_t>(value_ >> 24));
+            hex2(&current_out_[2], static_cast<uint8_t>(value_ >> 16));
+            hex2(&current_out_[4], static_cast<uint8_t>(value_ >> 8));
+            hex2(&current_out_[6], static_cast<uint8_t>(value_ >> 0));
+        };
+
+#if 0
+        {
+            {
+                std::string a(8, ' ');
+                hex8(a.data(), 0xAABBCCDD);
+                assert(a == "AABBCCDD");
+            }
+            {
+                std::string a(8, ' ');
+                hex8(a.data(), 0xDDCCBBAA);
+                assert(a == "DDCCBBAA");
+            }
+            {
+                std::string a(8, ' ');
+                hex8(a.data(), 0x01234567);
+                assert(a == "01234567");
+            }
+        }
+#endif
+
+        int address = current_in_ - begin_in_;
+        hex8(current_out_, address);
+        current_out_ += address_size;
+
+        for (int b = 0; b < count_; ++b) {
+            const uint8_t value = current_in_[b];
+            hex2(current_out_ + b * (2 + 1), value);
+            const char c = (value >= 32 && value <= 126) ? static_cast<char>(value) : '.';
+            current_out_[hex_size + b] = c;
+        }
+
+        current_out_ += hex_size + count_ + 1;
+        current_in_ += count_;
+    };
+
+    // full lines
+    for (int f = 0; f < full_lines; ++f) {
+        line(current_out, begin_in, current_in, width);
+        current_out[-1] = '\n';
+    }
+
+    // rest
+    if (rest) {
+        line(current_out, begin_in, current_in, rest);
+        current_out[-1] = '\n';
+    }
+
+    return result;
+}
+
+std::vector<std::string> ls_recursive(const std::filesystem::path& path)
+{
+    std::vector<std::string> result;
+    for (const auto& p : std::filesystem::recursive_directory_iterator(path))
+    {
+        if (!std::filesystem::is_directory(p))
+        {
+            result.push_back(p.path().string());
+        }
+    }
+    return result;
+    }
