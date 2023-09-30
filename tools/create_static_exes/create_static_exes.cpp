@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstdio>
 #include <fstream>
+#include <cstring>
 
 bool read_binary_file(const std::string& filename_, std::vector<uint8_t>& content_)
 {

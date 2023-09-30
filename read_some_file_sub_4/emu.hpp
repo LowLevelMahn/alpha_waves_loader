@@ -7,6 +7,7 @@
 #include <stack>
 #include <map>
 #include <string>
+#include <cstring>
 
 class emu_t
 {

@@ -1,6 +1,7 @@
 #include "emu.hpp"
 
 #include <ctime>
+#include <cstring>
 
 uint16_t code_question_two_sub_1288E_original(emu_t& e, char* code_answer_, uint16_t row_, uint16_t column_)
 {
@@ -306,7 +307,7 @@ void protection_tests()
 			return tmp;
 		};
 
-		auto answer_code_to_str = [](char* answer_code_)
+		auto answer_code_to_str = [](const char* answer_code_)
 		{
 			std::string tmp;
 			for (size_t i = 0; i < 4; ++i)
