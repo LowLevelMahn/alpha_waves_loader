@@ -66,15 +66,15 @@ my reduced loader
 
 # Loading process
 
-progs.cc1 contains the compressed executeable for:
-  * sound com TSR (installed at interrupt 0xF0)
-    * adlib
-    * tandy
-    * pc-buz
-  * gfx exe
-    * cga/hercules
-    * tandy
-    * ega/vga
+PROGS.CC1 contains the compressed executeable for:
+  * Sound TSR COM-file-executable (installed at interrupt 0xF0)
+    * Block[0] Adlib
+    * Block[1] Tandy
+    * Block[2] PC-Buz
+  * Graphic-Mode related EXE-executables
+    * Block[3] CGA/Hercules
+    * Block[4] Tandy
+    * Block[5] EGA/VGA
 
 config.tat maps the gfx selection in the loader to the gfx executables in prog.cc1
 
@@ -98,19 +98,7 @@ sets some interrupts and starts the game
 
 # Extractor & Starter
 
-with Release-0.0.3 there is a extractor and starter under tools that directly extracts the several game executables from the progs.cc1
-
-extractor.exe path-to-progs.cc1
-
-extracts these executables
-  * sound com TSR
-    * adlib -> s_adlib.com
-    * tandy -> s_tandy.com
-    * pc-buz -> s_pc_buz.com
-  * game gfx exe
-    * cga/hercules -> cga_herc.exe
-    * tandy -> tandy.exe
-    * ega/vga -> ega_vga.exe
+under tools/uncompress_cc is a tool that can uncompress the CC1 files
 
 the 16bit dos starter.exe creates the needed environment for the executables and starts the game
 
