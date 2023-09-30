@@ -20,5 +20,7 @@ add_executable(read_some_file_sub_4
   "original_port.cpp"
   "cleanup_port.cpp"
   "main.cpp"
+  "protection_tests.cpp"
+  "example.cpp"
+  "cc1_reader.cpp"
 )  
-

@@ -25,7 +25,7 @@ namespace second_try
         e.ax = e.ds;
         e.es = e.ax;
         e.di = 0x301;
-        e.xor_w( e.ax, e.ax );
+        e.xor( e.ax, e.ax );
         e.rep_stosw();
 
         e.pop( e.di );
@@ -33,7 +33,7 @@ namespace second_try
 
         e.push( e.es );
 
-        e.xor_w( e.ax, e.ax );
+        e.xor( e.ax, e.ax );
         e.es = e.ax;
         e.sub( e.di, *e.word_ptr( e.es, 4 ) );
 
@@ -47,11 +47,11 @@ namespace second_try
         e.cx = e.es;
         e.add( e.cx, e.ax );
         e.es = e.cx;
-        e.and_w( e.di, 0x0F );
+        e.and( e.di, 0x0F );
 
         e.push( e.es );
 
-        e.xor_w( e.ax, e.ax );
+        e.xor( e.ax, e.ax );
         e.es = e.ax;
         e.add( e.di, *e.word_ptr( e.es, 4 ) );
 
@@ -77,7 +77,7 @@ namespace second_try
         e.dx = e.ds;
         e.add( e.ax, e.dx );
         e.ds = e.ax;
-        e.and_w( e.si, 0x0F );
+        e.and( e.si, 0x0F );
         another_pointer2.offset = e.si;
         another_pointer2.segment = e.ds;
         e.add( another_pointer2.offset, e.cx );
@@ -107,7 +107,7 @@ namespace second_try
         e.push( e.es );
         e.push( e.di );
 
-        e.xor_b( e.ch, e.ch );
+        e.xor( e.ch, e.ch );
         e.cl = byte_57[0];
         e.di = 0x201;
         e.ax = e.ds;
@@ -117,7 +117,7 @@ namespace second_try
         e.add( another_pointer2.offset, e.cx );
         e.rep_movsb();
         e.cl = byte_57[0];
-        e.xor_b( e.ch, e.ch );
+        e.xor( e.ch, e.ch );
         e.di = 1;
         e.add( another_pointer2.offset, e.cx );
         e.rep_movsb();
@@ -130,9 +130,9 @@ namespace second_try
         e.pop( e.es );
         e.pop( e.ds );
 
-        e.xor_b( e.ch, e.ch );
+        e.xor( e.ch, e.ch );
         e.cl = byte_57[0];
-        e.xor_b( e.ah, e.ah );
+        e.xor( e.ah, e.ah );
         e.bx = 1;
 
     loc_567:
@@ -179,7 +179,7 @@ namespace second_try
 
     loc_571:
         e.bl = *e.byte_ptr( e.ds, e.bx + 0x301 );
-        e.xor_w( e.ax, e.ax );
+        e.xor( e.ax, e.ax );
         e.push( e.ax );
         goto loc_128;
 
@@ -196,7 +196,7 @@ namespace second_try
 
     loc_575:
         e.bl = *e.byte_ptr( e.ds, e.bx + 0x402 );
-        e.or_b( e.bl, e.bl );
+        e.or( e.bl, e.bl );
         if( e.jz() )
             goto loc_574;
         e.cmp( e.bl, e.al );
@@ -211,7 +211,7 @@ namespace second_try
         e.al = *e.byte_ptr( e.ds, e.bx + 0x100 );
         e.ah = e.bl;
         e.push( e.ax );
-        e.xor_b( e.ah, e.ah );
+        e.xor( e.ah, e.ah );
         e.al = *e.byte_ptr( e.ds, e.bx );
         goto loc_129;
 
@@ -220,13 +220,13 @@ namespace second_try
     loc_572:
         e.stosb();
         e.pop( e.ax );
-        e.or_w( e.ax, e.ax );
+        e.or( e.ax, e.ax );
         if( e.jnz() )
             goto loc_576;
         goto loc_124;
     loc_576:
         e.bl = e.ah;
-        e.xor_b( e.ah, e.ah );
+        e.xor( e.ah, e.ah );
         goto loc_129;
 
     loc_566:
@@ -316,11 +316,11 @@ namespace second_try
         e.di = e.cx;
         e.al = e.memory<config_tat_t::executable_info_t>( e.cs, e.si )->byte_12h;
         // e.al = block-nr
-        e.xor_b( e.ah, e.ah );
+        e.xor( e.ah, e.ah );
         e.shl( e.ax, 1 );
         e.shl( e.ax, 1 );
         e.dx = e.ax;
-        e.xor_w( e.cx, e.cx );
+        e.xor( e.cx, e.cx );
         e.al = 1;
         e.ah = 0x42;
         e.intr_0x21(); // DOS - 2 + -MOVE FILE READ / WRITE POINTER(LSEEK)
@@ -418,7 +418,7 @@ namespace second_try
         e.ax = e.ds;
         e.add( e.ax, e.si );
         e.ds = e.ax;
-        e.and_w( e.cx, 0x0F );
+        e.and( e.cx, 0x0F );
 
     loc_580:
         another_far_ptr.offset = e.cx;
@@ -440,7 +440,7 @@ namespace second_try
         e.ax = e.ds;
         e.add( e.ax, e.cx );
         e.ds = e.ax;
-        e.and_w( e.dx, 0x0F );
+        e.and( e.dx, 0x0F );
         e.ax = 48000;
         e.sub( e.si, e.ax );
         e.sbb( e.di, 0 );
@@ -448,8 +448,8 @@ namespace second_try
             goto loc_583;
         e.add( e.si, e.ax );
         e.ax = e.si;
-        e.xor_w( e.si, e.si );
-        e.xor_w( e.di, e.di );
+        e.xor( e.si, e.si );
+        e.xor( e.di, e.di );
 
     loc_583:
         e.cx = e.ax;
@@ -472,7 +472,7 @@ namespace second_try
         if( e.jnz() )
             goto loc_585;
         e.ax = e.si;
-        e.or_w( e.ax, e.di );
+        e.or( e.ax, e.di );
         if( e.jnz() )
             goto loc_586;
 
@@ -485,7 +485,7 @@ namespace second_try
             goto loc_587;
         e.les( e.di, executable_buffer_ );
         e.push( e.es );
-        e.xor_w( e.ax, e.ax );
+        e.xor( e.ax, e.ax );
         e.es = e.ax;
         *e.word_ptr( e.es, 4 ) = e.di;
         e.pop( e.es );
@@ -511,7 +511,7 @@ namespace second_try
         executable_buffer_.segment = e.ax;
         e.inc( e.ax );
         e.ds = e.ax;
-        e.and_w( e.bx, 0x0F );
+        e.and( e.bx, 0x0F );
         executable_buffer_.offset = e.bx;
         e.cld();
 
@@ -696,39 +696,60 @@ void cc1_read_test()
 
 uint16_t* to_uint16_ptr( uint32_t& value_ )
 {
-    return reinterpret_cast<uint16_t*>( value_ );
+    return reinterpret_cast<uint16_t*>( &value_ );
 }
 
 struct dword_t : emu_t
 {
-    dword_t( uint32_t& value_ ) : value( value_ ), lo( to_uint16_ptr( value_ )[0] ), hi( to_uint16_ptr( value_ )[1] )
+    dword_t( uint32_t& value_ ) : value( value_ )
     {
     }
 
     uint32_t& value;
-    uint16_t& lo;
-    uint16_t& hi;
+    uint16_t& lo = to_uint16_ptr( value )[0];
+    uint16_t& hi = to_uint16_ptr( value )[1];
 };
 
 void another_test_emu( emu_t& e )
 {
+#if 0
+    uint32_t x = 0xAABBCCDD;
+    dword_t d( x );
+    uint32_t v = d.value;
+    uint16_t l = d.lo;
+    uint16_t h = d.hi;
+#endif
+
     uint16_t& word_1BAA2 = *e.word_ptr( e.cs, 0xBAA2 );
     dword_t dword_1BAA4{ *e.dword_ptr( e.cs, 0xBAA4 ) };
     uint16_t& word_1BA9C = *e.word_ptr( e.cs, 0xBA9C );
     uint8_t& byte_1BA9A = *e.byte_ptr( e.cs, 0xBA9A );
     uint8_t& byte_1BA9B = *e.byte_ptr( e.cs, 0xBA9B );
 
+    const uint8_t* buf1 = e.byte_ptr( e.ds, e.si );
+    const uint8_t* buf2 = e.byte_ptr( e.es, e.di );
+
+    write_binary_file( "d:/temp/alpha/buf1.begin.bin", buf1, 4000 );
+    write_binary_file( "d:/temp/alpha/buf2.begin.bin", buf2, 4000 );
+
 begin:
+#if 0
     e.push( e.es );
     e.push( e.di );
+
     e.cx = 0x80;
     e.ax = e.ds;
     e.es = e.ax;
     e.di = 0x301;
-    e.xor_w( e.ax, e.ax );
+    e.xor( e.ax, e.ax );
     e.rep_stosw();
+
     e.pop( e.di );
     e.pop( e.es );
+#else
+    ::memset( e.byte_ptr( e.ds, 0x301 ), 0, 2 * 0x80 );
+#endif
+
     e.sub( e.di, word_1BAA2 );
     e.ax = e.di;
     e.shr( e.ax, 1 );
@@ -738,16 +759,15 @@ begin:
     e.cx = e.es;
     e.add( e.cx, e.ax );
     e.es = e.cx;
-    e.and_w( e.di, 0x0F );
+    e.and( e.di, 0x0F );
     e.add( e.di, word_1BAA2 );
+
     e.push( e.ds );
     e.push( e.es );
     e.push( e.si );
     e.push( e.di );
     e.cx = 4;
-    e.di = 0xBA9A; // cs:BA94
-    e.ax = e.cs;   // seg seg000
-    e.es = e.ax;
+    e.les( e.di, byte_1BA9A );
     e.lds( e.si, dword_1BAA4.value );
     e.ax = e.si;
     e.shr( e.ax, 1 );
@@ -757,7 +777,7 @@ begin:
     e.dx = e.ds;
     e.add( e.ax, e.dx );
     e.ds = e.ax;
-    e.and_w( e.si, 0x0F );
+    e.and( e.si, 0x0F );
     dword_1BAA4.lo = e.si;
     dword_1BAA4.hi = e.ds;
     e.add( dword_1BAA4.lo, e.cx );
@@ -766,6 +786,7 @@ begin:
     e.pop( e.si );
     e.pop( e.es );
     e.pop( e.ds );
+
     e.dx = word_1BA9C;
     e.inc( e.dx );
     e.cmp( byte_1BA9A, 0 );
@@ -779,7 +800,7 @@ loc_1BB63:
     e.push( e.ds );
     e.push( e.es );
     e.push( e.di );
-    e.xor_b( e.ch, e.ch );
+    e.xor( e.ch, e.ch );
     e.cl = byte_1BA9A;
     e.di = 0x201;
     e.ax = e.ds;
@@ -789,7 +810,7 @@ loc_1BB63:
     e.add( dword_1BAA4.lo, e.cx );
     e.rep_movsb();
     e.cl = byte_1BA9A;
-    e.xor_b( e.ch, e.ch );
+    e.xor( e.ch, e.ch );
     e.di = 1;
     e.add( dword_1BAA4.lo, e.cx );
     e.rep_movsb();
@@ -800,9 +821,9 @@ loc_1BB63:
     e.pop( e.di );
     e.pop( e.es );
     e.pop( e.ds );
-    e.xor_b( e.ch, e.ch );
+    e.xor( e.ch, e.ch );
     e.cl = byte_1BA9A;
-    e.xor_b( e.ah, e.ah );
+    e.xor( e.ah, e.ah );
     e.bx = 1;
 
 loc_1BBB4:
@@ -824,7 +845,9 @@ loc_1BBD2:
 
     e.dec( e.dx );
     if( e.jnz() )
+    {
         goto loc_1BBE1;
+    }
 
 loc_1BBD5:
     e.cmp( byte_1BA9B, 0 );
@@ -835,6 +858,8 @@ loc_1BBD5:
     goto begin;
 
 locret_1BBE0:
+    write_binary_file( "d:/temp/alpha/buf1.end.bin", buf1, 4000 );
+    write_binary_file( "d:/temp/alpha/buf2.end.bin", buf2, 4000 );
     return;
 
 loc_1BBE1:
@@ -856,7 +881,7 @@ loc_1BBE1:
 
 loc_1BC01:
     e.bl = *e.byte_ptr( e.ds, e.bx + 0x301 );
-    e.xor_w( e.ax, e.ax );
+    e.xor( e.ax, e.ax );
     e.push( e.ax );
     goto loc_1BC35;
 
@@ -877,7 +902,7 @@ loc_1BC0A:
 
 loc_1BC22:
     e.bl = *e.byte_ptr( e.ds, e.bx + 0x402 );
-    e.or_b( e.bl, e.bl );
+    e.or( e.bl, e.bl );
     if( e.jz() )
     {
         goto loc_1BC42;
@@ -896,7 +921,7 @@ loc_1BC35:
     e.al = *e.byte_ptr( e.ds, e.bx + 0x100 );
     e.ah = e.bl;
     e.push( e.ax );
-    e.xor_b( e.ah, e.ah );
+    e.xor( e.ah, e.ah );
     e.al = *e.byte_ptr( e.ds, e.bx );
     goto loc_1BC0A;
 loc_1BC42:
@@ -905,7 +930,7 @@ loc_1BC42:
 loc_1BC44:
     e.stosb();
     e.pop( e.ax );
-    e.or_w( e.ax, e.ax );
+    e.or( e.ax, e.ax );
     if( e.jnz() )
     {
         goto loc_1BC4C;
@@ -914,7 +939,7 @@ loc_1BC44:
 
 loc_1BC4C:
     e.bl = e.ah;
-    e.xor_b( e.ah, e.ah );
+    e.xor( e.ah, e.ah );
     goto loc_1BC0A;
 
 loc_1BC52:
@@ -949,5 +974,12 @@ void another_test()
         e.es = 0x1913;
         e.di = 0x0000;
         e.cs = 0x01A2;
+
+        assert( e.memory().size() == dump_before.size() );
+        e.memory() = dump_before;
+
+        another_test_emu( e );
+
+        write_binary_file( path + "\\block_ 0_dump_after_NEW.bin", e.memory().data(), e.memory().size() );
     }
 }

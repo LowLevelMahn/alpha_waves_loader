@@ -130,11 +130,13 @@ namespace port
 void protection_tests();
 int example_main();
 void cc1_read_test();
+void another_test();
 
 int main()
 {
 #if 1
-    cc1_read_test();
+    //cc1_read_test();
+    another_test();
     return 0;
 
     return example_main();

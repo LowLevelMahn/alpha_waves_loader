@@ -479,7 +479,7 @@ void emu_GAME_START_sub_3( std::vector<uint8_t>& uncompressed_buffer_, const std
     }
 }
 
-int main()
+int example_main()
 {
     const std::vector<uint8_t> uncompressed_reference( uncompressed_example,
                                                        uncompressed_example + sizeof( uncompressed_example ) );

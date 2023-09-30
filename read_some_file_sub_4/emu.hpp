@@ -14,6 +14,8 @@ public:
     emu_t();
 
 public:
+#pragma pack(push,1)
+
     struct ptr16_t
     {
         ptr16_t() = default;
@@ -34,9 +36,22 @@ public:
             return before;
         }
 
-        ptr16_t& operator+=( const size_t distance_ )
+        ptr16_t& operator+=( const int distance_ )
         {
             advance( distance_ );
+            return *this;
+        }
+
+        ptr16_t operator--( int )
+        {
+            const auto before = *this;
+            advance( -1 );
+            return before;
+        }
+
+        ptr16_t& operator-=( const int distance_ )
+        {
+            advance( -distance_ );
             return *this;
         }
 
@@ -60,7 +75,7 @@ public:
         }
 
     private:
-        void advance( size_t distance_ )
+        void advance( int distance_ )
         {
             const uint32_t new_offset = offset + distance_;
             if( new_offset < 0xFFFF )
@@ -74,6 +89,8 @@ public:
             }
         }
     };
+
+#pragma pack(pop)
 
 public:
     // operations
@@ -97,7 +114,7 @@ public:
     void shl( uint8_t& op1_, uint8_t op2_ );
 
     void add( uint16_t& op1_, uint16_t op2_ );
-    void and_w( uint16_t& op1_, uint16_t op2_ );
+    void and( uint16_t& op1_, uint16_t op2_ );
     void adc( uint16_t& op1_, uint16_t op2_ );
     void sub( uint16_t& op1_, uint16_t op2_ );
     void shr( uint16_t& op1_, uint8_t op2_ );
@@ -109,11 +126,11 @@ public:
 
     void xchg( uint8_t& op1_, uint8_t& op2_ );
     void test( uint8_t op1_, uint8_t op2_ );
-    void xor_b( uint8_t& op1_, uint8_t op2_ );
+    void xor( uint8_t& op1_, uint8_t op2_ );
 
-    void or_w( uint16_t& op1_, uint16_t op2_ );
-    void or_b( uint8_t& op1_, uint8_t op2_ );
-    void xor_w( uint16_t& op1_, uint16_t op2_ );
+    void or( uint16_t& op1_, uint16_t op2_ );
+    void or( uint8_t& op1_, uint8_t op2_ );
+    void xor( uint16_t& op1_, uint16_t op2_ );
     void inc( uint16_t& op_ );
     void dec( uint16_t& op_ );
 
@@ -277,10 +294,15 @@ public:
         return m_memory;
     }
 
-    ptr16_t ptr_to_ptr16( void* ptr_ )
+    ptr16_t ptr_to_ptr16( const void* ptr_ )
     {
-        uint8_t* ptr = static_cast<uint8_t*>( ptr_ );
-        assert( ( ptr >= m_memory.data() ) && ( ptr < m_memory.data() + m_memory.size() ) );
+        const uint8_t* ptr = static_cast<const uint8_t*>( ptr_ );
+
+        const uint8_t *memory_begin = m_memory.data();
+        const uint8_t *memory_end = memory_begin + m_memory.size();
+	    const bool in_range = ( ptr >= memory_begin ) && ( ptr < memory_end );
+
+        assert( in_range );
 
         size_t offset32 = ptr - m_memory.data();
         return ptr16( offset32 );

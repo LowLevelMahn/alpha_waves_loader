@@ -4,11 +4,12 @@
 #include <string>
 #include <vector>
 
-std::string hexdump( const void* const ptr, int buflen, int width );
+std::string hexdump(const void* const ptr, int buflen, int width);
+std::string hex_string(const void* const buffer_, const size_t& size_,
+                       bool as_stream_ = false);
+
 std::vector<uint8_t> read_binary_file( const std::string& filename_ );
 void write_binary_file( const std::string& file_path_, const void* const data_, size_t size_ );
-
-std::string hex_string( const void* const buffer_, const size_t& size_, bool as_stream_ = false );
 
 inline uint8_t lo( uint16_t value_ )
 {

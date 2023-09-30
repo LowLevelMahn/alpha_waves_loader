@@ -20,7 +20,7 @@ namespace original
         e.ax = e.ds;
         e.es = e.ax;
         e.di = 0x301;
-        e.xor_w( e.ax, e.ax );
+        e.xor( e.ax, e.ax );
         e.rep_stosw();
 
         e.pop( e.di );
@@ -28,7 +28,7 @@ namespace original
 
         e.push( e.es );
 
-        e.xor_w( e.ax, e.ax );
+        e.xor( e.ax, e.ax );
         e.es = e.ax;
         e.sub( e.di, *e.word_ptr( e.es, 4 ) );
 
@@ -42,11 +42,11 @@ namespace original
         e.cx = e.es;
         e.add( e.cx, e.ax );
         e.es = e.cx;
-        e.and_w( e.di, 0x0F );
+        e.and( e.di, 0x0F );
 
         e.push( e.es );
 
-        e.xor_w( e.ax, e.ax );
+        e.xor( e.ax, e.ax );
         e.es = e.ax;
         e.add( e.di, *e.word_ptr( e.es, 4 ) );
 
@@ -72,7 +72,7 @@ namespace original
         e.dx = e.ds;
         e.add( e.ax, e.dx );
         e.ds = e.ax;
-        e.and_w( e.si, 0x0F );
+        e.and( e.si, 0x0F );
         another_pointer2.offset = e.si;
         another_pointer2.segment = e.ds;
         e.add( another_pointer2.offset, e.cx );
@@ -102,7 +102,7 @@ namespace original
         e.push( e.es );
         e.push( e.di );
 
-        e.xor_b( e.ch, e.ch );
+        e.xor( e.ch, e.ch );
         e.cl = byte_57[0];
         e.di = 0x201;
         e.ax = e.ds;
@@ -112,7 +112,7 @@ namespace original
         e.add( another_pointer2.offset, e.cx );
         e.rep_movsb();
         e.cl = byte_57[0];
-        e.xor_b( e.ch, e.ch );
+        e.xor( e.ch, e.ch );
         e.di = 1;
         e.add( another_pointer2.offset, e.cx );
         e.rep_movsb();
@@ -125,9 +125,9 @@ namespace original
         e.pop( e.es );
         e.pop( e.ds );
 
-        e.xor_b( e.ch, e.ch );
+        e.xor( e.ch, e.ch );
         e.cl = byte_57[0];
-        e.xor_b( e.ah, e.ah );
+        e.xor( e.ah, e.ah );
         e.bx = 1;
 
     loc_567:
@@ -174,7 +174,7 @@ namespace original
 
     loc_571:
         e.bl = *e.byte_ptr( e.ds, e.bx + 0x301 );
-        e.xor_w( e.ax, e.ax );
+        e.xor( e.ax, e.ax );
         e.push( e.ax );
         goto loc_128;
 
@@ -191,7 +191,7 @@ namespace original
 
     loc_575:
         e.bl = *e.byte_ptr( e.ds, e.bx + 0x402 );
-        e.or_b( e.bl, e.bl );
+        e.or( e.bl, e.bl );
         if( e.jz() )
             goto loc_574;
         e.cmp( e.bl, e.al );
@@ -206,7 +206,7 @@ namespace original
         e.al = *e.byte_ptr( e.ds, e.bx + 0x100 );
         e.ah = e.bl;
         e.push( e.ax );
-        e.xor_b( e.ah, e.ah );
+        e.xor( e.ah, e.ah );
         e.al = *e.byte_ptr( e.ds, e.bx );
         goto loc_129;
 
@@ -215,13 +215,13 @@ namespace original
     loc_572:
         e.stosb();
         e.pop( e.ax );
-        e.or_w( e.ax, e.ax );
+        e.or( e.ax, e.ax );
         if( e.jnz() )
             goto loc_576;
         goto loc_124;
     loc_576:
         e.bl = e.ah;
-        e.xor_b( e.ah, e.ah );
+        e.xor( e.ah, e.ah );
         goto loc_129;
 
     loc_566:
@@ -243,6 +243,9 @@ namespace original
                                      config_tat_t::executable_info_t* exec_info_,
                                      emu_t::ptr16_t& executable_buffer_ )
     {
+        const auto org_executable_buffer = executable_buffer_;
+
+        // packed_size
         uint16_t word_44{};
         uint16_t word_45{};
 
@@ -311,11 +314,11 @@ namespace original
         e.di = e.cx;
         e.al = e.memory<config_tat_t::executable_info_t>( e.cs, e.si )->byte_12h;
         // e.al = block-nr
-        e.xor_b( e.ah, e.ah );
+        e.xor( e.ah, e.ah );
         e.shl( e.ax, 1 );
         e.shl( e.ax, 1 );
         e.dx = e.ax;
-        e.xor_w( e.cx, e.cx );
+        e.xor( e.cx, e.cx );
         e.al = 1;
         e.ah = 0x42;
         e.intr_0x21(); // DOS - 2 + -MOVE FILE READ / WRITE POINTER(LSEEK)
@@ -413,7 +416,7 @@ namespace original
         e.ax = e.ds;
         e.add( e.ax, e.si );
         e.ds = e.ax;
-        e.and_w( e.cx, 0x0F );
+        e.and( e.cx, 0x0F );
 
     loc_580:
         another_far_ptr.offset = e.cx;
@@ -435,7 +438,7 @@ namespace original
         e.ax = e.ds;
         e.add( e.ax, e.cx );
         e.ds = e.ax;
-        e.and_w( e.dx, 0x0F );
+        e.and( e.dx, 0x0F );
         e.ax = 48000;
         e.sub( e.si, e.ax );
         e.sbb( e.di, 0 );
@@ -443,8 +446,8 @@ namespace original
             goto loc_583;
         e.add( e.si, e.ax );
         e.ax = e.si;
-        e.xor_w( e.si, e.si );
-        e.xor_w( e.di, e.di );
+        e.xor( e.si, e.si );
+        e.xor( e.di, e.di );
 
     loc_583:
         e.cx = e.ax;
@@ -467,7 +470,7 @@ namespace original
         if( e.jnz() )
             goto loc_585;
         e.ax = e.si;
-        e.or_w( e.ax, e.di );
+        e.or( e.ax, e.di );
         if( e.jnz() )
             goto loc_586;
 
@@ -480,7 +483,7 @@ namespace original
             goto loc_587;
         e.les( e.di, executable_buffer_ );
         e.push( e.es );
-        e.xor_w( e.ax, e.ax );
+        e.xor( e.ax, e.ax );
         e.es = e.ax;
         *e.word_ptr( e.es, 4 ) = e.di;
         e.pop( e.es );
@@ -506,9 +509,15 @@ namespace original
         executable_buffer_.segment = e.ax;
         e.inc( e.ax );
         e.ds = e.ax;
-        e.and_w( e.bx, 0x0F );
+        e.and( e.bx, 0x0F );
         executable_buffer_.offset = e.bx;
         e.cld();
+
+        //size_t executable_buffer_org_ofs32 = e.offset32( org_executable_buffer );
+        //size_t executable_buffer_result_ofs32 = e.offset32( executable_buffer_ );
+        //size_t another_pointer2_ofs32 = e.offset32( another_pointer2 );
+        //size_t es_di_ofs32 = e.offset32( e.es, e.di );
+        //size_t ds_si_ofs32 = e.offset32( e.ds, e.si );
 
         // some sort of uncompression, after that the executable is +sizeof(PSP) behind executable_buffer_begin
         emu_GAME_START_sub_3( e, another_pointer2 );
