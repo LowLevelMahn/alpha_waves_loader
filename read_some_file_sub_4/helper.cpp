@@ -21,7 +21,7 @@ AAAAAAAA 00 11 22 33 44 55 66 77 abcdefgh\n
 	const int all_lines = (rest == 0) ? full_lines : full_lines + 1;
 	const int result_size = all_lines * (address_size + hex_size + ascii_size);
 	std::string result(result_size, ' ');
-	char* current_out = result.data();
+	char* current_out = &result[0];
 	const uint8_t* begin_in = static_cast<const uint8_t*>(buffer);
 	const uint8_t* current_in = begin_in;
 
