@@ -17,7 +17,7 @@ namespace port
         std::vector<uint8_t> progs_cc1_content = read_binary_file( progs_cc1_filepath );
 
         const auto& blocks = gfx_infos_[gfx_nr_];
-        const auto& block = blocks.executable_info[exec_nr_];
+        const auto& block = blocks.executable_info_array[exec_nr_];
 
         {
             uint16_t di = 0;

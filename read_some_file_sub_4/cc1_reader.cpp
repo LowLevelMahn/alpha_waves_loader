@@ -600,10 +600,10 @@ std::vector<uint8_t> unpack( const std::string file_path_, const std::string& fi
     std::fill( e.memory().begin(), e.memory().end(), 0xBB );
 
     config_tat_t::gfx_info_t blocks;
-    const auto filename = blocks.executable_info[0].filename; // cc1-file
-    ::strcpy( blocks.executable_info[0].filename.data(), file_name_.c_str() );
-    blocks.executable_info[0].byte_12h = block_nr_;
-    blocks.executable_info[0].byte_13h = 0x18;
+    const auto filename = blocks.executable_info_array[0].filename; // cc1-file
+    ::strcpy( blocks.executable_info_array[0].filename.data(), file_name_.c_str() );
+    blocks.executable_info_array[0].byte_12h = block_nr_;
+    blocks.executable_info_array[0].byte_13h = 0x18;
 
     const emu_t::ptr16_t block_begin_ptr16( 0, 0x100D );
     const size_t blocks_begin = emu_t::offset32( block_begin_ptr16 );

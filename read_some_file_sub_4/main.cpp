@@ -156,7 +156,7 @@ int main()
     // as in original code - replace first blank with 0 in filename
     for( auto& gfx : config_tat->gfx_info )
     {
-        for( auto& exec : gfx.executable_info )
+        for( auto& exec : gfx.executable_info_array)
         {
             for( size_t i = 0; i < exec.filename.size(); ++i )
             {
@@ -177,7 +177,7 @@ int main()
     size_t gfx_nr = 0;
 #endif
     {
-        auto& blocks = config_tat->gfx_info[gfx_nr].executable_info;
+        auto& blocks = config_tat->gfx_info[gfx_nr].executable_info_array;
 
 #if TEST_FULL()
         for( int exec_nr = 0; exec_nr < config_tat_t::gfx_info_t::EXECUTABLE_COUNT; ++exec_nr )

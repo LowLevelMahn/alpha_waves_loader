@@ -73,8 +73,8 @@ struct config_tat_t
         //   2=PC Buz
         // 3=Game EXE
 
-        using executable_info_t = std::array<executable_info_t, EXECUTABLE_COUNT>;
-        executable_info_t executable_info;
+        using executable_info_array_t = std::array<executable_info_t, EXECUTABLE_COUNT>;
+        executable_info_array_t executable_info_array;
         uint8_t end_mark; // always 0xFF
     };
     static_assert( sizeof( gfx_info_t ) == 4 * sizeof( executable_info_t ) + 1, "wrong size" );
