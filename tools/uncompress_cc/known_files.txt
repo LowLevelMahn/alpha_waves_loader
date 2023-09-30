@@ -103,15 +103,26 @@ Murders in Space: https://www.mobygames.com/game/4803/murders-in-space/, release
   TXTITAL.CC1 CC1
 
 Full Metal Planet: https://www.mobygames.com/game/6538/full-metal-planet/, release 1990 on DOS
-  cadre.vc0 CC0
-  credits.vc0 CC0
-  draco.vc0 CC0
-  ecran1.vc0 CC0
-  fmpalet.vc0 CC0
-  fullvga.cc1 CC1
-  icone.vc0 CC0
-  maree.vc0 CC0
-  select3.vc0 CC0
+  CADRE.CC0
+  CADRE.HCG
+  CREDITS.CC0
+  CREDITS.HCG
+  ECRAN1.HCG
+  ECRAN2.CC0
+  FMPALET.CC0
+  FMPALET.HCG
+  FULLCGA.CC1
+  FULLEGA.CC1
+  GENERIC.CC0
+  GENERIC.HCG
+  ICONE.CC0
+  ICONE.HCG
+  MAREE.CC0
+  MAREE.HCG
+  SELECT3.CC0
+  SELECT3.HCG
+  TOUTSPR.CC0
+  TOUTSPR.HCG  
   
 Wild Life: https://www.mobygames.com/game/54191/wild-life/, release 1990 on DOS
   WILDCGA.CC1 CC1
