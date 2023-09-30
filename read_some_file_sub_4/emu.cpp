@@ -92,7 +92,7 @@ emu_t::emu_t()
 	}
 }
 
-#if defined(_WIN64)
+#if defined(_WIN64) || defined(__linux__)
 
 // inline asm is only available for x86 not for x64
 // (need to use external assembler)
