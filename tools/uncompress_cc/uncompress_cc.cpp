@@ -162,12 +162,18 @@ tables_t prepare_tables(const uint8_t packed_size, const uint8_t*& input_ptr)
         throw 32;
     }
 
+    /*
+    table3_offsets 256 bytes
+    table0         1+packed_size bytes
+    table1         1+packed_siize bytes
+    */
+
     // read & prepare uncompress-helper tables
     std::vector<uint8_t> table0(1 + packed_size);
     std::vector<uint8_t> table1(1 + packed_size);
     std::vector<uint8_t> table3_offsets(packed_size); // only needed for initialization, not for uncompression
-    std::vector<uint8_t> table3(256);
-    std::vector<uint8_t> table4(1 + packed_size);
+    std::vector<uint8_t> table3(256); // read and the modified by table4 generation
+    std::vector<uint8_t> table4(1 + packed_size); // generated from table3_offsets + table3 content
 
     read(input_ptr, table3_offsets.data(), packed_size);
 
@@ -192,6 +198,11 @@ tables_t prepare_tables(const uint8_t packed_size, const uint8_t*& input_ptr)
     return { table0, table1, table3, table4 };
 }
 
+size_t left(const uint8_t* const current_, const uint8_t* const end_)
+{
+    return end_ - current_;
+}
+
 std::vector<uint8_t> uncompress(const std::vector<uint8_t>& packed_data_, const size_t unpacked_size_)
 {
     const uint8_t* input_ptr = packed_data_.data();
@@ -204,7 +215,7 @@ std::vector<uint8_t> uncompress(const std::vector<uint8_t>& packed_data_, const 
     block_t block{};
     do
     {
-        if ((input_end_ptr - input_ptr) < static_cast<long int>(sizeof(block)))
+        if (left(input_ptr, input_end_ptr) < sizeof(block))
         {
             throw 4;
         }
@@ -241,15 +252,13 @@ std::vector<uint8_t> uncompress(const std::vector<uint8_t>& packed_data_, const 
         }
     } while (block.flag != LAST_BLOCK);
 
-    const bool input_fully_used = input_ptr == packed_data_.data() + packed_data_.size();
-    if (!input_fully_used)
+    if (left(input_ptr, input_end_ptr) != 0)
     {
         throw 9;
     }
-    const bool output_fully_used = output_ptr == output.data() + output.size();
-    if (!output_fully_used)
+    if (left(output_ptr, output.data() + output.size()) != 0)
     {
-        throw 9;
+        throw 29;
     }
     return output; // the-end
 }
@@ -267,11 +276,6 @@ void write_binary_file(const std::string& file_path_, const void* const data_, s
         throw 13;
     }
     fclose(fp);
-}
-
-size_t left(const uint8_t* const current_, const uint8_t* const end_)
-{
-    return end_ - current_;
 }
 
 struct packed_block_t {
@@ -406,8 +410,14 @@ int cc1_uncompress(const std::string cc_filepath, const std::vector<uint8_t>& co
             const uint8_t* const data_start = current;
             for (size_t i = 0; i < offset_count; ++i)
             {
+                if ((data_start + offset_table[i]) >= end)
+                {
+                    throw 44;
+                }
                 current = data_start + offset_table[i];
                 data_blocks[i] = read_packed_block(current, end);
+
+                printf("data_blocks: packed_size: %u, unpacked_size: %u\n", data_blocks[i].packed_data.size(), data_blocks[i].unpacked_size);
             }
 
             {
