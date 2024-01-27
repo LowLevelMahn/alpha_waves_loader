@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <cassert>
+#include <cstring>
 
 uint8_t lo(const uint16_t value_)
 {
@@ -163,7 +164,7 @@ std::string hexdump(const void* const buffer, int buffer_size, int width)
                 hex8(a.data(), 0x01234567);
                 assert(a == "01234567");
             }
-        }
+    }
 #endif
 
         int address = current_in_ - begin_in_;
@@ -179,7 +180,7 @@ std::string hexdump(const void* const buffer, int buffer_size, int width)
 
         current_out_ += hex_size + count_ + 1;
         current_in_ += count_;
-    };
+};
 
     // full lines
     for (int f = 0; f < full_lines; ++f) {
