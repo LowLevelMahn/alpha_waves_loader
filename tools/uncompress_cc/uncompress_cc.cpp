@@ -11,6 +11,7 @@
 
 #include "cc_algorithm.hpp"
 #include "cc_file.hpp"
+#include "helper.hpp"
 
 int do_extract(const std::string cc_filepath, const bool extract)
 {

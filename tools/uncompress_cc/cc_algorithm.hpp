@@ -1,7 +1,5 @@
 #pragma once
 
-#include "helper.hpp"
-
 // cc0 and cc1 uncompression algorithm
 
 #include <vector>

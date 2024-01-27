@@ -1,5 +1,7 @@
 #include "cc_algorithm.hpp"
 
+#include "helper.hpp"
+
 #include <cassert>
 
 constexpr uint8_t LAST_BLOCK = 0;

@@ -11,11 +11,6 @@ if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
 
-if((UNIX AND NOT APPLE) OR MINGW)
-  # clang,gcc
-  SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wextra")
-endif()
-
 add_executable(uncompress_cc
   "uncompress_cc.cpp"
   "helper.hpp"
@@ -25,3 +20,12 @@ add_executable(uncompress_cc
   "cc_file.hpp"
   "cc_file.cpp"
 )  
+
+if((UNIX AND NOT APPLE) OR MINGW)
+  # clang,gcc
+  SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+  if(UNIX AND NOT APPLE)
+    target_compile_options(uncompress_cc PUBLIC -fsanitize=undefined,address)
+    target_link_options(uncompress_cc PUBLIC -fsanitize=undefined,address)  
+  endif()
+endif()
