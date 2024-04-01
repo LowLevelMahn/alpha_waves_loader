@@ -59,7 +59,7 @@ const char* EGA_VGA = "ega_vga.exe";
 const char* TANDY = "tandy.exe";
 const char* game_exec[5] = {CGA_HERC, EGA_VGA, TANDY, CGA_HERC, EGA_VGA};
 
-const char* sound_exec[3] = {"s_adlib.com","s_tandy.com","s_pc_buz_com"};
+const char* sound_exec[3] = {"s_adlib.com","s_tandy.com","s_pc_buz.com"};
 
 uint8_t bool_as_int(bool value_)
 {
