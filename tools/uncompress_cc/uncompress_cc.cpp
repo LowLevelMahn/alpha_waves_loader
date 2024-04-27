@@ -19,26 +19,27 @@ int do_extract(const std::string cc_filepath, const bool extract)
     {
         const std::vector<uint8_t> content = read_binary_file(cc_filepath);
 
-        int res = 0;
-#if 1
-        printf("try extracting as CC0\n");
-        res = cc0_uncompress(cc_filepath, content, extract);
-        if (res == 0)
         {
-            printf("CC0 successfull uncompressed\n");
-            return 0;
+            printf("try extracting as CC0\n");
+            int res = cc0_uncompress(cc_filepath, content, extract);
+            if (res == 0)
+            {
+                printf("CC0 successfull uncompressed\n");
+                return 0;
+            }
+            printf("not a CC0!\n");
         }
-        printf("not a CC0!\n");
-#endif
 
-        printf("try extracting as CC1\n");
-        res = cc1_uncompress(cc_filepath, content, extract);
-        if (res == 0)
         {
-            printf("CC1 successfull uncompressed\n");
-            return 0;
+            printf("try extracting as CC1\n");
+            int res = cc1_uncompress(cc_filepath, content, extract);
+            if (res == 0)
+            {
+                printf("CC1 successfull uncompressed\n");
+                return 0;
+            }
+            printf("not a CC1!\n");
         }
-        printf("not a CC1!\n");
 
         printf("unknown file format!\n");
 

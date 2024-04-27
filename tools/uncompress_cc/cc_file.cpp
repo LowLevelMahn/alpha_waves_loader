@@ -34,11 +34,7 @@ static packed_block_t read_packed_block(const uint8_t*& current_, const uint8_t*
     return { unpacked_size , std::move(packed_data) };
 }
 
-#if 0
-
-// port to stream based - future use on file reading cleanup
-
-static packed_block_t read_packed_block2(stream_reader_t& input_reader_)
+static packed_block_t read_packed_block(stream_reader_t& input_reader_)
 {
     if (input_reader_.left() < 8)
     {
@@ -58,24 +54,13 @@ static packed_block_t read_packed_block2(stream_reader_t& input_reader_)
     return { unpacked_size , std::move(packed_data) };
 }
 
-#endif
-
 int cc0_uncompress(const std::string& cc_filepath, const std::vector<uint8_t>& content, const bool extract)
 {
     try
     {
-#if 0
-        {
-            stream_reader_t input_reader(content.data(), content.data() + content.size());
-            const packed_block_t packed_block = read_packed_block2(input_reader);
-        }
-#endif
-
-        const uint8_t* current = content.data();
-        const uint8_t* end = current + content.size();
-
-        const packed_block_t packed_block = read_packed_block(current, end);
-        if (left(current, end) != 0) // no left bytes?
+        stream_reader_t input_reader(content.data(), content.data() + content.size());
+        const packed_block_t packed_block = read_packed_block(input_reader);
+        if (input_reader.left() != 0) // bytes left?
         {
             return 3;
         }
@@ -119,6 +104,7 @@ int cc1_uncompress(const std::string& cc_filepath, const std::vector<uint8_t>& c
         data + offset_table[z]
            packed_block
         ...
+        [dictionary]
         */
 
 #if 0
@@ -203,7 +189,7 @@ int cc1_uncompress(const std::string& cc_filepath, const std::vector<uint8_t>& c
                 current = data_start + offset_table[i];
                 data_blocks[i] = read_packed_block(current, end);
 
-                printf("data_blocks: packed_size: %zu, unpacked_size: %u\n", data_blocks[i].packed_data.size(), data_blocks[i].unpacked_size);
+                //printf("data_blocks: packed_size: %zu, unpacked_size: %u\n", data_blocks[i].packed_data.size(), data_blocks[i].unpacked_size);
             }
 
             {
@@ -215,7 +201,7 @@ int cc1_uncompress(const std::string& cc_filepath, const std::vector<uint8_t>& c
                     const int expected_distance = sizeof(uint32_t) + sizeof(uint32_t) +
                         data_blocks[i - 1].packed_data.size();
 
-                    printf("distance: %i, expected-distance: %i\n", distance, expected_distance);
+                   //printf("distance: %i, expected-distance: %i\n", distance, expected_distance);
                     if (distance != expected_distance)
                     {
                         printf("gap between packed blocks\n");
@@ -232,75 +218,80 @@ int cc1_uncompress(const std::string& cc_filepath, const std::vector<uint8_t>& c
                     result_size += sizeof(uint32_t) + sizeof(uint32_t) +
                         data_blocks[i].packed_data.size();
                 }
-                if (result_size != content.size())
+
                 {
-                    size_t last_end = 0;
-                    for (size_t i = 0; i < offset_count; ++i)
+                    if (result_size != content.size())
                     {
-                        int offset = offset_table[i];
-                        int gap = offset - last_end;
-                        assert(gap == 0);
-                        int block_size = 2 * sizeof(uint32_t) + data_blocks[i].packed_data.size();
-                        int block_end = offset + block_size;
-                        printf("gap: %i, offset: %u, block_size: %u, block_end: %i\n", gap, offset_table[i], block_size, block_end);
-                        last_end = block_end;
-                    }
-
-                    if (last_end < content.size() - sizeof(uint16_t) + offset_count * sizeof(uint32_t))
-                    {
-                        // only Mystical: MYSJEUCG.1 and MYSJEUEG.2
-
-                        printf("%zu bytes remaining after last block\n", left(content.data() + last_end, end));
-
-                        const uint8_t* const rest_begin = content.data() + last_end;
-                        size_t rest_size = content.data() + content.size() - rest_begin;
-                        printf("%s\n", hexdump(rest_begin, rest_size, 16).c_str());
-
-                        if (extract)
+                        size_t last_end = 0;
+                        for (size_t i = 0; i < offset_count; ++i)
                         {
-                            char cc1_rest_filepath[1024]{};
-                            sprintf(cc1_rest_filepath, "%s_rest.bin", cc_filepath.c_str());
-                            printf("  write: %s\n", cc1_rest_filepath);
-                            write_binary_file(cc1_rest_filepath, rest_begin, rest_size);
+                            int offset = offset_table[i];
+                            int gap = offset - last_end;
+                            assert(gap == 0);
+                            int block_size = 2 * sizeof(uint32_t) + data_blocks[i].packed_data.size();
+                            int block_end = offset + block_size;
+                            //printf("gap: %i, offset: %u, block_size: %u, block_end: %i\n", gap, offset_table[i], block_size, block_end);
+                            last_end = block_end;
                         }
 
+                        // is there a "dictionary"
+                        if (last_end < content.size() - sizeof(uint16_t) + offset_count * sizeof(uint32_t))
                         {
-                            // from back to front
-                            size_t fileinfo_table_offset = rest_size - offset_count * 84;
+                            // only Mystical: MYSJEUCG.1 and MYSJEUEG.2
+
+                            printf("%zu bytes remaining after last block\n", left(content.data() + last_end, end));
+
+                            const uint8_t* const rest_begin = content.data() + last_end;
+                            size_t rest_size = content.data() + content.size() - rest_begin;
+                            printf("%s\n", hexdump(rest_begin, rest_size, 16).c_str());
+
+                            if (extract)
+                            {
+                                char cc1_rest_filepath[1024]{};
+                                sprintf(cc1_rest_filepath, "%s_rest.bin", cc_filepath.c_str());
+                                printf("  write: %s\n", cc1_rest_filepath);
+                                write_binary_file(cc1_rest_filepath, rest_begin, rest_size);
+                            }
 
                             {
-                                // no idea what the 4 or 6 bytes are, or in what order, or splitted
-                                const size_t calculated_table_offset = (offset_count * 4) + 6;
-                                assert(fileinfo_table_offset == calculated_table_offset);
-                            }
+                                // from back to front
+                                size_t fileinfo_table_offset = rest_size - offset_count * 84;
+
+                                {
+                                    // no idea what the 4 or 6 bytes are, or in what order, or splitted
+                                    const size_t calculated_table_offset = (offset_count * 4) + 6;
+                                    assert(fileinfo_table_offset == calculated_table_offset);
+                                }
 
 #if 0
-                            const uint8_t* const fileinfo_table_begin = rest_begin + fileinfo_table_offset;
-                            current = fileinfo_table_begin;
+                                const uint8_t* const fileinfo_table_begin = rest_begin + fileinfo_table_offset;
+                                current = fileinfo_table_begin;
 #else
-                            current = rest_begin;
-                            for (size_t i = 0; i < offset_count; ++i)
-                            {
-                                uint32_t unknown0_0 = read16(current);
-                                uint32_t unknown0_1 = read16(current);
-                                printf("unknown0_0: %u, unknown0_1: %u\n", unknown0_0, unknown0_1);
-                            }
-                            std::vector<uint8_t> unknown1(6);
-                            read(current, unknown1.data(), unknown1.size());
-                            printf("unknown1:\n%s\n", hexdump(unknown1.data(), unknown1.size(), unknown1.size()).c_str());
+                                current = rest_begin;
+                                for (size_t i = 0; i < offset_count; ++i)
+                                {
+                                    uint32_t unknown0_0 = read16(current);
+                                    uint32_t unknown0_1 = read16(current);
+                                    printf("unknown0_0: %u, unknown0_1: %u\n", unknown0_0, unknown0_1);
+                                }
+                                std::vector<uint8_t> unknown1(6);
+                                read(current, unknown1.data(), unknown1.size());
+                                printf("unknown1:\n%s\n", hexdump(unknown1.data(), unknown1.size(), unknown1.size()).c_str());
 #endif
 
-                            for (size_t i = 0; i < offset_count; ++i)
-                            {
-                                std::vector<uint8_t> fileinfo(84);
-                                read(current, fileinfo.data(), fileinfo.size());
-                                printf("%s\n", hexdump(fileinfo.data(), fileinfo.size(), fileinfo.size()).c_str());
+                                for (size_t i = 0; i < offset_count; ++i)
+                                {
+                                    std::vector<uint8_t> fileinfo(84);
+                                    read(current, fileinfo.data(), fileinfo.size());
+                                    printf("%s\n", hexdump(fileinfo.data(), fileinfo.size(), fileinfo.size()).c_str());
+                                    printf("--> file: %s\n", fileinfo.data());
+                                }
+
+                                filenames_after.push_back(cc_filepath);
                             }
-
-                            filenames_after.push_back(cc_filepath);
                         }
-                    }
 
+                    }
                 }
             }
         }

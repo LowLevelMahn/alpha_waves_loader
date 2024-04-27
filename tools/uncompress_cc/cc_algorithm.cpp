@@ -3,6 +3,7 @@
 #include "helper.hpp"
 
 #include <cassert>
+#include <optional>
 
 constexpr uint8_t LAST_BLOCK = 0;
 constexpr uint8_t NOT_LAST_BLOCK = 1;
@@ -85,7 +86,7 @@ struct table_3_4_t
     std::vector<uint8_t> table4;
 };
 
-static table_3_4_t generate_table_3_4(const std::vector<uint8_t>& table2_)
+static table_3_4_t generate_table_3_4_from_table2(const std::vector<uint8_t>& table2_)
 {
     std::vector<uint8_t> table3(256);
     std::vector<uint8_t> table4(1 + table2_.size());
@@ -100,6 +101,84 @@ static table_3_4_t generate_table_3_4(const std::vector<uint8_t>& table2_)
     table4[0] = 0xFF; // unused, never read
 
     return { table3 , table4 };
+}
+
+static std::vector<uint8_t> generate_table2_from_table_3_4(const table_3_4_t& tables_)
+{
+    assert(tables_.table3.size() == 256);
+
+    auto find_index_by_value = [](const std::vector<uint8_t> list_, uint8_t value_)
+    {
+        std::vector<uint8_t> tmp;
+        for (size_t i = 0; i < list_.size(); ++i)
+        {
+            if (list_[i] == value_)
+            {
+                tmp.push_back(i);
+            }
+        }
+        // should be only 0 or 1 - if im correct
+        const bool ok = (tmp.size() == 0) || (tmp.size() == 1);
+        if (!ok)
+        {
+            throw 231;
+        }
+        std::optional<uint8_t> res;
+        if (tmp.size() == 1)
+        {
+            res = tmp[0];
+        }
+        return res;
+    };
+
+    struct table2_result_t
+    {
+        std::vector<int> indices;
+        uint8_t value;
+    };
+
+    auto traverse_chain = [&](int tabl4_index_)
+    {
+        table2_result_t res;
+
+        int current_table4_index = tabl4_index_;
+        while (true)
+        {
+            //printf("%i", current_table4_index - 1);
+            res.indices.push_back(current_table4_index - 1);
+
+            std::optional<uint8_t> t3_indice = find_index_by_value(tables_.table3, current_table4_index);
+            // could be foundable
+            if (t3_indice.has_value())
+            {
+                // chain end found
+                //printf(" t2-ofs: %i\n", t3_indices[0]);
+                res.value = t3_indice.value();
+                break;
+            }
+
+            //printf(",");
+
+            std::optional<uint8_t> t4_indice = find_index_by_value(tables_.table4, current_table4_index);
+            // needs to get found
+            assert(t4_indice.has_value());
+            current_table4_index = t4_indice.value();
+        }
+
+        return res;
+    };
+
+    std::vector<uint8_t> table2(tables_.table4.size() - 1);
+    for (size_t i = 1; i < tables_.table4.size(); ++i)
+    {
+        table2_result_t t2r = traverse_chain(i);
+        for (auto i : t2r.indices)
+        {
+            table2[i] = t2r.value;
+        }
+    }
+
+    return table2;
 }
 
 struct tables_2_0_1_t
@@ -149,7 +228,14 @@ static tables_t read_and_prepare_tables(stream_reader_t& input_reader_, const ui
 
     // prepare table3 and table4 based on the read tables
 
-    const table_3_4_t table_3_4 = generate_table_3_4(table_2_0_1.table2);
+    const table_3_4_t table_3_4 = generate_table_3_4_from_table2(table_2_0_1.table2);
+
+#if !defined(NDEBUG)
+    {
+        const std::vector<uint8_t> table2 = generate_table2_from_table_3_4(table_3_4);
+        assert(table2 == table_2_0_1.table2);
+    }
+#endif
 
     return { table_2_0_1.table0, table_2_0_1.table1, table_3_4.table3, table_3_4.table4 };
 }
@@ -337,7 +423,7 @@ bool part_uncompress_unit_test()
 
     //-------------------
 
-    const table_3_4_t table_3_4 = generate_table_3_4(table2);
+    const table_3_4_t table_3_4 = generate_table_3_4_from_table2(table2);
     tables.table3 = table_3_4.table3;
     tables.table4 = table_3_4.table4;
 
@@ -635,10 +721,28 @@ bool uncompress_unit_test()
     return uncompressed == uncompressed_reference;
 }
 
+void generate_table2_test()
+{
+    const std::vector<uint8_t> table2_ref = {
+        0x10, 0x15, 0x17, 0x23, 0x2A, 0x2E, 0x35, 0x36, 0x39, 0x4A, 0x33, 0x4C, 0x51, 0x53, 0x57, 0x53,
+        0x5B, 0x5F, 0x60, 0x61, 0x60, 0x62, 0x52, 0x62, 0x63, 0x65, 0x5C, 0x66, 0x67, 0x68, 0x69, 0x6B,
+        0x6D, 0x6F, 0x73, 0x7A, 0x85, 0x7A, 0x85, 0x37, 0x7A, 0x85, 0x93, 0x94, 0x96, 0x9E, 0x9F, 0xA5,
+        0x58, 0x5D, 0xA7, 0xA9, 0xAB, 0xAE, 0xAB, 0xAE, 0xAB, 0x17, 0xAF, 0x55, 0xAF, 0x55, 0xAF, 0xB9,
+        0xBC, 0xBD, 0xBE, 0xC9, 0xCB, 0xCC, 0xCB, 0xCC, 0xCB, 0xCE, 0xD0, 0xCE, 0xD0, 0xD2, 0xD6, 0xD7,
+        0xD8, 0xDE, 0xDF, 0xE1, 0xDF, 0xE4, 0xEA, 0xE4, 0xEA, 0xED, 0xEF, 0x36, 0xF1, 0xF2, 0xF3
+    };
+
+    const table_3_4_t table_3_4 = generate_table_3_4_from_table2(table2_ref);
+
+    const std::vector<uint8_t> table2 = generate_table2_from_table_3_4(table_3_4);
+    assert(table2 == table2_ref);
+}
+
 struct test
 {
     test()
     {
+        generate_table2_test();
         assert(part_uncompress_unit_test());
         assert(uncompress_unit_test());
     }
