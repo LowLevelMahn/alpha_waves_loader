@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <optional>
+#include <map>
 
 constexpr uint8_t LAST_BLOCK = 0;
 constexpr uint8_t NOT_LAST_BLOCK = 1;
@@ -21,7 +22,7 @@ struct tables_t {
     std::vector<uint8_t> table4;
 };
 
-constexpr uint8_t UNPACKED_VAL = 0;
+constexpr uint8_t UNPACKED_VALUE_INDEX = 0;
 
 static void uncompress_part1(
     stream_writer_t& output_writer_,
@@ -29,61 +30,78 @@ static void uncompress_part1(
     const uint8_t index_,
     const std::vector<uint8_t>& table_);
 
-static void uncompress_part0(stream_writer_t& output_writer_, const tables_t& tables, const uint8_t index_)
+static void uncompress_part0(stream_writer_t& output_writer_, const tables_t& tables, const uint8_t table4_start_index_)
 {
     //index_ is value from table3 or table4
-    uncompress_part1(output_writer_, tables, index_, tables.table0);
-    uncompress_part1(output_writer_, tables, index_, tables.table1);
+    uncompress_part1(output_writer_, tables, table4_start_index_, tables.table0);
+    uncompress_part1(output_writer_, tables, table4_start_index_, tables.table1);
 }
 
 static void uncompress_part1(
     stream_writer_t& output_writer_,
     const tables_t& tables,
-    const uint8_t index_,
+    const uint8_t table4_start_index_,
     const std::vector<uint8_t>& table_
 )
 {
     // table_ is table0 or table1, index_ is value from table3 or table4
-    const uint8_t table3_index = table_[index_];
-    const uint8_t table3_val = tables.table3[table3_index];
+    const uint8_t store_value = table_[table4_start_index_];
+    const uint8_t table4_index = tables.table3[store_value];
 
-    if (table3_val == UNPACKED_VAL)
+    if (table4_index == UNPACKED_VALUE_INDEX)
     {
-        output_writer_.write_uint8(table3_index);
+        output_writer_.write_uint8(store_value);
         return;
     }
 
-    if (index_ > table3_val)
+    if (table4_start_index_ > table4_index)
     {
-        uncompress_part0(output_writer_, tables, table3_val);
+        uncompress_part0(output_writer_, tables, table4_index);
         return;
     }
 
-    uint8_t table4_index = table3_val;
+    uint8_t current_table4_index = table4_index;
     while (true)
     {
-        const uint8_t table4_val = tables.table4[table4_index];
+        const uint8_t table4_parent_index = tables.table4[current_table4_index];
 
-        if (table4_val == UNPACKED_VAL)
+        if (table4_parent_index == UNPACKED_VALUE_INDEX)
         {
-            output_writer_.write_uint8(table3_index);
+            output_writer_.write_uint8(store_value);
             return;
         }
 
-        if (index_ >= table4_val)
+        if (table4_start_index_ >= table4_parent_index)
         {
-            uncompress_part0(output_writer_, tables, table4_val);
+            uncompress_part0(output_writer_, tables, table4_parent_index);
             return;
         }
 
-        table4_index = table4_val;
+        current_table4_index = table4_parent_index;
     }
 }
 
 struct table_3_4_t
 {
-    std::vector<uint8_t> table3;
-    std::vector<uint8_t> table4;
+    // all key values are with a unique index except key=0 (there is the value 0 = invalid-index/aka not compressed)
+    std::vector<uint8_t> table3; // its a unknown-value to table4.index map: table3[Unknow]=>Table4.Index
+
+    // all index and parent.index are unique - except the key=0 with value 0
+    std::vector<uint8_t> table4; // its a list: table4[Tabel4.Index]=Parent.Tabel4.Index
+    // example
+    // flat as in table4
+    //   [1 + 35] => 0 (root)
+    //   ...
+    //   [1 + 37] => 1 + 35 (child of 1+35)
+    //   ...
+    //   [1 + 40] => 1 + 37 (child of 1+37)
+    // as list
+    //   [1+35] ^ 0 => no table3 entry contains this value (aka Index)
+    //     [1+37] ^ 1+35 => no table3 entry contains this value (aka Index)
+    //       [1+40] ^ 1+40 => one table3 entry contains this value (aka Index) with the key: 122
+    // 
+    // table4[1+35] -> table4[1+37] -> table4[1+40] <--> 122 <--> table3[122] == 1+40
+    //   
 };
 
 static table_3_4_t generate_table_3_4_from_table2(const std::vector<uint8_t>& table2_)
@@ -98,7 +116,7 @@ static table_3_4_t generate_table_3_4_from_table2(const std::vector<uint8_t>& ta
         table4[index] = table3[ofs]; //1+256  [0] ignored, [1-256]
         table3[ofs] = index;
     }
-    table4[0] = 0xFF; // unused, never read
+    table4[0] = 0xFF; // index unused, never read
 
     return { table3 , table4 };
 }
@@ -107,7 +125,76 @@ static std::vector<uint8_t> generate_table2_from_table_3_4(const table_3_4_t& ta
 {
     assert(tables_.table3.size() == 256);
 
-    auto find_index_by_value = [](const std::vector<uint8_t> list_, uint8_t value_)
+    // sample
+    /*
+in table2 are multiple times the same value on different indices
+
+ofs = table2[i]
+
+examples:
+
+ofs: 23, i: 2;57
+
+i=2
+ofs = table2[2] = 23
+table4[1+2] = table3[23] = 0;
+table3[23] = 1+2;
+
+i=57
+ofs = table2[57] = 23
+table4[1+57] = table3[23] = 1+2;
+table3[23] = 1+57;
+
+//using maps to describe these 2 indices better
+std::map<int,int> table2{ {2,23},{57,23} }
+std::map<int,int> table3{ {23,1+57} }
+std::map<int,int> table4{ {1+2,0},{1+57,1+2} }
+
+--
+
+ofs: 122, i: 35;37;40
+
+i=35
+ofs = table2[35] = 122
+table4[1+35] = table3[122] = 0;
+table3[122] = 1+35;
+
+i=37
+ofs = table2[37] = 122
+table4[1+37] = table3[122] = 1+37;
+table3[122] = 1+37;
+
+i=40
+ofs = table2[40] = 122
+table4[1+40] = table3[122] = 1+40;
+table3[122] = 1+40;
+
+//using maps to describe these 3 indices better
+std::map<int,int> table2{ {35,122},{37,122},{40,122} }
+std::map<int,int> table3{ {122,1+40} }
+std::map<int,int> table4{ {1+35,0},{1+37,1+35},{1+40,1+37}}
+                             1+35 index not found in table3
+                             --------------> search for parent.index in table4
+                                     +1+37 index not found in table3
+                                     -----------------> search for parent.index in table4
+                                               1+40 index found in table3
+
+--
+
+    table4[index]=parent.table4.index
+    table3[unknown_index]=table4.index
+
+*/
+
+
+    struct table2_result_t
+    {
+        std::vector<int> indices;
+        uint8_t value;
+    };
+
+#if 0
+    auto find_index_by_value = [](const std::vector<uint8_t>& list_, uint8_t value_)
     {
         std::vector<uint8_t> tmp;
         for (size_t i = 0; i < list_.size(); ++i)
@@ -131,17 +218,11 @@ static std::vector<uint8_t> generate_table2_from_table_3_4(const table_3_4_t& ta
         return res;
     };
 
-    struct table2_result_t
-    {
-        std::vector<int> indices;
-        uint8_t value;
-    };
-
-    auto traverse_chain = [&](int tabl4_index_)
+    auto traverse_chain = [&](int table4_index_)
     {
         table2_result_t res;
 
-        int current_table4_index = tabl4_index_;
+        int current_table4_index = table4_index_;
         while (true)
         {
             //printf("%i", current_table4_index - 1);
@@ -179,6 +260,73 @@ static std::vector<uint8_t> generate_table2_from_table_3_4(const table_3_4_t& ta
     }
 
     return table2;
+
+#else
+    // map based indexing
+
+    std::map<uint8_t, uint8_t> table3_invert;
+    for (size_t i = 0; i < tables_.table3.size(); ++i)
+    {
+        uint8_t value = tables_.table3[i];
+        if (value != 0)
+        {
+            table3_invert[value] = i;
+        }
+    }
+
+    std::map<uint8_t, uint8_t> table4_invert;
+    for (size_t i = 1; i < tables_.table4.size(); ++i)
+    {
+        uint8_t value = tables_.table4[i];
+        if (value != 0)
+        {
+            table4_invert[value] = i;
+        }
+    }
+
+    auto traverse_chain = [&](int table4_index_)
+    {
+        table2_result_t res;
+
+        int current_table4_index = table4_index_;
+        while (true)
+        {
+            //printf("%i", current_table4_index - 1);
+            res.indices.push_back(current_table4_index - 1);
+
+            auto t3_indice = table3_invert.find(current_table4_index);
+            // could be foundable
+            if (t3_indice != table3_invert.end())
+            {
+                // chain end found
+                //printf(" t2-ofs: %i\n", t3_indices[0]);
+                res.value = t3_indice->second;
+                break;
+            }
+
+            //printf(",");
+
+            auto t4_indice = table4_invert.find(current_table4_index);
+            // needs to get found
+            assert(t4_indice != table4_invert.end());
+            current_table4_index = t4_indice->second;
+        }
+
+        return res;
+    };
+
+    std::vector<uint8_t> table2(tables_.table4.size() - 1);
+    for (size_t i = 1; i < tables_.table4.size(); ++i)
+    {
+        table2_result_t t2r = traverse_chain(i);
+        for (auto i : t2r.indices)
+        {
+            table2[i] = t2r.value;
+        }
+    }
+
+    return table2;
+#endif
 }
 
 struct tables_2_0_1_t
@@ -194,13 +342,60 @@ static tables_2_0_1_t read_tables_2_0_1(stream_reader_t& input_reader_, const ui
 
     std::vector<uint8_t> table0(1 + packed_size);
     input_reader_.read(&table0[1], packed_size);
-    table0[0] = 0xFF; // unused, never read
+    table0[0] = 0xFF; // index unused, never read
 
     std::vector<uint8_t> table1(1 + packed_size);
     input_reader_.read(&table1[1], packed_size);
-    table1[0] = 0xFF; // unused, never read
+    table1[0] = 0xFF; // index unused, never read
 
     return { table2, table0, table1 };
+}
+
+void some_reverse_testing(const std::vector<uint8_t>& table2, const table_3_4_t& table_3_4)
+{
+    // reverse table2 creation test
+    const std::vector<uint8_t> recreated_table2 = generate_table2_from_table_3_4(table_3_4);
+    assert(recreated_table2 == table2);
+
+    {
+        // all values except key=0 are single-values
+
+        std::map<uint8_t, std::vector<int>> table3_value_ofs; // key=value and value=key
+        for (size_t i = 0; i < table_3_4.table3.size(); ++i)
+        {
+            uint8_t value = table_3_4.table3[i];
+            table3_value_ofs[value].push_back(i);
+        }
+        for (const auto& [k, v] : table3_value_ofs)
+        {
+            if (k != 0)
+            {
+                assert(v.size() == 1);
+            }
+        }
+        int bkr = 1;
+    }
+
+    {
+        // all values except key=0 are single-values
+
+        std::map<uint8_t, std::vector<int>> table4_value_ofs; // key=value and value=key
+        for (size_t i = 0; i < table_3_4.table4.size(); ++i)
+        {
+            uint8_t value = table_3_4.table4[i];
+            table4_value_ofs[value].push_back(i);
+        }
+        // only lists - no tree?
+        for (const auto& [k, v] : table4_value_ofs)
+        {
+            if (k != 0)
+            {
+                assert(v.size() == 1);
+            }
+        }
+        // yep - only list
+        int bkr = 1;
+    }
 }
 
 static tables_t read_and_prepare_tables(stream_reader_t& input_reader_, const uint8_t packed_size)
@@ -232,8 +427,7 @@ static tables_t read_and_prepare_tables(stream_reader_t& input_reader_, const ui
 
 #if !defined(NDEBUG)
     {
-        const std::vector<uint8_t> table2 = generate_table2_from_table_3_4(table_3_4);
-        assert(table2 == table_2_0_1.table2);
+        some_reverse_testing(table_2_0_1.table2, table_3_4);
     }
 #endif
 
@@ -283,15 +477,17 @@ std::vector<uint8_t> uncompress(const std::vector<uint8_t>& packed_data_, const 
 
             const std::vector<uint8_t> compressed_data = input_reader.read_vector(block.data_len);
 
-            for (const uint8_t var1 : compressed_data)
+            for (const uint8_t store_value : compressed_data)
             {
-                const uint8_t table3_val = tables.table3[var1]; // var1 0..n
+                const uint8_t table4_index = tables.table3[store_value]; // value 0..n
 
-                if (table3_val == UNPACKED_VAL) {    // uncompressed part
-                    output_writer.write_uint8(var1); // just store value
+                if (table4_index == UNPACKED_VALUE_INDEX) {
+                    // uncompressed part
+                    output_writer.write_uint8(store_value); // just store value
                 }
-                else {                      // compressed part
-                    uncompress_part0(output_writer, tables, table3_val);
+                else {
+                    // compressed part
+                    uncompress_part0(output_writer, tables, table4_index);
                 }
             }
         }
