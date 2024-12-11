@@ -103,18 +103,18 @@ feature_flags
 
 #if SET_INT_24h
 
-const uint8_t dos_version = 5;
+const uint8_t dos_version = 3;
 
 // never called? in Sound-Driver?
 // dosbox debugger bpint 24 does not stop anywhere
 // no 0xCD 0x24 opcode in executables (only as data)
 // gets overrwritten by the game (interrupt-table changes from start to end at interrupt 24h)
 // bpint 21 4c
-// at file offset 0x5802 in ega_vga.exe get set with offset/segment
+// at file offset 0x5802 (seg000:5602) in ega_vga.exe get set with offset/segment
 // same routine that calls interrupt 97h
 void __interrupt __far interrupt_24h(INTPACK regs_)
 {
-  regs_.h.al = dos_version;
+  regs_.h.al = dos_version; // returns always 3 if dos version is >= 3 (dosbox is version 5)
 }
 
 #endif
