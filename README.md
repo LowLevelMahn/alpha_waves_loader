@@ -144,3 +144,4 @@ create_static_exes.exe path-to-extracted-exes
  - [Full Atari ST source](http://cc3d.free.fr/Alpha-Waves.zip) - Build-environment: Devpac from [HiSoft Systems](https://en.wikipedia.org/wiki/HiSoft_Systems)
  - [GitHub account](https://github.com/c3d) and [GitHub page](https://c3d.github.io/) of Christophe de Dinechin
  - [Facebook Page](https://www.facebook.com/ludoid.raynal/) of Frederick Raynal's company
+ - [Python based copy-protection remover](https://github.com/unk1911/alpha_waves) by @unk1911 which patches the executable
