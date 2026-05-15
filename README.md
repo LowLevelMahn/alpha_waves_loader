@@ -126,6 +126,7 @@ create_static_exes.exe path-to-extracted-exes
  - create static vga.exe from extracted ega_vga.exe that does not need the starter to run
  - disabled copy protection - just press enter on code question when using ega.exe or vga.exe
  - reversed the CC1(CC0) compression format: https://moddingwiki.shikadi.net/wiki/CC1_Format and wrote a generic uncompress tool
+ - i've got an binary equal re-assembleable version of the ega/vga executeable (not released due to copyright)
 
  # TODOs
  - reverse the sound driver TSRs
